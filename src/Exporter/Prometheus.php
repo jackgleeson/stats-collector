@@ -18,7 +18,7 @@ class Prometheus implements ExporterInterface
     /**
      * Directory where we should write Prometheus files
      *
-     * @var string $prometheusPath
+     * @var string $path
      */
     protected $path;
 
@@ -32,6 +32,7 @@ class Prometheus implements ExporterInterface
 
     public function export($data)
     {
+        // finish mapping namespaces to underscore paths and output data to files
         return true;
     }
 
@@ -56,4 +57,6 @@ class Prometheus implements ExporterInterface
             self::$extension;
         file_put_contents($path, implode('', $contents));
     }
+
+
 }

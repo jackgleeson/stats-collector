@@ -5,13 +5,14 @@ namespace Statistics;
 
 use Statistics\Exporter\ExporterInterface;
 use Dflydev\DotAccessData\Data as Container;
+use Statistics\Exceptions\StatisticsCollectorException;
 
 /**
  * Statistics Collector
  *
  * This object is intended to serve as storage for application-wide statistics
  * captured during the lifecycle of a request. Recorded statistics can then be exported
- * via a backend specific exporter class to file, db, other.
+ * via a backend specific exporter class to file, log, db, queue, other.
  *
  * Reportable subjects are defined as custom namespaces. The identifier namespace is
  * entirely up to the user e.g. queue.donations.received or civi.user.unsubscribed
@@ -23,6 +24,9 @@ use Dflydev\DotAccessData\Data as Container;
  * - add $additionalOptions to addStat method custom backend specific tags
  * - add targetNS option to all CRUD stat methods (easy ones complete)
  * - consider naming 'setNamespace' to 'useNamespace'
+ * - make it easier to work out averages from non-leaf nodes child namespaces either by using
+ * xpath-like behaviour or tagging
+ * - add custom exceptions
  *
  */
 class Collector
@@ -141,7 +145,7 @@ class Collector
      * @param string $name name of statistic to be added to namespace
      * @param int $increment
      * @return $this
-     * @throws \Exception
+     * @throws StatisticsCollectorException
      */
     public function incrementStat($name, $increment = 1)
     {
@@ -151,7 +155,7 @@ class Collector
             $this->updateValueAtNamespace($name, $currentValue + $increment);
             return $this;
         } else {
-            throw new \Exception("Attemped to increment a value which cannot be incremented! (" . $name . ":" . gettype($currentValue) . ")");
+            throw new StatisticsCollectorException("Attemped to increment a value which cannot be incremented! (" . $name . ":" . gettype($currentValue) . ")");
         }
     }
 
@@ -162,7 +166,7 @@ class Collector
      * @param string $name name of statistic to be added to namespace
      * @param int $decrement
      * @return $this
-     * @throws \Exception
+     * @throws StatisticsCollectorException
      */
     public function decrementStat($name, $decrement = -1)
     {
@@ -172,7 +176,7 @@ class Collector
             $this->updateValueAtNamespace($name, $currentValue + $decrement);
             return $this;
         } else {
-            throw new \Exception("Attemped to decrement a value which cannot be decremented! (" . $name . ":" . gettype($currentValue) . ")");
+            throw new StatisticsCollectorException("Attemped to decrement a value which cannot be decremented! (" . $name . ":" . gettype($currentValue) . ")");
         }
     }
 
@@ -200,7 +204,7 @@ class Collector
      * - confirm array values are incrementable and throw if not
      * @param $name
      * @return mixed
-     * @throws \Exception
+     * @throws StatisticsCollectorException
      */
     public function getStatAverage($name)
     {
@@ -219,7 +223,7 @@ class Collector
                     return $total / count($value);
             }
         } else {
-            throw new \Exception("Unable to return average for this type of value: " . gettype($value));
+            throw new StatisticsCollectorException("Unable to return average for this type of value: " . gettype($value));
         }
     }
 
@@ -230,7 +234,7 @@ class Collector
      * - take array of namespaces with wildcards to target specific namespaces
      * @param string $namespace
      * @return array
-     * @throws \Exception
+     * @throws StatisticsCollectorException
      */
     public function getAllStats($namespace = "*")
     {
@@ -241,12 +245,12 @@ class Collector
             }
             return $data;
         } else {
-            throw new \Exception("Not currently implemented!");
+            throw new StatisticsCollectorException("Not currently implemented!");
         }
     }
 
     /**
-     * Export statistics using exporter object
+     * Export statistics using backend specific $Exporter
      *
      * TODO:
      * - take array of namespaces to target specific namespaces
@@ -254,25 +258,17 @@ class Collector
      * @param string $namespaces
      * @param ExporterInterface $Exporter
      * @return
-     * @throws \Exception
+     * @throws StatisticsCollectorException
      */
     public function export($namespaces = "*", ExporterInterface $Exporter)
     {
         if ($namespaces === "*") {
             return $Exporter->export($this->getAllStats());
         } else {
-            throw new \Exception("Not currently implemented!");
+            throw new StatisticsCollectorException("Not currently implemented!");
 
         }
     }
-
-    /**
-     * Iterate through stats array to find namespace container and set value
-     * @param string $namespace
-     * @param mixed $value
-     * @return bool
-     */
-
 
     /**
      * TODO:
@@ -317,14 +313,14 @@ class Collector
      * @param $value
      * @param array $options
      * @return $this
-     * @throws \Exception
+     * @throws StatisticsCollectorException
      */
     protected function updateValueAtNamespace($name, $value, $options = [])
     {
         if ($this->container->has($this->getCurrentNamespace() . static::SEPARATOR . $name)) {
             $this->container->set($this->getCurrentNamespace() . static::SEPARATOR . $name, $value);
         } else {
-            throw new \Exception("Unable to update value at " . $this->getCurrentNamespace() . static::SEPARATOR . $name);
+            throw new StatisticsCollectorException("Unable to update value at " . $this->getCurrentNamespace() . static::SEPARATOR . $name);
         }
         return $this;
     }
@@ -431,12 +427,12 @@ class Collector
      * Check that a namespace element exists
      * @param $name
      * @return bool
-     * @throws \Exception
+     * @throws StatisticsCollectorException
      */
     protected function checkExists($name)
     {
         if (!$this->container->has($this->getCurrentNamespace() . static::SEPARATOR . $name)) {
-            throw new \Exception("The namespace does not exist: " . $this->getCurrentNamespace() . static::SEPARATOR . $name);
+            throw new StatisticsCollectorException("The namespace does not exist: " . $this->getCurrentNamespace() . static::SEPARATOR . $name);
         }
         return true;
     }

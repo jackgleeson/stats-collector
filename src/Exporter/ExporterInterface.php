@@ -3,6 +3,6 @@ namespace Statistics\Exporter;
 
 interface ExporterInterface
 {
-    public function export();
+    public function export($data);
 
 }

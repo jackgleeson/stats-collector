@@ -6,7 +6,6 @@ $StatsCollector = Statistics\Collector::getInstance();
 // dummy data
 $class = new StdClass;
 $class->name = "Mr Class";
-$json_class = json_encode($class);
 $clicks = 993924;
 $visits = 657;
 
@@ -14,8 +13,10 @@ $visits = 657;
 $StatsCollector->setNamespace("test.namespace")
     ->addStat("clicks", $clicks)
     ->addStat("visits", $visits);
+
+// more advanced properties for backend specific handling?
 //    ->addStat("object", $class)
-//    ->addStat("json", $json_class)
+//    ->addStat("json", json_encode($class))
 //    ->addStat("custom", ["_type" => "summary", "value" => 6]);
 
 // cats removing stats
