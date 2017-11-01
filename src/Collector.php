@@ -296,8 +296,9 @@ class Collector
     }
 
     /**
-     * @param $namespace
+     * @param $name
      * @param $value
+     * @param array $options
      * @return bool
      */
     protected function addValueToNamespace($name, $value, $options = [])
@@ -311,6 +312,13 @@ class Collector
         return $this;
     }
 
+    /**
+     * @param $name
+     * @param $value
+     * @param array $options
+     * @return $this
+     * @throws \Exception
+     */
     protected function updateValueAtNamespace($name, $value, $options = [])
     {
         if ($this->container->has($this->getCurrentNamespace() . static::SEPARATOR . $name)) {
@@ -322,7 +330,6 @@ class Collector
     }
 
     /**
-     * Iterate through stats array to find namespace container and set value to null
      * @param $name
      * @return $this
      */
@@ -334,8 +341,8 @@ class Collector
     }
 
     /**
-     * Retrieve stats value from container
-     * @param string $namespace
+     * Retrieve stats value from container, return null if not found.
+     * @param $name
      * @return mixed
      */
     protected function getValueFromNamespace($name)
@@ -351,7 +358,6 @@ class Collector
     {
         return ($this->namespace === null) ? $this->getDefaultNamespace() : $this->namespace;
     }
-
 
     /**
      * @return string
@@ -421,6 +427,12 @@ class Collector
         return true;
     }
 
+    /**
+     * Check that a namespace element exists
+     * @param $name
+     * @return bool
+     * @throws \Exception
+     */
     protected function checkExists($name)
     {
         if (!$this->container->has($this->getCurrentNamespace() . static::SEPARATOR . $name)) {
@@ -430,6 +442,9 @@ class Collector
     }
 
 
+    /**
+     * During getInstance() we want to configure the container to be an instance of Container()
+     */
     protected function containerSetup()
     {
         if (!$this->container instanceof Container) {
