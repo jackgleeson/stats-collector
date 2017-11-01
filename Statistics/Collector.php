@@ -97,7 +97,6 @@ class Collector
      *
      * TODO:
      * - workout how to handle backend specific types
-     *
      * @param string $name name of statistic to be added to namespace
      * @param string $value
      * @param null $targetNamespace
@@ -139,8 +138,6 @@ class Collector
     /**
      * Increment a statistic
      *
-     * TODO:
-     * - confirm value is able to be incremented
      * @param string $name name of statistic to be added to namespace
      * @param int $increment
      * @return $this
@@ -162,11 +159,10 @@ class Collector
     /**
      * Decrement a statistic
      *
-     * TODO:
-     * - confirm value is able to be decremented
      * @param string $name name of statistic to be added to namespace
      * @param int $decrement
      * @return $this
+     * @throws \Exception
      */
     public function decrementStat($name, $decrement = -1)
     {
@@ -232,7 +228,7 @@ class Collector
      *
      * TODO:
      * - take array of namespaces with wildcards to target specific namespaces
-     * @param string $name
+     * @param string $namespace
      * @return array
      * @throws \Exception
      */
