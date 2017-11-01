@@ -1,0 +1,16 @@
+{
+    "name": "jack/stats-collector",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Jack Gleeson",
+            "email": "jgleeson@wikimedia.org"
+        }
+    ],
+    "autoload": {
+        "psr-4": {"Statistics\\": "Statistics/"}
+    },
+    "require": {
+        "dflydev/dot-access-data": "^1.1"
+    }
+}
