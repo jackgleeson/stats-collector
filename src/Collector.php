@@ -19,14 +19,10 @@ use Statistics\Exceptions\StatisticsCollectorException;
  *
  * TODO:
  * - implement exporter strategy object to hanldle backend specific export/output logic (Prometheus being the first)
- * - move to Smashpig project?
  * - add updateStat behaviour
  * - add $additionalOptions to addStat method custom backend specific tags
- * - add targetNS option to all CRUD stat methods (easy ones complete)
- * - consider naming 'setCurrentNamespace' to 'useNamespace'
- * - make it easier to work out averages from non-leaf nodes child namespaces either by using
- * xpath-like behaviour or tagging
- * - add custom exceptions
+ * - crying out for wildcard usage in namespaces
+ * - finish compound stats methods
  *
  */
 class Collector
