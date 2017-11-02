@@ -48,12 +48,60 @@ $statsRelative = $StatsCollector->getStats(['.general.stats.days_on_the_earth', 
 var_dump($statsAbsolute); // array(2) { [0] => int(12046) [1] => int(52) }
 var_dump($statsRelative); // array(2) { [0] => int(12046) [1] => int(52) }
 
+### lets sum up some stats ##
+$StatsCollector->setNamespace("donation.count")
+    ->addStat("jan", 553)
+    ->addStat("feb", 223)
+    ->addStat("mar", 434)
+    ->addStat("apr", 731)
+    ->addStat("may", 136)
+    ->addStat("june", 434)
+    ->addStat("july", 321)
+    ->addStat("aug", 353)
+    ->addStat("sept", 657)
+    ->addStat("oct", 575)
+    ->addStat("nov", 1020)
+    ->addStat("dec", 2346);
+
+// get the total of the above stats
+echo $StatsCollector->getStatsSum([
+        'jan',
+        'feb',
+        'mar',
+        'apr',
+        'may',
+        'june',
+        'july',
+        'aug',
+        'sept',
+        'oct',
+        'nov',
+        'dec'
+    ]) . PHP_EOL; //7783
+
+### Averages of a collection of stats
+
+// lets work out the average donations per month based on the above the above stats
+echo $StatsCollector->getStatsAverage([
+        'jan',
+        'feb',
+        'mar',
+        'apr',
+        'may',
+        'june',
+        'july',
+        'aug',
+        'sept',
+        'oct',
+        'nov',
+        'dec'
+    ]) . PHP_EOL; //648.58333333333
 
 /**
  * Compound stats usage
  *
  * Stats become "compound" when you add either an array of scalars as the value or when you add a stat to
- * an existing namespace.
+ * an already existing namespace.
  */
 
 ### Compound Averages
@@ -96,35 +144,7 @@ $StatsCollector->setNamespace("gateway.tracking")
 
 echo $StatsCollector->getStatSum('timeouts') . PHP_EOL; // 167
 
-// lets take 12 different compound stats and work out the collective sum
-$StatsCollector->setNamespace("donation.count")
-    ->addStat("jan", 553)
-    ->addStat("feb", 223)
-    ->addStat("mar", 434)
-    ->addStat("apr", 731)
-    ->addStat("may", 136)
-    ->addStat("june", 434)
-    ->addStat("july", 321)
-    ->addStat("aug", 353)
-    ->addStat("sept", 657)
-    ->addStat("oct", 575)
-    ->addStat("nov", 1020)
-    ->addStat("dec", 2346);
 
-echo $StatsCollector->getStatsSum([
-        'jan',
-        'feb',
-        'mar',
-        'apr',
-        'may',
-        'june',
-        'aug',
-        'oct',
-        'nov',
-        'dec'
-    ]) . PHP_EOL; //6805
-
-exit();
 
 /**
  * Work in progres below
