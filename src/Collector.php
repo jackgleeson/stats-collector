@@ -115,19 +115,11 @@ class Collector
     /**
      * Delete a statistic
      * @param $name
-     * @param null $targetNamespace
      * @return Collector
      */
-    public function removeStat($name, $targetNamespace = null)
+    public function removeStat($name)
     {
-        if ($targetNamespace !== null) {
-            $originalNamespace = $this->getCurrentNamespace();
-            $this->setCurrentNamespace($targetNamespace);
-            $this->removeValueFromNamespace($name);
-            $this->setCurrentNamespace($originalNamespace);
-        } else {
-            $this->removeValueFromNamespace($name);
-        }
+        $this->removeValueFromNamespace($name);
         return $this;
     }
 
@@ -176,24 +168,33 @@ class Collector
     /**
      * Retrieve statistic for a given subject namespace
      * @param $name name of statistic to be added to namespace
-     * @param string $targetNamespace
      * @return mixed
      */
-    public function getStat($name, $targetNamespace = null)
+    public function getStat($name)
     {
-        if ($targetNamespace !== null) {
-            $originalNamespace = $this->getCurrentNamespace();
-            $this->setCurrentNamespace($targetNamespace);
-            $this->getValueFromNamespace($name);
-            $this->setCurrentNamespace($originalNamespace);
-        } else {
-            $this->getValueFromNamespace($name);
-        }
+        return $this->getValueFromNamespace($name);
     }
 
     /**
-     * TODO:
-     * - confirm array values are incrementable and throw if not
+     * Retrieve a collection of statistics with an array of given subject namespace
+     * @param array $names
+     * @param bool $withKeys
+     * @return array
+     */
+    public function getStats($names = [], $withKeys = false)
+    {
+        $values = [];
+        foreach ($names as $name) {
+            if ($withKeys === true) {
+                $values[$name] = $this->getStat($name);
+            } else {
+                $values[] = $this->getStat($name);
+            }
+        }
+        return $values;
+    }
+
+    /**
      * @param $name
      * @return mixed
      * @throws StatisticsCollectorException
@@ -202,21 +203,53 @@ class Collector
     {
         $this->checkExists($name);
         $value = $this->getValueFromNamespace($name);
-        if ($this->is_averageable($value)) {
-            switch (gettype($value)) {
-                case "string":
-                case "integer":
-                    return $value;
-                case "array":
-                    $total = 0;
-                    foreach ($value as $stat) {
-                        $total += $stat;
-                    }
-                    return $total / count($value);
+        return $this->calculateStatsAverage($value);
+    }
+
+    /**
+     * @param array $names
+     * @return float|int
+     */
+    public function getStatsAverage($names = [])
+    {
+        $allStats = [];
+        foreach ($names as $name) {
+            $values = $this->getValueFromNamespace($name);
+            if (gettype($values) !== "array") {
+                $values = [$values];
             }
-        } else {
-            throw new StatisticsCollectorException("Unable to return average for this type of value: " . gettype($value));
+            $allStats = array_merge($allStats, $values);
         }
+        return $this->calculateStatsAverage($allStats);
+
+    }
+
+    /**
+     * @param $name
+     * @return float|int
+     */
+    public function getStatSum($name)
+    {
+        $this->checkExists($name);
+        $values = $this->getValueFromNamespace($name);
+        return $this->calculateStatsSum($values);
+    }
+
+    /**
+     * @param array $names
+     * @return float|int
+     */
+    public function getStatsSum($names = [])
+    {
+        $totalSum = [];
+        foreach ($names as $name) {
+            $values = $this->getValueFromNamespace($name);
+            if (gettype($values) !== "array") {
+                $values = [$values];
+            }
+            $totalSum = array_merge($totalSum, $values);
+        }
+        return $this->calculateStatsSum($totalSum);
     }
 
     /**
@@ -272,6 +305,7 @@ class Collector
         return $this->setCurrentNamespace($namespace);
 
     }
+
     /**
      * TODO:
      * - validate namespace argument
@@ -306,7 +340,7 @@ class Collector
     /**
      * Determine the type of target based on the namespace value
      * '.' present at beginning indicates absolute namespace path
-     * '.' present but not at the beginning indicates branch namesapce paths of the current namespace
+     * '.' present but not at the beginning indicates branch namespace path of the current namespace
      * '.' not present indicates leaf-node namespace of current namespace
      * @param $namespace
      * @return string
@@ -316,7 +350,7 @@ class Collector
         if (($pos = strpos($namespace, static::SEPARATOR)) !== false) {
             if ($pos === 0) {
                 //absolute path namespace e.g. '.this.a.full.path.beginning.with.separator'
-                $target = substr($namespace,1);
+                $target = substr($namespace, 1);
             } else {
                 //sub-namespace e.g 'sub.path.of.current.namespace'
                 $target = $this->getCurrentNamespace() . static::SEPARATOR . $namespace;
@@ -358,8 +392,9 @@ class Collector
      */
     protected function updateValueAtNamespace($name, $value, $options = [])
     {
-        if ($this->container->has($this->getCurrentNamespace() . static::SEPARATOR . $name)) {
-            $this->container->set($this->getCurrentNamespace() . static::SEPARATOR . $name, $value);
+        $targetNS = $this->determineTargetNS($name);
+        if ($this->container->has($targetNS)) {
+            $this->container->set($targetNS, $value);
         } else {
             throw new StatisticsCollectorException("Unable to update value at " . $this->getCurrentNamespace() . static::SEPARATOR . $name);
         }
@@ -372,8 +407,9 @@ class Collector
      */
     protected function removeValueFromNamespace($name)
     {
-        $this->container->remove($this->getCurrentNamespace() . static::SEPARATOR . $name);
-        $this->removePopulatedNamespace($this->getCurrentNamespace() . static::SEPARATOR . $name);
+        $targetNS = $this->determineTargetNS($name);
+        $this->container->remove($targetNS);
+        $this->removePopulatedNamespace($targetNS);
         return $this;
     }
 
@@ -384,7 +420,8 @@ class Collector
      */
     protected function getValueFromNamespace($name)
     {
-        return $this->container->get($this->getCurrentNamespace() . static::SEPARATOR . $name, null);
+        $targetNS = $this->determineTargetNS($name);
+        return $this->container->get($targetNS);
     }
 
     /**
@@ -405,30 +442,6 @@ class Collector
     protected function is_incrementable($value)
     {
         return (is_int($value) || is_string($value));
-    }
-
-    /**
-     * Check if value is a number or a collection of numbers available to averaged.
-     *
-     * TODO:
-     * - work out how to prevent subnamespaces of the current breaking current averaging
-     * @param $value
-     * @return bool
-     */
-    protected function is_averageable($value)
-    {
-        if (in_array(gettype($value), ['integer', 'float'])) {
-            return true;
-        } elseif (gettype($value) === "array") {
-            foreach ($value as $v) {
-                if (!in_array(gettype($v), ['integer', 'float'])) {
-                    return false;
-                }
-            }
-            return true;
-        } else {
-            return false;
-        }
     }
 
     /**
@@ -463,12 +476,109 @@ class Collector
      */
     protected function checkExists($name)
     {
-        if (!$this->container->has($this->getCurrentNamespace() . static::SEPARATOR . $name)) {
-            throw new StatisticsCollectorException("The namespace does not exist: " . $this->getCurrentNamespace() . static::SEPARATOR . $name);
+        $targetNS = $this->determineTargetNS($name);
+        if (!$this->container->has($targetNS)) {
+            throw new StatisticsCollectorException("The namespace does not exist: " . $targetNS);
         }
         return true;
     }
 
+    protected function calculateStatsSum($stats)
+    {
+        if ($this->is_summable($stats)) {
+            switch (gettype($stats)) {
+                case "string":
+                case "integer":
+                    return $stats;
+                case "array":
+                    return $this->sum($stats);
+            }
+        } else {
+            throw new StatisticsCollectorException("Unable to return sum for this type of value: " . gettype($stats));
+        }
+
+    }
+
+    protected function calculateStatsAverage($stats)
+    {
+        if ($this->is_averageable($stats)) {
+            switch (gettype($stats)) {
+                case "string":
+                case "integer":
+                    return $stats;
+                case "array":
+                    return $this->average($stats);
+            }
+        } else {
+            throw new StatisticsCollectorException("Unable to return average for this type of value: " . gettype($stats));
+        }
+    }
+
+    /**
+     * TODO:
+     * - this is the same as is averageable(). refactor both into one method?
+     * @param mixed $value
+     * @return bool
+     */
+    protected function is_summable($value)
+    {
+        if (in_array(gettype($value), ['integer', 'float'])) {
+            return true;
+        } elseif (gettype($value) === "array") {
+            foreach ($value as $v) {
+                if (!in_array(gettype($v), ['integer', 'float'])) {
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Check if value is a number or a collection of numbers available to averaged.
+     *
+     * TODO:
+     * - work out how to prevent subnamespaces of the current breaking current averaging
+     * @param $value
+     * @return bool
+     */
+    protected function is_averageable($value)
+    {
+        if (in_array(gettype($value), ['integer', 'float'])) {
+            return true;
+        } elseif (gettype($value) === "array") {
+            foreach ($value as $v) {
+                if (!in_array(gettype($v), ['integer', 'float'])) {
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Get the average of a collection of values
+     * @param array $values
+     * @return float|int
+     */
+    protected function average($values = [])
+    {
+        return array_sum($values) / count($values);
+    }
+
+    /**
+     * Get the sum of a collection of values
+     * @param array $values
+     * @return float|int
+     */
+    protected function sum($values = [])
+    {
+        return array_sum($values);
+    }
 
     /**
      * During getInstance() we want to configure the container to be an instance of Container()

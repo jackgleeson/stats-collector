@@ -1,56 +1,141 @@
 <?php
 require __DIR__ . '/vendor/autoload.php';
 
-$Stats = Statistics\Collector::getInstance();
 
-// dummy data
-$class = new StdClass;
-$class->name = "Mr Class";
-$clicks = 993924;
-$visits = 657;
+### get an instance of the Collector ###
+$StatsCollector = Statistics\Collector::getInstance();
 
-// adding stats with different value types
-$Stats->setNamespace("test.namespace")
-    ->addStat(".clicks.sub.count", $clicks)
-    ->addStat("visits", $visits);
+/**
+ * Scalar stats usage
+ */
 
-var_dump($Stats->getAllStats());
-exit();
+### lets add some stats (basic usage) ###
+$StatsCollector->addStat("clicks", 104103); // add stat to "general" default namespace
 
-// more advanced properties for backend specific handling?
-//    ->addStat("object", $class)
-//    ->addStat("json", json_encode($class))
-//    ->addStat("custom", ["_type" => "summary", "value" => 6]);
+### lets add some stats to an absolute path namespace (notice the first character of the namespace is '.') ###
+$StatsCollector->addStat(".this.is.an.absolute.namespace.path.clicks", 55);
 
-// cats removing stats
-$StatsCollector->setNamespace("another.test.namespace.created.by.cats")
-    ->addStat("dogs_likeability", 100)
-    ->removeStat("dogs_likeability")
-    ->addStat("cats_likeability", 100);
+### lets add a custom default namespace, and then add a bunch of stats to it ###
+$StatsCollector->setNamespace("noahs.ark.passengers")
+    ->addStat("humans", 2)
+    ->addStat("aliens", 0)
+    ->addStat("animal.cats", 3)// adds sub-namespace 'noahs.ark.passengers.animal.cats'
+    ->addStat("animal.dogs", 6)
+    ->addStat("animal.chickens", 25);
 
-//increment a stat
-$StatsCollector->setNamespace("test.namespace")
-    ->incrementStat("clicks");
+### lets increment some stats ###
+$StatsCollector->setNamespace("general.stats")
+    ->addStat("days_on_the_earth", (33 * 365))// 12045 added to 'general.stats.days_on_the_earth'
+    ->incrementStat("days_on_the_earth"); //
+echo $StatsCollector->getStat("days_on_the_earth") . PHP_EOL; // 12046
+echo $StatsCollector->getStat(".general.stats.days_on_the_earth") . PHP_EOL; // same as above 12046
 
-//decrement a stat
-$StatsCollector->setNamespace("test.namespace")
-    ->decrementStat("visits");
+### lets decrement some stats###
+$StatsCollector->setNamespace("general.other.stats")
+    ->addStat("days_until_christmas", 53)// 53 as of 11/02/2017
+    ->decrementStat("days_until_christmas"); // skip 24 hours
+echo $StatsCollector->getStat("days_until_christmas"); // 52
 
-// stat averages
+### lets retrieve multiple stats in one go ###
+// find two stats by absolute path
+$statsAbsolute = $StatsCollector->getStats([
+    '.general.stats.days_on_the_earth',
+    '.general.other.stats.days_until_christmas'
+]);
+// find two stats, one using absolute namespace and one using relative namespace in relation to path on line 30
+$statsRelative = $StatsCollector->getStats(['.general.stats.days_on_the_earth', 'days_until_christmas']);
+
+var_dump($statsAbsolute); // array(2) { [0] => int(12046) [1] => int(52) }
+var_dump($statsRelative); // array(2) { [0] => int(12046) [1] => int(52) }
+
+
+/**
+ * Compound stats usage
+ *
+ * Stats become "compound" when you add either an array of scalars as the value or when you add a stat to
+ * an existing namespace.
+ */
+
+### Compound Averages
+
+// lets get the average of a compound stat
 $StatsCollector->setNamespace("test.averages")
     ->addStat("age", 23)
     ->addStat("age", 12)
     ->addStat("age", 74)
     ->addStat("age", 49)
-    ->addStat("age", 9)
-    ->addStat("height", 123);
+    ->addStat("age", 9);
+echo $StatsCollector->getStatAverage('age') . PHP_EOL; //33.4
+
+// lets take two different compound stats and work out the collective average
+$StatsCollector->setNamespace("donation.amounts")
+    ->addStat("paypal", 10)
+    ->addStat("paypal", 22)
+    ->addStat("paypal", 16)
+    ->addStat("paypal", 15)
+    ->addStat("paypal", 50)
+    ->addStat("ayden", 18)
+    ->addStat("ayden", 22)
+    ->addStat("ayden", 20)
+    ->addStat("ayden", 33)
+    ->addStat("ayden", 14);
+
+echo $StatsCollector->getStatsAverage(['paypal', 'ayden']) . PHP_EOL; //22
+echo $StatsCollector->getStatsAverage(['.donation.amounts.paypal', '.donation.amounts.ayden']) . PHP_EOL; //22
+
+
+## Compound Summation
+
+// lets get the sum of a compound stat
+$StatsCollector->setNamespace("gateway.tracking")
+    ->addStat("timeouts", 23)
+    ->addStat("timeouts", 12)
+    ->addStat("timeouts", 74)
+    ->addStat("timeouts", 49)
+    ->addStat("timeouts", 9);
+
+echo $StatsCollector->getStatSum('timeouts') . PHP_EOL; // 167
+
+// lets take 12 different compound stats and work out the collective sum
+$StatsCollector->setNamespace("donation.count")
+    ->addStat("jan", 553)
+    ->addStat("feb", 223)
+    ->addStat("mar", 434)
+    ->addStat("apr", 731)
+    ->addStat("may", 136)
+    ->addStat("june", 434)
+    ->addStat("july", 321)
+    ->addStat("aug", 353)
+    ->addStat("sept", 657)
+    ->addStat("oct", 575)
+    ->addStat("nov", 1020)
+    ->addStat("dec", 2346);
+
+echo $StatsCollector->getStatsSum([
+        'jan',
+        'feb',
+        'mar',
+        'apr',
+        'may',
+        'june',
+        'aug',
+        'oct',
+        'nov',
+        'dec'
+    ]) . PHP_EOL; //6805
+
+exit();
+
+/**
+ * Work in progres below
+ */
 
 //stats grouped by tags
-$StatsCollector->setNamespace("test.averages")
-    ->addStat([
-        'name' => "paypal_processing",
-        'tags' => ['process_times']
-    ], 23);
+//$StatsCollector->setNamespace("test.averages")
+//    ->addStat([
+//        'name' => "paypal_processing",
+//        'tags' => ['process_times']
+//    ], 23);
 
 
 /*
@@ -60,22 +145,12 @@ $StatsCollector->setNamespace("test.averages")
  * path = leafnode in current name space
  * #path = tags ?
  */
-
-$StatsCollector->getStatAverage("age"); // average of current namespace value
-$StatsCollector->getStatsAverage(["target.one", "target.two", "target.three.*"]); //average of multuple targets (wildcard also?)
-
-$StatsCollector->getStatSum("age"); // add all values together
-$StatsCollector->getStatsSum(["target.one", "target.two", "target.three.*"]); // add all values together
-
-$StatsCollector->getStatCount("age"); // count all indivudal stats
-$StatsCollector->getStatsCount(["target.one", "target.two", "target.three.*"]); // count all individual stats
-
-$StatsCollector->getStatsCountByTag("tag1");
-$StatsCollector->getStatsCountByTags(['tag1','tag2']);
-
-
-var_dump($StatsCollector->getStatAverage("test.averages.age")); // if not dot, assume current namespace
-var_dump($StatsCollector->setNamespace("test.averages")->getStatAverage("height"));
+//
+//$StatsCollector->getStatCount("age"); // count all indivudal stats
+//$StatsCollector->getStatsCount(["target.one", "target.two", "target.three.*"]); // count all individual stats
+//
+//$StatsCollector->getStatsCountByTag("tag1");
+//$StatsCollector->getStatsCountByTags(['tag1', 'tag2']);
 
 
 ?>
