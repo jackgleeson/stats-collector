@@ -23,7 +23,7 @@ use Statistics\Exceptions\StatisticsCollectorException;
  * - add updateStat behaviour
  * - add $additionalOptions to addStat method custom backend specific tags
  * - add targetNS option to all CRUD stat methods (easy ones complete)
- * - consider naming 'setNamespace' to 'useNamespace'
+ * - consider naming 'setCurrentNamespace' to 'useNamespace'
  * - make it easier to work out averages from non-leaf nodes child namespaces either by using
  * xpath-like behaviour or tagging
  * - add custom exceptions
@@ -103,20 +103,12 @@ class Collector
      * - workout how to handle backend specific types
      * @param string $name name of statistic to be added to namespace
      * @param string $value
-     * @param null $targetNamespace
      * @param array $additionalOptions
-     * @return $this
+     * @return Collector
      */
-    public function addStat($name, $value, $targetNamespace = null, $additionalOptions = [])
+    public function addStat($name, $value, $additionalOptions = [])
     {
-        if ($targetNamespace !== null) {
-            $originalNamespace = $this->getCurrentNamespace();
-            $this->setNamespace($targetNamespace);
-            $this->addValueToNamespace($name, $value, $additionalOptions);
-            $this->setNamespace($originalNamespace);
-        } else {
-            $this->addValueToNamespace($name, $value, $additionalOptions);
-        }
+        $this->addValueToNamespace($name, $value, $additionalOptions);
         return $this;
     }
 
@@ -124,15 +116,15 @@ class Collector
      * Delete a statistic
      * @param $name
      * @param null $targetNamespace
-     * @return $this
+     * @return Collector
      */
     public function removeStat($name, $targetNamespace = null)
     {
         if ($targetNamespace !== null) {
             $originalNamespace = $this->getCurrentNamespace();
-            $this->setNamespace($targetNamespace);
+            $this->setCurrentNamespace($targetNamespace);
             $this->removeValueFromNamespace($name);
-            $this->setNamespace($originalNamespace);
+            $this->setCurrentNamespace($originalNamespace);
         } else {
             $this->removeValueFromNamespace($name);
         }
@@ -144,7 +136,7 @@ class Collector
      *
      * @param string $name name of statistic to be added to namespace
      * @param int $increment
-     * @return $this
+     * @return Collector
      * @throws StatisticsCollectorException
      */
     public function incrementStat($name, $increment = 1)
@@ -165,7 +157,7 @@ class Collector
      *
      * @param string $name name of statistic to be added to namespace
      * @param int $decrement
-     * @return $this
+     * @return Collector
      * @throws StatisticsCollectorException
      */
     public function decrementStat($name, $decrement = -1)
@@ -191,9 +183,9 @@ class Collector
     {
         if ($targetNamespace !== null) {
             $originalNamespace = $this->getCurrentNamespace();
-            $this->setNamespace($targetNamespace);
+            $this->setCurrentNamespace($targetNamespace);
             $this->getValueFromNamespace($name);
-            $this->setNamespace($originalNamespace);
+            $this->setCurrentNamespace($originalNamespace);
         } else {
             $this->getValueFromNamespace($name);
         }
@@ -270,16 +262,36 @@ class Collector
         }
     }
 
+
+    /**
+     * @param $namespace
+     * @return Collector
+     */
+    public function setNamespace($namespace)
+    {
+        return $this->setCurrentNamespace($namespace);
+
+    }
     /**
      * TODO:
      * - validate namespace argument
      * @param $namespace
-     * @return $this
+     * @return Collector
      */
-    public function setNamespace($namespace)
+    public function setCurrentNamespace($namespace)
     {
         $this->namespace = $namespace;
         return $this;
+    }
+
+
+    /**
+     * Return the current namespace. Default to default namespace if none set.
+     * @return string
+     */
+    public function getCurrentNamespace()
+    {
+        return ($this->namespace === null) ? $this->getDefaultNamespace() : $this->namespace;
     }
 
 
@@ -292,6 +304,32 @@ class Collector
     }
 
     /**
+     * Determine the type of target based on the namespace value
+     * '.' present at beginning indicates absolute namespace path
+     * '.' present but not at the beginning indicates branch namesapce paths of the current namespace
+     * '.' not present indicates leaf-node namespace of current namespace
+     * @param $namespace
+     * @return string
+     */
+    protected function determineTargetNS($namespace)
+    {
+        if (($pos = strpos($namespace, static::SEPARATOR)) !== false) {
+            if ($pos === 0) {
+                //absolute path namespace e.g. '.this.a.full.path.beginning.with.separator'
+                $target = substr($namespace,1);
+            } else {
+                //sub-namespace e.g 'sub.path.of.current.namespace'
+                $target = $this->getCurrentNamespace() . static::SEPARATOR . $namespace;
+            }
+
+        } else {
+            // leaf-node namespace of current namespace e.g. 'dates'
+            $target = $this->getCurrentNamespace() . static::SEPARATOR . $namespace;
+        }
+        return $target;
+    }
+
+    /**
      * @param $name
      * @param $value
      * @param array $options
@@ -299,11 +337,14 @@ class Collector
      */
     protected function addValueToNamespace($name, $value, $options = [])
     {
-        if ($this->container->has($this->getCurrentNamespace() . static::SEPARATOR . $name)) {
-            $this->container->append($this->getCurrentNamespace() . static::SEPARATOR . $name, $value);
+        //handle options['tag']
+        //$this->sanitiseNS($name); // remove any trailing dots which will break things
+        $targetNS = $this->determineTargetNS($name);
+        if ($this->container->has($targetNS)) {
+            $this->container->append($targetNS, $value);
         } else {
-            $this->container->set($this->getCurrentNamespace() . static::SEPARATOR . $name, $value);
-            $this->addPopulatedNamespace($this->getCurrentNamespace() . static::SEPARATOR . $name);
+            $this->container->set($targetNS, $value);
+            $this->addPopulatedNamespace($targetNS);
         }
         return $this;
     }
@@ -312,7 +353,7 @@ class Collector
      * @param $name
      * @param $value
      * @param array $options
-     * @return $this
+     * @return Collector
      * @throws StatisticsCollectorException
      */
     protected function updateValueAtNamespace($name, $value, $options = [])
@@ -327,7 +368,7 @@ class Collector
 
     /**
      * @param $name
-     * @return $this
+     * @return Collector
      */
     protected function removeValueFromNamespace($name)
     {
@@ -344,15 +385,6 @@ class Collector
     protected function getValueFromNamespace($name)
     {
         return $this->container->get($this->getCurrentNamespace() . static::SEPARATOR . $name, null);
-    }
-
-    /**
-     * Return the current namespace. Default to default namespace if none set.
-     * @return string
-     */
-    protected function getCurrentNamespace()
-    {
-        return ($this->namespace === null) ? $this->getDefaultNamespace() : $this->namespace;
     }
 
     /**

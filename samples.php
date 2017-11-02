@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/vendor/autoload.php';
 
-$StatsCollector = Statistics\Collector::getInstance();
+$Stats = Statistics\Collector::getInstance();
 
 // dummy data
 $class = new StdClass;
@@ -10,9 +10,12 @@ $clicks = 993924;
 $visits = 657;
 
 // adding stats with different value types
-$StatsCollector->setNamespace("test.namespace")
-    ->addStat("clicks", $clicks)
+$Stats->setNamespace("test.namespace")
+    ->addStat(".clicks.sub.count", $clicks)
     ->addStat("visits", $visits);
+
+var_dump($Stats->getAllStats());
+exit();
 
 // more advanced properties for backend specific handling?
 //    ->addStat("object", $class)
@@ -42,9 +45,36 @@ $StatsCollector->setNamespace("test.averages")
     ->addStat("age", 9)
     ->addStat("height", 123);
 
+//stats grouped by tags
+$StatsCollector->setNamespace("test.averages")
+    ->addStat([
+        'name' => "paypal_processing",
+        'tags' => ['process_times']
+    ], 23);
 
-var_dump($StatsCollector->getAllStats());
-var_dump($StatsCollector->setNamespace("test.averages")->getStatAverage("age"));
+
+/*
+ * Targeting convention
+ * .path.to.namespace = absolute
+ * path.to.namespace = sub-namespace relative to current namespace
+ * path = leafnode in current name space
+ * #path = tags ?
+ */
+
+$StatsCollector->getStatAverage("age"); // average of current namespace value
+$StatsCollector->getStatsAverage(["target.one", "target.two", "target.three.*"]); //average of multuple targets (wildcard also?)
+
+$StatsCollector->getStatSum("age"); // add all values together
+$StatsCollector->getStatsSum(["target.one", "target.two", "target.three.*"]); // add all values together
+
+$StatsCollector->getStatCount("age"); // count all indivudal stats
+$StatsCollector->getStatsCount(["target.one", "target.two", "target.three.*"]); // count all individual stats
+
+$StatsCollector->getStatsCountByTag("tag1");
+$StatsCollector->getStatsCountByTags(['tag1','tag2']);
+
+
+var_dump($StatsCollector->getStatAverage("test.averages.age")); // if not dot, assume current namespace
 var_dump($StatsCollector->setNamespace("test.averages")->getStatAverage("height"));
 
 
