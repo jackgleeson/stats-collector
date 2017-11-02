@@ -47,7 +47,8 @@ $statsAbsolute = $StatsCollector->getStats([
 $statsRelative = $StatsCollector->getStats(['.general.stats.days_on_the_earth', 'days_until_christmas']);
 $statsRelativeWithKeys = $StatsCollector->getStats([
     '.general.stats.days_on_the_earth',
-    'days_until_christmas'],true); // with namespace as keys
+    'days_until_christmas'
+], true); // with namespace as keys
 
 var_dump($statsAbsolute); // array(2) { [0] => int(12046) [1] => int(52) }
 var_dump($statsRelative); // array(2) { [0] => int(12046) [1] => int(52) }
@@ -102,6 +103,7 @@ echo $StatsCollector->getStatsAverage([
         'dec'
     ]) . PHP_EOL; //648.58333333333
 
+
 /**
  * Compound stats usage
  *
@@ -137,6 +139,19 @@ echo $StatsCollector->getStatsAverage(['paypal', 'ayden']) . PHP_EOL; //22
 echo $StatsCollector->getStatsAverage(['.donation.amounts.paypal', '.donation.amounts.ayden']) . PHP_EOL; //22
 
 
+## Compound Count (the number of values for a given stat)
+
+// count how many values there are in one namespace
+echo $StatsCollector->getStatCount(".test.averages.age") . PHP_EOL; //5 (stats set on line 117)
+
+// count how many values there are in a collection of namespaces
+echo $StatsCollector->getStatsCount([
+        ".test.averages.age",
+        ".donation.amounts.paypal",
+        ".donation.amounts.ayden"
+    ]) . PHP_EOL; //15
+
+
 ## Compound Summation
 
 // lets get the sum of a compound stat
@@ -148,7 +163,6 @@ $StatsCollector->setNamespace("gateway.tracking")
     ->addStat("timeouts", 9);
 
 echo $StatsCollector->getStatSum('timeouts') . PHP_EOL; // 167
-
 
 
 /**
@@ -171,8 +185,6 @@ echo $StatsCollector->getStatSum('timeouts') . PHP_EOL; // 167
  * #path = tags ?
  */
 //
-//$StatsCollector->getStatCount("age"); // count all indivudal stats
-//$StatsCollector->getStatsCount(["target.one", "target.two", "target.three.*"]); // count all individual stats
 //
 //$StatsCollector->getStatsCountByTag("tag1");
 //$StatsCollector->getStatsCountByTags(['tag1', 'tag2']);

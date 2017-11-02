@@ -172,7 +172,7 @@ class Collector
     }
 
     /**
-     * Retrieve a collection of statistics with an array of given subject namespace
+     * Retrieve a collection of statistics with an array of subject namespaces
      * @param array $names
      * @param bool $withKeys
      * @return array
@@ -188,6 +188,37 @@ class Collector
             }
         }
         return $values;
+    }
+
+    /**
+     * Count the number of values of a given stat
+     * @param $name
+     * @return int
+     */
+    public function getStatCount($name)
+    {
+        $this->checkExists($name);
+        $value = $this->getValueFromNamespace($name);
+        return count($value);
+    }
+
+    /**
+     * Count the number of values of a collection given stats
+     * @param array $names
+     * @return int
+     */
+    public function getStatsCount($names = [])
+    {
+        $allStats = [];
+        foreach ($names as $name) {
+            $values = $this->getValueFromNamespace($name);
+            if (gettype($values) !== "array") {
+                $values = [$values];
+            }
+            $allStats = array_merge($allStats, $values);
+        }
+        return count($allStats);
+
     }
 
     /**
