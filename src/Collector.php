@@ -19,10 +19,9 @@ use Statistics\Exceptions\StatisticsCollectorException;
  *
  * TODO:
  * - implement exporter strategy object to hanldle backend specific export/output logic (Prometheus being the first)
- * - add updateStat behaviour
  * - add $additionalOptions to addStat method custom backend specific tags
- * - crying out for wildcard usage in namespaces
- * - finish compound stats methods
+ * - add wildcard support for namespace targeting
+ * - add support for tagging stats
  *
  */
 class Collector
