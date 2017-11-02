@@ -97,7 +97,7 @@ class Collector
      * TODO:
      * - workout how to handle backend specific types
      * @param string $name name of statistic to be added to namespace
-     * @param string $value
+     * @param mixed $value
      * @param array $additionalOptions
      * @return Collector
      */
@@ -198,7 +198,15 @@ class Collector
     {
         $this->checkExists($name);
         $value = $this->getValueFromNamespace($name);
-        return count($value);
+        if (gettype($value) === "array") {
+            $flattened = [];
+            array_walk_recursive($value, function ($a) use (&$flattened) {
+                $flattened[] = $a;
+            });
+            return count($flattened);
+        } else {
+            return count($value);
+        }
     }
 
     /**
@@ -208,16 +216,11 @@ class Collector
      */
     public function getStatsCount($names = [])
     {
-        $allStats = [];
+        $count = 0;
         foreach ($names as $name) {
-            $values = $this->getValueFromNamespace($name);
-            if (gettype($values) !== "array") {
-                $values = [$values];
-            }
-            $allStats = array_merge($allStats, $values);
+            $count += $this->getStatCount($name);
         }
-        return count($allStats);
-
+        return $count;
     }
 
     /**
@@ -517,7 +520,11 @@ class Collector
                 case "integer":
                     return $stats;
                 case "array":
-                    return $this->sum($stats);
+                    $flattened = [];
+                    array_walk_recursive($stats, function ($a) use (&$flattened) {
+                        $flattened[] = $a;
+                    });
+                    return $this->sum($flattened);
             }
         } else {
             throw new StatisticsCollectorException("Unable to return sum for this type of value: " . gettype($stats));
@@ -533,7 +540,11 @@ class Collector
                 case "integer":
                     return $stats;
                 case "array":
-                    return $this->average($stats);
+                    $flattened = [];
+                    array_walk_recursive($stats, function ($a) use (&$flattened) {
+                        $flattened[] = $a;
+                    });
+                    return $this->average($flattened);
             }
         } else {
             throw new StatisticsCollectorException("Unable to return average for this type of value: " . gettype($stats));
@@ -552,9 +563,7 @@ class Collector
             return true;
         } elseif (gettype($value) === "array") {
             foreach ($value as $v) {
-                if (!in_array(gettype($v), ['integer', 'float'])) {
-                    return false;
-                }
+                $this->is_averageable($v);
             }
             return true;
         } else {
@@ -576,9 +585,7 @@ class Collector
             return true;
         } elseif (gettype($value) === "array") {
             foreach ($value as $v) {
-                if (!in_array(gettype($v), ['integer', 'float'])) {
-                    return false;
-                }
+                $this->is_averageable($v);
             }
             return true;
         } else {

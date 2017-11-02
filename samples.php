@@ -122,6 +122,21 @@ $StatsCollector->setNamespace("test.averages")
     ->addStat("age", 9);
 echo $StatsCollector->getStatAverage('age') . PHP_EOL; //33.4
 
+// another way to add or convert to a compound stat is just to pass an array of values as the value (it will auto-flatten)
+$StatsCollector->setNamespace("test.averages")
+    ->addStat("heights", 17)
+    ->addStat("heights", [
+        18,
+        22,
+        46,
+        43,
+        23,
+        61,
+        84
+    ]);
+
+echo $StatsCollector->getStatAverage('heights') . PHP_EOL; //39.25
+
 // lets take two different compound stats and work out the collective average
 $StatsCollector->setNamespace("donation.amounts")
     ->addStat("paypal", 10)
