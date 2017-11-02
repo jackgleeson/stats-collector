@@ -42,11 +42,16 @@ $statsAbsolute = $StatsCollector->getStats([
     '.general.stats.days_on_the_earth',
     '.general.other.stats.days_until_christmas'
 ]);
+
 // find two stats, one using absolute namespace and one using relative namespace in relation to path on line 30
 $statsRelative = $StatsCollector->getStats(['.general.stats.days_on_the_earth', 'days_until_christmas']);
+$statsRelativeWithKeys = $StatsCollector->getStats([
+    '.general.stats.days_on_the_earth',
+    'days_until_christmas'],true); // with namespace as keys
 
 var_dump($statsAbsolute); // array(2) { [0] => int(12046) [1] => int(52) }
 var_dump($statsRelative); // array(2) { [0] => int(12046) [1] => int(52) }
+var_dump($statsRelativeWithKeys); // array(2) { 'general.stats.days_on_the_earth' => int(12046) 'general.other.stats.days_until_christmas' => int(52) }
 
 ### lets sum up some stats ##
 $StatsCollector->setNamespace("donation.count")
@@ -147,7 +152,7 @@ echo $StatsCollector->getStatSum('timeouts') . PHP_EOL; // 167
 
 
 /**
- * Work in progres below
+ * Work in progress below
  */
 
 //stats grouped by tags

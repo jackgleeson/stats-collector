@@ -182,7 +182,7 @@ class Collector
         $values = [];
         foreach ($names as $name) {
             if ($withKeys === true) {
-                $values[$name] = $this->getStat($name);
+                $values[$this->determineTargetNS($name)] = $this->getStat($name);
             } else {
                 $values[] = $this->getStat($name);
             }
