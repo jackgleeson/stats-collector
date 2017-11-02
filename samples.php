@@ -81,7 +81,7 @@ echo $StatsCollector->getStatsSum([
 
 ### Averages of a collection of stats
 
-// lets work out the average donations per month based on the above the above stats
+// lets work out the average donations per month based on the above stats
 echo $StatsCollector->getStatsAverage([
         'jan',
         'feb',
