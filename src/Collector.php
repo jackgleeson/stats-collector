@@ -22,6 +22,7 @@ use Statistics\Exceptions\StatisticsCollectorException;
  * - add $additionalOptions to addStat method custom backend specific tags
  * - add wildcard support for namespace targeting
  * - add support for tagging stats
+ * - make auto flatten happen on assignment, not during processing
  *
  */
 class Collector
@@ -35,7 +36,7 @@ class Collector
     /**
      * namespace separator
      */
-    protected const SEPARATOR = '.';
+    const SEPARATOR = '.';
 
     /**
      * @var null|string
@@ -67,12 +68,14 @@ class Collector
     {
     }
 
-    private function __sleep()
+    public function __sleep()
     {
+        return [];
     }
 
-    private function __wakeup()
+    public function __wakeup()
     {
+        return [];
     }
 
     /**
@@ -101,9 +104,14 @@ class Collector
      * @param array $additionalOptions
      * @return Collector
      */
-    public function addStat($name, $value, $additionalOptions = [])
+    public function addStat($name, $value, $options = [])
     {
-        $this->addValueToNamespace($name, $value, $additionalOptions);
+        // we auto-flatten any multi-dimensional arrays
+        if (!array_key_exists("flatten", $options)) {
+            $options['flatten'] = true;
+        }
+
+        $this->addValueToNamespace($name, $value, $options);
         return $this;
     }
 
@@ -198,15 +206,7 @@ class Collector
     {
         $this->checkExists($name);
         $value = $this->getValueFromNamespace($name);
-        if (gettype($value) === "array") {
-            $flattened = [];
-            array_walk_recursive($value, function ($a) use (&$flattened) {
-                $flattened[] = $a;
-            });
-            return count($flattened);
-        } else {
-            return count($value);
-        }
+        return count($value);
     }
 
     /**
@@ -244,7 +244,7 @@ class Collector
         $allStats = [];
         foreach ($names as $name) {
             $values = $this->getValueFromNamespace($name);
-            if (gettype($values) !== "array") {
+            if (!is_array($values)) {
                 $values = [$values];
             }
             $allStats = array_merge($allStats, $values);
@@ -273,7 +273,7 @@ class Collector
         $totalSum = [];
         foreach ($names as $name) {
             $values = $this->getValueFromNamespace($name);
-            if (gettype($values) !== "array") {
+            if (!is_array($values)) {
                 $values = [$values];
             }
             $totalSum = array_merge($totalSum, $values);
@@ -398,13 +398,27 @@ class Collector
      * @param array $options
      * @return bool
      */
-    protected function addValueToNamespace($name, $value, $options = [])
+    protected function addValueToNamespace($name, $value, $options)
     {
-        //handle options['tag']
-        //$this->sanitiseNS($name); // remove any trailing dots which will break things
+        if (array_key_exists("flatten", $options) &&
+            $options['flatten'] === true &&
+            is_array($value)
+        ) {
+            $flatten = true;
+            $flattenedValues = $this->arrayFlatten($value);
+        }
+
         $targetNS = $this->determineTargetNS($name);
+
         if ($this->container->has($targetNS)) {
-            $this->container->append($targetNS, $value);
+            if (isset($flatten) && $flatten === true) {
+                $currentValue = $this->container->get($targetNS);
+                $values = (is_array($currentValue)) ?
+                    array_merge($currentValue, $flattenedValues) : array_merge([$currentValue], $flattenedValues);
+                $this->container->set($targetNS, $values);
+            } else {
+                $this->container->append($targetNS, $value);
+            }
         } else {
             $this->container->set($targetNS, $value);
             $this->addPopulatedNamespace($targetNS);
@@ -516,18 +530,16 @@ class Collector
     {
         if ($this->is_summable($stats)) {
             switch (gettype($stats)) {
-                case "string":
                 case "integer":
+                case "float":
                     return $stats;
                 case "array":
-                    $flattened = [];
-                    array_walk_recursive($stats, function ($a) use (&$flattened) {
-                        $flattened[] = $a;
-                    });
-                    return $this->sum($flattened);
+                    return $this->sum($stats);
+                default:
+                    throw new StatisticsCollectorException("Unable to return sum for this collection of values (are they all numbers?)");
             }
         } else {
-            throw new StatisticsCollectorException("Unable to return sum for this type of value: " . gettype($stats));
+            throw new StatisticsCollectorException("Unable to return sum for this collection of values (are they all numbers?)");
         }
 
     }
@@ -536,18 +548,16 @@ class Collector
     {
         if ($this->is_averageable($stats)) {
             switch (gettype($stats)) {
-                case "string":
                 case "integer":
+                case "float":
                     return $stats;
                 case "array":
-                    $flattened = [];
-                    array_walk_recursive($stats, function ($a) use (&$flattened) {
-                        $flattened[] = $a;
-                    });
-                    return $this->average($flattened);
+                    return $this->average($stats);
+                default:
+                    throw new StatisticsCollectorException("Unable to return average for this collection of values (are they all numbers?)");
             }
         } else {
-            throw new StatisticsCollectorException("Unable to return average for this type of value: " . gettype($stats));
+            throw new StatisticsCollectorException("Unable to return average for this collection of values (are they all numbers?)");
         }
     }
 
@@ -559,15 +569,19 @@ class Collector
      */
     protected function is_summable($value)
     {
-        if (in_array(gettype($value), ['integer', 'float'])) {
-            return true;
-        } elseif (gettype($value) === "array") {
-            foreach ($value as $v) {
-                $this->is_averageable($v);
-            }
-            return true;
-        } else {
-            return false;
+        switch (gettype($value)) {
+            case "integer":
+            case "float":
+                return true;
+            case "array":
+                foreach ($value as $v) {
+                    if ($this->is_summable($v) === false) {
+                        return false;
+                    }
+                }
+                return true;
+            default:
+                return false;
         }
     }
 
@@ -581,15 +595,19 @@ class Collector
      */
     protected function is_averageable($value)
     {
-        if (in_array(gettype($value), ['integer', 'float'])) {
-            return true;
-        } elseif (gettype($value) === "array") {
-            foreach ($value as $v) {
-                $this->is_averageable($v);
-            }
-            return true;
-        } else {
-            return false;
+        switch (gettype($value)) {
+            case "integer":
+            case "float":
+                return true;
+            case "array":
+                foreach ($value as $v) {
+                    if ($this->is_averageable($v) === false) {
+                        return false;
+                    }
+                }
+                return true;
+            default:
+                return false;
         }
     }
 
@@ -611,6 +629,20 @@ class Collector
     protected function sum($values = [])
     {
         return array_sum($values);
+    }
+
+    /**
+     * Flatten a multi-dimensional array down to a single array
+     * @param array $array
+     * @return array
+     */
+    protected function arrayFlatten($array = [])
+    {
+        $flattened = [];
+        array_walk_recursive($array, function ($a) use (&$flattened) {
+            $flattened[] = $a;
+        });
+        return $flattened;
     }
 
     /**
