@@ -39,6 +39,11 @@ class Collector
     const SEPARATOR = '.';
 
     /**
+     * Wildcard operator
+     */
+    const WILDCARD = '*';
+
+    /**
      * @var null|string
      */
     protected $namespace = null;
@@ -171,11 +176,23 @@ class Collector
     /**
      * Retrieve statistic for a given subject namespace
      * @param $name name of statistic to be added to namespace
+     * @param bool $withKeys
      * @return mixed
      */
-    public function getStat($name)
+    public function getStat($name, $withKeys = false)
     {
-        return $this->getValueFromNamespace($name);
+        // send wildcards to the plural method due to wildcard expansion
+//        if (strpos($name, static::WILDCARD) !== false) {
+//            return $this->getStats([$name], $withKeys);
+//        }
+
+        if ($withKeys === true) {
+            $namespace = $this->determineTargetNS($name);
+            $value = [$namespace] = $this->getValueFromNamespace($name);
+        } else {
+            $value = $this->getValueFromNamespace($name);
+        }
+        return $value;
     }
 
     /**
@@ -186,13 +203,21 @@ class Collector
      */
     public function getStats($names = [], $withKeys = false)
     {
+        //check through paths for wildcards and expand paths if present
+//        $paths = [];
+//        foreach ($names as $name) {
+//            if (strpos($name, static::WILDCARD) !== false) {
+//                $wildcardPaths = $this->determineWildcardPathTargetNS($name);
+//                $paths = array_merge($paths, $wildcardPaths);
+//            } else {
+//                $paths[] = $name;
+//            }
+//        }
+
+        //iterate over paths and retrieve values
         $values = [];
-        foreach ($names as $name) {
-            if ($withKeys === true) {
-                $values[$this->determineTargetNS($name)] = $this->getStat($name);
-            } else {
-                $values[] = $this->getStat($name);
-            }
+        foreach ($names as $path) {
+            $values[] = $this->getStat($path, $withKeys);
         }
         return $values;
     }
@@ -364,6 +389,11 @@ class Collector
     public function getPopulatedNamespaces()
     {
         return $this->populatedNamespaces;
+    }
+
+    protected function determineWildcardPathTargetNS($namespace)
+    {
+        $parts = explode(static::SEPARATOR . static::WILDCARD, $namespace);
     }
 
     /**

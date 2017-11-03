@@ -190,6 +190,8 @@ $StatsCollector->setNamespace("gateway.tracking")
 
 echo $StatsCollector->getStatsSum(['timeouts', 'server_errors']) . PHP_EOL; // 334
 
+//var_dump($StatsCollector->getPopulatedNamespaces());
+
 
 /**
  * Work in progress below
