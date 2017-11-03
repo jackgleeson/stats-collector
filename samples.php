@@ -180,6 +180,17 @@ $StatsCollector->setNamespace("gateway.tracking")
 echo $StatsCollector->getStatSum('timeouts') . PHP_EOL; // 167
 
 
+// lets get the combined sum of two different compound stats
+$StatsCollector->setNamespace("gateway.tracking")
+    ->addStat("server_errors", 23)
+    ->addStat("server_errors", 12)
+    ->addStat("server_errors", 74)
+    ->addStat("server_errors", 49)
+    ->addStat("server_errors", 9);
+
+echo $StatsCollector->getStatsSum(['timeouts', 'server_errors']) . PHP_EOL; // 334
+
+
 /**
  * Work in progress below
  */
