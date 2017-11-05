@@ -2,11 +2,45 @@
 require __DIR__ . '/vendor/autoload.php';
 
 
-### get an instance of the Collector ###
+/**
+ * Get an instance of the Collector
+ */
 $StatsCollector = Statistics\Collector::getInstance();
 
 /**
- * Scalar stats usage
+ * Setting & Getting stats
+ */
+
+// basic usage (append to default namespace)
+$StatsCollector->addStat("clicks", 104103); // add stat to "root" default general namespace
+$clicks = $StatsCollector->getStat("clicks"); // 104103
+$clicksWithNamespaceInKey = $StatsCollector->getStat("clicks", $withKeys = true); // Array ( [root.clicks] => 104103 )
+
+// define a new default namespace, add stats to it and then retrieve them using relative and absolute paths.
+$StatsCollector->setNamespace("website.logo")
+    ->addStat("clicks", 87872);
+// get relative
+$clicks = $StatsCollector->getStat("clicks"); // 87872 - the getStats() call is relative to your last default namespace
+// get absolute
+$clicks = $StatsCollector->getStat(".website.logo.click"); // 87872 - prepending paths with '.' signals absolute paths
+
+//define a namespace, add a stat related stats and retrieve it using a wildcard path
+$StatsCollector->setNamespace("this.is.a.really.long.namespace.path")
+    ->addStat("age", 33);
+$clicks = $StatsCollector->getStat("this.*.age"); // 33
+print_r($clicks);
+exit();
+
+//define a namespace, add some related stats to different containers and retrieve them all with wildcard paths
+$StatsCollector->setNamespace("transactions")
+    ->addStat("paypal", 1)
+    ->addStat("ayden", 2)
+    ->addStat("sagepay", 3)
+    ->addStat("braintree", 4);
+
+
+/**
+ * flat number (int/float) stats usage
  */
 
 ### lets add some stats (basic usage) ###
@@ -189,10 +223,6 @@ $StatsCollector->setNamespace("gateway.tracking")
     ->addStat("server_errors", 9);
 
 echo $StatsCollector->getStatsSum(['timeouts', 'server_errors']) . PHP_EOL; // 334
-
-foreach($StatsCollector->getPopulatedNamespaces() as $path) {
-    echo '"'.$path.'",'.PHP_EOL;
-}
 
 
 /**

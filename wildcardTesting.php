@@ -33,6 +33,6 @@ foreach ($paths as $path) {
     if (fnmatch($argv[1], $path)) {
         echo $path . " matches " . $argv[1] . PHP_EOL;
     } else {
-        //echo $path . " does not match " . $argv[1] . PHP_EOL;
+        echo $path . " does not match " . $argv[1] . PHP_EOL;
     }
 }

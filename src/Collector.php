@@ -50,7 +50,7 @@ class Collector
     /**
      * @var string
      */
-    protected $defaultNamespace = "general";
+    protected $defaultNamespace = "root";
 
     /**
      * Container for stats data
@@ -181,14 +181,14 @@ class Collector
      */
     public function getStat($name, $withKeys = false)
     {
-        // send wildcards to the plural method due to wildcard expansion
-//        if (strpos($name, static::WILDCARD) !== false) {
-//            return $this->getStats([$name], $withKeys);
-//        }
+        // send wildcards to the plural method for wildcard expansion
+        if (strpos($name, static::WILDCARD) !== false) {
+            return $this->getStats([$name], $withKeys);
+        }
 
         if ($withKeys === true) {
             $namespace = $this->determineTargetNS($name);
-            $value = [$namespace] = $this->getValueFromNamespace($name);
+            $value[$namespace] = $this->getValueFromNamespace($name);
         } else {
             $value = $this->getValueFromNamespace($name);
         }
@@ -203,20 +203,20 @@ class Collector
      */
     public function getStats($names = [], $withKeys = false)
     {
-        //check through paths for wildcards and expand paths if present
-//        $paths = [];
-//        foreach ($names as $name) {
-//            if (strpos($name, static::WILDCARD) !== false) {
-//                $wildcardPaths = $this->determineWildcardPathTargetNS($name);
-//                $paths = array_merge($paths, $wildcardPaths);
-//            } else {
-//                $paths[] = $name;
-//            }
-//        }
+        //check through paths for wildcards and expand wildcard paths if present
+        $paths = [];
+        foreach ($names as $name) {
+            if (strpos($name, static::WILDCARD) !== false) {
+                $wildcardPaths = $this->determineWildcardPathTargetNS($name);
+                $paths = array_merge($paths, $wildcardPaths);
+            } else {
+                $paths[] = $name;
+            }
+        }
 
         //iterate over paths and retrieve values
         $values = [];
-        foreach ($names as $path) {
+        foreach ($paths as $path) {
             $values[] = $this->getStat($path, $withKeys);
         }
         return $values;
@@ -391,9 +391,24 @@ class Collector
         return $this->populatedNamespaces;
     }
 
+    /**
+     * @param $namespace
+     * @return array
+     */
     protected function determineWildcardPathTargetNS($namespace)
     {
-        $parts = explode(static::SEPARATOR . static::WILDCARD, $namespace);
+        //clear absolute path starting '.' as not needed for wildcard
+        if(strpos($namespace, static::SEPARATOR) === 0) {
+            $namespace = $target = substr($namespace, 1);
+        }
+
+        $expandedPaths = [];
+        foreach ($this->getPopulatedNamespaces() as $populatedNamespace) {
+            if (fnmatch($namespace, $populatedNamespace)) {
+                $expandedPaths[] = $populatedNamespace;
+            }
+        }
+        return $expandedPaths;
     }
 
     /**
