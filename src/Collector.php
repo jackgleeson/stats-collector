@@ -18,11 +18,8 @@ use Statistics\Exceptions\StatisticsCollectorException;
  * entirely up to the user e.g. queue.donations.received or civi.user.unsubscribed
  *
  * TODO:
- * - implement exporter strategy object to hanldle backend specific export/output logic (Prometheus being the first)
- * - add $additionalOptions to addStat method custom backend specific tags
- * - add wildcard support for namespace targeting
+ * - implement exporter strategy object to handle backend specific export/output logic (Prometheus being the first)
  * - add support for tagging stats
- * - make auto flatten happen on assignment, not during processing
  *
  */
 class Collector
@@ -103,10 +100,10 @@ class Collector
      * Record a statistic for a subject
      *
      * TODO:
-     * - workout how to handle backend specific types
+     * - workout how to handle backend specific types as values
      * @param string $name name of statistic to be added to namespace
      * @param mixed $value
-     * @param array $additionalOptions
+     * @param array $options
      * @return Collector
      */
     public function addStat($name, $value, $options = [])
@@ -122,190 +119,179 @@ class Collector
 
     /**
      * Delete a statistic
-     * @param $name
+     * @param string $namespace
      * @return Collector
+     * @throws StatisticsCollectorException
      */
-    public function removeStat($name)
+    public function removeStat($namespace)
     {
-        $this->removeValueFromNamespace($name);
+        if (strpos($namespace, static::WILDCARD) !== false) {
+            throw new StatisticsCollectorException("Wildcard usage forbidden when removing stats (to protect you from yourself!)");
+        }
+
+        $this->removeValueFromNamespace($namespace);
         return $this;
     }
 
     /**
      * Increment a statistic
-     *
-     * @param string $name name of statistic to be added to namespace
+     * @param string $namespace
      * @param int $increment
      * @return Collector
      * @throws StatisticsCollectorException
      */
-    public function incrementStat($name, $increment = 1)
+    public function incrementStat($namespace, $increment = 1)
     {
-        $this->checkExists($name);
-        $currentValue = $this->getValueFromNamespace($name);
+        $currentValue = $this->getStat($namespace);
         if ($this->is_incrementable($currentValue)) {
-            $this->updateValueAtNamespace($name, $currentValue + $increment);
+            $this->updateValueAtNamespace($namespace, $currentValue + $increment);
             return $this;
         } else {
-            throw new StatisticsCollectorException("Attemped to increment a value which cannot be incremented! (" . $name . ":" . gettype($currentValue) . ")");
+            throw new StatisticsCollectorException("Attempted to increment a value which cannot be incremented! (" . $namespace . ":" . gettype($currentValue) . ")");
         }
     }
 
 
     /**
      * Decrement a statistic
-     *
-     * @param string $name name of statistic to be added to namespace
+     * @param $namespace
      * @param int $decrement
      * @return Collector
      * @throws StatisticsCollectorException
      */
-    public function decrementStat($name, $decrement = -1)
+    public function decrementStat($namespace, $decrement = -1)
     {
-        $this->checkExists($name);
-        $currentValue = $this->getValueFromNamespace($name);
+        $currentValue = $this->getStat($namespace);
         if ($this->is_incrementable($currentValue)) {
-            $this->updateValueAtNamespace($name, $currentValue + $decrement);
+            $this->updateValueAtNamespace($namespace, $currentValue - abs($decrement));
             return $this;
         } else {
-            throw new StatisticsCollectorException("Attemped to decrement a value which cannot be decremented! (" . $name . ":" . gettype($currentValue) . ")");
+            throw new StatisticsCollectorException("Attempted to decrement a value which cannot be decremented! (" . $namespace . ":" . gettype($currentValue) . ")");
         }
     }
 
 
     /**
-     * Retrieve statistic for a given subject namespace
-     * @param $name name of statistic to be added to namespace
+     * Retrieve statistic for a given namespace
+     * @param string $namespace
      * @param bool $withKeys
      * @return mixed
      */
-    public function getStat($name, $withKeys = false)
+    public function getStat($namespace, $withKeys = false)
     {
         // send wildcards to the plural method for wildcard expansion
-        if (strpos($name, static::WILDCARD) !== false) {
-            return $this->getStats([$name], $withKeys);
+        if (strpos($namespace, static::WILDCARD) !== false) {
+            return $this->getStats([$namespace], $withKeys);
         }
 
+        $this->checkExists($namespace);
+        $resolvedNamespace = $this->getTargetNamespaces($namespace);
+
         if ($withKeys === true) {
-            $namespace = $this->determineTargetNS($name);
-            $value[$namespace] = $this->getValueFromNamespace($name);
+            $value[$resolvedNamespace] = $this->getValueFromNamespace($namespace);
         } else {
-            $value = $this->getValueFromNamespace($name);
+            $value = $this->getValueFromNamespace($namespace);
         }
         return $value;
     }
 
     /**
      * Retrieve a collection of statistics with an array of subject namespaces
-     * @param array $names
+     * @param array $namespaces
      * @param bool $withKeys
      * @return array
+     * @throws StatisticsCollectorException
      */
-    public function getStats($names = [], $withKeys = false)
+    public function getStats(array $namespaces, $withKeys = false)
     {
-
-        if (!is_array($names)) {
-            throw new StatisticsCollectorException("getStats() expects the first argument to be an array of paths");
+        $resolvedNamespaces = $this->getTargetNamespaces($namespaces, true);
+        $this->checkExists($resolvedNamespaces);
+        if (!is_array($resolvedNamespaces)) {
+            $resolvedNamespaces = [$resolvedNamespaces];
         }
 
-        //check through paths for wildcards and expand wildcard paths if present
-        $paths = [];
-        foreach ($names as $name) {
-            if (strpos($name, static::WILDCARD) !== false) {
-                $wildcardPaths = $this->determineWildcardPathTargetNS($name);
-                $paths = array_merge($paths, $wildcardPaths);
-            } else {
-                $paths[] = $name;
-            }
-        }
-        // remove any duplicate paths pulled in due to wildcarding
-        $paths = array_unique($paths);
-
-        //iterate over paths and retrieve values
+        //iterate over $namespaces and retrieve values
         $stats = [];
-        foreach ($paths as $path) {
-            $stat = $this->getStat($path, $withKeys);
+        foreach ($resolvedNamespaces as $namespace) {
+            $stat = $this->getStat($namespace, $withKeys);
             $stats = array_merge($stats, (is_array($stat) ? $stat : [$stat]));
         }
         return $stats;
     }
 
     /**
-     * Count the number of values of a given stat
-     * @param $name
+     * Count the number of values recorded for a given stat
+     * @param $namespace
      * @return int
      */
-    public function getStatCount($name)
+    public function getStatCount($namespace)
     {
-        $this->checkExists($name);
-        $value = $this->getValueFromNamespace($name);
+        $value = $this->getStat($namespace);
         return count($value);
     }
 
     /**
-     * Count the number of values of a collection given stats
-     * @param array $names
+     * Count the number of values recorded for a collection of given stats
+     * @param array $namespaces
      * @return int
+     * @internal param array $names
      */
-    public function getStatsCount($names = [])
+    public function getStatsCount(array $namespaces)
     {
         $count = 0;
-        foreach ($names as $name) {
-            $count += $this->getStatCount($name);
+        foreach ($namespaces as $namespace) {
+            $count += $this->getStatCount($namespace);
         }
         return $count;
     }
 
     /**
-     * @param $name
-     * @return mixed
-     * @throws StatisticsCollectorException
+     * @param $namespace
+     * @return float|int
      */
-    public function getStatAverage($name)
+    public function getStatAverage($namespace)
     {
-        $this->checkExists($name);
-        $value = $this->getValueFromNamespace($name);
+        $value = $this->getStat($namespace);
         return $this->calculateStatsAverage($value);
     }
 
     /**
-     * @param array $names
+     * @param array $namespaces
      * @return float|int
      */
-    public function getStatsAverage($names = [])
+    public function getStatsAverage(array $namespaces)
     {
         $allStats = [];
-        foreach ($names as $name) {
-            $values = $this->getValueFromNamespace($name);
-            if (!is_array($values)) {
-                $values = [$values];
+        foreach ($namespaces as $namespace) {
+            $value = $this->getStat($namespace);
+            if (!is_array($value)) {
+                $value = [$value];
             }
-            $allStats = array_merge($allStats, $values);
+            $allStats = array_merge($allStats, $value);
         }
         return $this->calculateStatsAverage($allStats);
 
     }
 
     /**
-     * @param $name
+     * @param $namespace
      * @return float|int
      */
-    public function getStatSum($name)
+    public function getStatSum($namespace)
     {
-        $this->checkExists($name);
-        $values = $this->getValueFromNamespace($name);
-        return $this->calculateStatsSum($values);
+        $value = $this->getStat($namespace);
+        return $this->calculateStatsSum($value);
     }
 
     /**
-     * @param array $names
+     * @param array $namespaces
      * @return float|int
      */
-    public function getStatsSum($names = [])
+    public function getStatsSum(array $namespaces)
     {
         $totalSum = [];
-        foreach ($names as $name) {
-            $values = $this->getValueFromNamespace($name);
+        foreach ($namespaces as $namespace) {
+            $values = $this->getStat($namespace);
             if (!is_array($values)) {
                 $values = [$values];
             }
@@ -400,12 +386,12 @@ class Collector
     }
 
     /**
-     * @param $namespace
-     * @return array
+     * @param string $namespace
+     * @return mixed
      */
-    protected function determineWildcardPathTargetNS($namespace)
+    protected function resolveWildcardNamespace($namespace)
     {
-        //clear absolute path starting '.' as not needed for wildcard
+        // clear absolute path initial '.' as not needed for wildcard
         if (strpos($namespace, static::SEPARATOR) === 0) {
             $namespace = $target = substr($namespace, 1);
         }
@@ -418,42 +404,57 @@ class Collector
                 $expandedPaths[] = static::SEPARATOR . $populatedNamespace;
             }
         }
+
         return $expandedPaths;
     }
 
     /**
-     * Determine the type of target based on the namespace value
+     * Determine the target namespace(s) based on the namespace value(s)
      * '.' present at beginning indicates absolute namespace path
      * '.' present but not at the beginning indicates branch namespace path of the current namespace
      * '.' not present indicates leaf-node namespace of current namespace
-     * @param $namespace
-     * @return string
+     * '*' present indicates wildcard namespace path expansion required
+     * @param mixed $namespaces
+     * @param bool $returnAbsolute
+     * @return mixed $resolvedNamespaces
      */
-    protected function determineTargetNS($namespace)
+    protected function getTargetNamespaces($namespaces, $returnAbsolute = false)
     {
-        if (($pos = strpos($namespace, static::SEPARATOR)) !== false) {
-            if ($pos === 0) {
-                //absolute path namespace e.g. '.this.a.full.path.beginning.with.separator'
-                $target = substr($namespace, 1);
-            } else {
-                //sub-namespace e.g 'sub.path.of.current.namespace'
-                $target = $this->getCurrentNamespace() . static::SEPARATOR . $namespace;
-            }
-
-        } else {
-            // leaf-node namespace of current namespace e.g. 'dates'
-            $target = $this->getCurrentNamespace() . static::SEPARATOR . $namespace;
+        if (!is_array($namespaces)) {
+            $namespaces = [$namespaces];
         }
-        return $target;
+
+        $resolvedNamespaces = [];
+        foreach ($namespaces as $namespace) {
+            if (strpos($namespace, static::WILDCARD) !== false) {
+                // wildcard
+                $wildcardPaths = $this->resolveWildcardNamespace($namespace);
+                $resolvedNamespaces = array_merge($resolvedNamespaces, $wildcardPaths);
+            } else {
+                // non-wildcard
+                if (strpos($namespace, static::SEPARATOR) === 0) {
+                    // absolute path namespace e.g. '.this.a.full.path.beginning.with.separator'
+                    $resolvedNamespaces[] = ($returnAbsolute === false) ? substr($namespace, 1) : $namespace;
+                } else {
+                    // leaf-node namespace of current namespace e.g. 'dates' or
+                    // sub-namespace e.g 'sub.path.of.current.namespace'
+                    $resolvedNamespaces[] = ($returnAbsolute === false) ?
+                        $this->getCurrentNamespace() . static::SEPARATOR . $namespace :
+                        static::SEPARATOR . $this->getCurrentNamespace() . static::SEPARATOR . $namespace;
+                }
+            }
+        }
+
+        return (count($resolvedNamespaces) === 1) ? $resolvedNamespaces[0] : array_unique($resolvedNamespaces);
     }
 
     /**
-     * @param $name
-     * @param $value
+     * @param string $namespace
+     * @param mixed $value
      * @param array $options
-     * @return bool
+     * @return Collector
      */
-    protected function addValueToNamespace($name, $value, $options)
+    protected function addValueToNamespace($namespace, $value, $options)
     {
         if (array_key_exists("flatten", $options) &&
             $options['flatten'] === true &&
@@ -463,7 +464,7 @@ class Collector
             $flattenedValues = $this->arrayFlatten($value);
         }
 
-        $targetNS = $this->determineTargetNS($name);
+        $targetNS = $this->getTargetNamespaces($namespace);
 
         if ($this->container->has($targetNS)) {
             if (isset($flatten) && $flatten === true) {
@@ -482,19 +483,19 @@ class Collector
     }
 
     /**
-     * @param $name
+     * @param $namespace
      * @param $value
-     * @param array $options
      * @return Collector
      * @throws StatisticsCollectorException
+     * @internal param $name
      */
-    protected function updateValueAtNamespace($name, $value, $options = [])
+    protected function updateValueAtNamespace($namespace, $value)
     {
-        $targetNS = $this->determineTargetNS($name);
+        $targetNS = $this->getTargetNamespaces($namespace);
         if ($this->container->has($targetNS)) {
             $this->container->set($targetNS, $value);
         } else {
-            throw new StatisticsCollectorException("Unable to update value at " . $this->getCurrentNamespace() . static::SEPARATOR . $name);
+            throw new StatisticsCollectorException("Unable to update value at " . $targetNS);
         }
         return $this;
     }
@@ -505,7 +506,7 @@ class Collector
      */
     protected function removeValueFromNamespace($name)
     {
-        $targetNS = $this->determineTargetNS($name);
+        $targetNS = $this->getTargetNamespaces($name);
         $this->container->remove($targetNS);
         $this->removePopulatedNamespace($targetNS);
         return $this;
@@ -518,7 +519,7 @@ class Collector
      */
     protected function getValueFromNamespace($name)
     {
-        $targetNS = $this->determineTargetNS($name);
+        $targetNS = $this->getTargetNamespaces($name);
         return $this->container->get($targetNS);
     }
 
@@ -562,21 +563,31 @@ class Collector
     {
         if (($index = array_search($namespace, $this->populatedNamespaces)) !== false) {
             unset($this->populatedNamespaces[$index]);
+            return true;
+        } else {
+            return false;
         }
-        return true;
     }
 
     /**
-     * Check that a namespace element exists
-     * @param $name
+     * Check that namespace element(s) exist
+     * @param mixed $namespace
      * @return bool
      * @throws StatisticsCollectorException
      */
-    protected function checkExists($name)
+    protected function checkExists($namespace)
     {
-        $targetNS = $this->determineTargetNS($name);
-        if (!$this->container->has($targetNS)) {
-            throw new StatisticsCollectorException("The namespace does not exist: " . $targetNS);
+        $resolvedNamespace = $this->getTargetNamespaces($namespace);
+        if (is_array($resolvedNamespace)) {
+            foreach ($resolvedNamespace as $ns) {
+                if (!$this->container->has($ns)) {
+                    throw new StatisticsCollectorException("The namespace does not exist: " . $ns);
+                }
+            }
+        } else {
+            if (!$this->container->has($resolvedNamespace)) {
+                throw new StatisticsCollectorException("The namespace does not exist: " . $resolvedNamespace);
+            }
         }
         return true;
     }

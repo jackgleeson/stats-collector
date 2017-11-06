@@ -1,12 +1,9 @@
 <?php
 require __DIR__ . '/vendor/autoload.php';
-
-
 /**
  * Get an instance of the Collector
  */
 $StatsCollector = Statistics\Collector::getInstance();
-
 
 /**
  * Setting & Getting stats
@@ -26,10 +23,10 @@ $StatsCollector->setNamespace("website")
 $clicks = $StatsCollector->getStat("clicks"); // 30 - the getStat() call is relative to your last default namespace
 
 // get single stat by sub-namespace relative (resolves to website.banner.views)
-$clicks = $StatsCollector->getStat("banner.views"); // 20 - the getStat() call is made to website.banner.clicks
+$bannerViews = $StatsCollector->getStat("banner.views"); // 20 - the getStat() call is made to website.banner.clicks
 
 // get single stat by absolute path
-$clicks = $StatsCollector->getStat(".website.clicks"); // 30 - prepending paths with '.' resolves to absolute paths
+$websiteClicks = $StatsCollector->getStat(".website.clicks"); // 30 - prepending paths with '.' resolves to absolute paths
 
 // get multiple stats back using absolute paths
 $statsAbsolute = $StatsCollector->getStats([
@@ -41,7 +38,7 @@ $statsAbsolute = $StatsCollector->getStats([
 $statsAbsoluteWithKeys = $StatsCollector->getStats([
     '.website.clicks',
     '.website.banner.views'
-],$withKeys=true); // $statsAbsoluteWithKeys = Array ( [website.clicks] => 30 [website.banner.views] => 20 )
+], $withKeys = true); // $statsAbsoluteWithKeys = Array ( [website.clicks] => 30 [website.banner.views] => 20 )
 
 // get multiple stats, one using absolute namespace and one using relative namespace
 $statsRelative = $StatsCollector->getStats(['clicks', '.website.banner.views']); // Array ( [0] => 30 [1] => 20 )
@@ -66,6 +63,7 @@ $transactions = $StatsCollector->getStat("transactions.*");
 $transactionsWithKeys = $StatsCollector->getStat("transactions.*", true);
 // $transactions = Array ( [transactions.paypal] => 10 [transactions.ayden] => 20 [transactions.sagepay] => 30 [transactions.braintree] => 40 )
 
+
 // getStat() and getStats() will auto-deduplicate results if you accidently include the same stat twice using wildcards
 $transactionsWithUniqueStats = $StatsCollector->getStats(["transactions.*", ".transactions.paypal"]);
 // only one paypal stat of '10' is present in the result $transactionsWithUniqueStats = Array ( [0] => 10 [1] => 20 [2] => 30 [3] => 40 )
@@ -78,23 +76,21 @@ $transactionsWithUniqueStats = $StatsCollector->getStats(["transactions.*", ".tr
 ### lets increment some stats ###
 $StatsCollector->setNamespace("general.stats")
     ->addStat("days_on_the_earth", (33 * 365))// 12045 added to 'general.stats.days_on_the_earth'
-    ->incrementStat("days_on_the_earth"); //
-echo $StatsCollector->getStat("days_on_the_earth") . PHP_EOL; // 12046
-echo $StatsCollector->getStat(".general.stats.days_on_the_earth") . PHP_EOL; // same as above 12046
+    ->incrementStat("days_on_the_earth"); // we time travel forward 24 hours.
+$daysOnEarth = $StatsCollector->getStat("days_on_the_earth"); // 12046
+$daysOnEarthAbsolute = $StatsCollector->getStat(".general.stats.days_on_the_earth"); // same as above 12046
 
 ### lets decrement some stats###
 $StatsCollector->setNamespace("general.other.stats")
     ->addStat("days_until_christmas", 53)// 53 as of 11/02/2017
     ->decrementStat("days_until_christmas"); // skip 24 hours
-echo $StatsCollector->getStat("days_until_christmas"); // 52
-
+$daysUntilChristmas = $StatsCollector->getStat("days_until_christmas"); // 52
 
 /**
- * Working with stats, basic aggregate functions (increment/decrement)
+ * Working with stats, aggregate functions (sum/average)
  */
 
-
-### lets add a bunch of stats and sum them ###
+// lets add a bunch of stats and sum them
 $StatsCollector->setNamespace("noahs.ark.passengers")
     ->addStat("humans", 2)
     ->addStat("aliens", 0)
@@ -102,12 +98,11 @@ $StatsCollector->setNamespace("noahs.ark.passengers")
     ->addStat("animal.dogs", 6)
     ->addStat("animal.chickens", 25);
 
-// lets get the total passenger count on noahs ark
-echo $StatsCollector->getStat("noahs.ark.passengers.*") . PHP_EOL; // same as above 12046
-exit();
+// total number of passengers on noahs ark
+$numberOfPassengers = $StatsCollector->getStatSum("noahs.ark.passengers.*"); // 36
 
-### lets sum up some stats ##
-$StatsCollector->setNamespace("donation.count")
+// lets sum up some individual stats
+$StatsCollector->setNamespace("donations.month")
     ->addStat("jan", 553)
     ->addStat("feb", 223)
     ->addStat("mar", 434)
@@ -122,7 +117,7 @@ $StatsCollector->setNamespace("donation.count")
     ->addStat("dec", 2346);
 
 // get the total of the above stats
-echo $StatsCollector->getStatsSum([
+$donationsForTheYear = $StatsCollector->getStatsSum([
         'jan',
         'feb',
         'mar',
@@ -135,12 +130,11 @@ echo $StatsCollector->getStatsSum([
         'oct',
         'nov',
         'dec'
-    ]) . PHP_EOL; //7783
+    ]); //7783
 
-### Averages of a collection of stats
 
 // lets work out the average donations per month based on the above stats
-echo $StatsCollector->getStatsAverage([
+$averageDonationsPerMonth = $StatsCollector->getStatsAverage([
         'jan',
         'feb',
         'mar',
@@ -153,11 +147,11 @@ echo $StatsCollector->getStatsAverage([
         'oct',
         'nov',
         'dec'
-    ]) . PHP_EOL; //648.58333333333
+    ]); //648.58333333333
 
 
 /**
- * Compound stats usage
+ * Working with compound stats
  *
  * Stats become "compound" when you add either an array of scalars as the value or when you add a stat to
  * an already existing namespace.
@@ -172,7 +166,7 @@ $StatsCollector->setNamespace("test.averages")
     ->addStat("age", 74)
     ->addStat("age", 49)
     ->addStat("age", 9);
-echo $StatsCollector->getStatAverage('age') . PHP_EOL; //33.4
+$averageAges = $StatsCollector->getStatAverage('age'); //33.4
 
 // another way to add or convert to a compound stat is just to pass an array of values as the value (it will auto-flatten by default)
 $StatsCollector->setNamespace("test.averages")
@@ -187,7 +181,7 @@ $StatsCollector->setNamespace("test.averages")
         84
     ]);
 
-echo $StatsCollector->getStatAverage('heights') . PHP_EOL; //39.25
+$averageHeights =  $StatsCollector->getStatAverage('heights'); //39.25
 
 // lets take two different compound stats and work out the collective average
 $StatsCollector->setNamespace("donation.amounts")
@@ -202,9 +196,8 @@ $StatsCollector->setNamespace("donation.amounts")
     ->addStat("ayden", 33)
     ->addStat("ayden", 14);
 
-echo $StatsCollector->getStatsAverage(['paypal', 'ayden']) . PHP_EOL; //22
-echo $StatsCollector->getStatsAverage(['.donation.amounts.paypal', '.donation.amounts.ayden']) . PHP_EOL; //22
-
+$averageAcrossTwoProcessors = $StatsCollector->getStatsAverage(['paypal', 'ayden']) . PHP_EOL; //22
+$averageAcrossTwoProcessorsAbsolute = $StatsCollector->getStatsAverage(['.donation.amounts.paypal', '.donation.amounts.ayden']) . PHP_EOL; //22
 
 ## Compound Count (the number of values for a given stat)
 
