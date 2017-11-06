@@ -32,8 +32,8 @@ class Prometheus implements iExporter
 
     public function export($data)
     {
-        // finish mapping namespaces to underscore paths and output data to files
-        return true;
+        print_r($data);
+        exit();
     }
 
     /**

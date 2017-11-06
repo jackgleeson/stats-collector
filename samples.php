@@ -135,7 +135,7 @@ $visitsForTheYear = $StatsCollector->getStatsSum([
 // you could also use a wildcard to get the sum of visits by targeting  'visits.month.*'
 $visitsForTheYearWildcard = $StatsCollector->getStatSum("visits.month.*"); ////7783
 
-// lets work out the average donations per month based on the above stats
+// lets work out the average visits per month based on the above stats
 $averageVisitsPerMonth = $StatsCollector->getStatsAverage([
     'jan',
     'feb',
@@ -245,8 +245,8 @@ $totalResponses = $StatsCollector->getStatsSum(['.api.response.success', '.api.r
  */
 
 $CiviCRMCollector = Statistics\Collector\CiviCRM::getInstance();
-$CiviCRMCollector->addStat("donations.created", 500);
-$donationsPending = $CiviCRMCollector->getStat("donations.created");
+$CiviCRMCollector->addStat("users.created", 500);
+$usersCreated = $CiviCRMCollector->getStat("users.created");
 
 $QueueStatsCollector = Statistics\Collector\QueueStats::getInstance();
 $QueueStatsCollector->addStat("redis.messages.processed", 150);
