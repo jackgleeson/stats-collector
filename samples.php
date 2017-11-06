@@ -7,55 +7,73 @@ require __DIR__ . '/vendor/autoload.php';
  */
 $StatsCollector = Statistics\Collector::getInstance();
 
+
 /**
  * Setting & Getting stats
  */
 
-// basic usage (append to default namespace)
-$StatsCollector->addStat("clicks", 104103); // add stat to "root" default general namespace
-$clicks = $StatsCollector->getStat("clicks"); // 104103
-$clicksWithNamespaceInKey = $StatsCollector->getStat("clicks", $withKeys = true); // Array ( [root.clicks] => 104103 )
+// basic usage (add to default namespace)
+$StatsCollector->addStat("clicks", 45); // add stat to "root" default general namespace
+$clicks = $StatsCollector->getStat("clicks"); // 45
+$clicksWithNamespaceInKey = $StatsCollector->getStat("clicks", $withKeys = true); // Array ( [root.clicks] => 45 )
 
-// define a new default namespace, add stats to it and then retrieve them using relative and absolute paths.
-$StatsCollector->setNamespace("website.logo")
-    ->addStat("clicks", 87872);
-// get relative
-$clicks = $StatsCollector->getStat("clicks"); // 87872 - the getStats() call is relative to your last default namespace
-// get absolute
-$clicks = $StatsCollector->getStat(".website.logo.click"); // 87872 - prepending paths with '.' signals absolute paths
+// define a new default namespace and add stats to it
+$StatsCollector->setNamespace("website")
+    ->addStat("clicks", 30)
+    ->addStat("banner.views", 20); // add a sub-namespace to the current namespace (in a relative fashion)
 
-//define a namespace, add a stat related stats and retrieve it using a wildcard path
+// get single stat by relative (resolves to website.clicks due to last set namespace being "website" on line 20)
+$clicks = $StatsCollector->getStat("clicks"); // 30 - the getStat() call is relative to your last default namespace
+
+// get single stat by sub-namespace relative (resolves to website.banner.views)
+$clicks = $StatsCollector->getStat("banner.views"); // 20 - the getStat() call is made to website.banner.clicks
+
+// get single stat by absolute path
+$clicks = $StatsCollector->getStat(".website.clicks"); // 30 - prepending paths with '.' resolves to absolute paths
+
+// get multiple stats back using absolute paths
+$statsAbsolute = $StatsCollector->getStats([
+    '.website.clicks',
+    '.website.banner.views'
+]); // $statsAbsolute = Array ( [0] => 30 [1] => 20 )
+
+// get multiple stats back using absolute paths including their full namespace as the key
+$statsAbsoluteWithKeys = $StatsCollector->getStats([
+    '.website.clicks',
+    '.website.banner.views'
+],$withKeys=true); // $statsAbsoluteWithKeys = Array ( [website.clicks] => 30 [website.banner.views] => 20 )
+
+// get multiple stats, one using absolute namespace and one using relative namespace
+$statsRelative = $StatsCollector->getStats(['clicks', '.website.banner.views']); // Array ( [0] => 30 [1] => 20 )
+
+//define a long namespace, add a stat related stats and retrieve it using a wildcard operator
 $StatsCollector->setNamespace("this.is.a.really.long.namespace.path")
     ->addStat("age", 33);
 $clicks = $StatsCollector->getStat("this.*.age"); // 33
-print_r($clicks);
-exit();
 
-//define a namespace, add some related stats to different containers and retrieve them all with wildcard paths
+//define a namespace, add some stats and retrieve them all with wildcard paths
 $StatsCollector->setNamespace("transactions")
-    ->addStat("paypal", 1)
-    ->addStat("ayden", 2)
-    ->addStat("sagepay", 3)
-    ->addStat("braintree", 4);
+    ->addStat("paypal", 10)
+    ->addStat("ayden", 20)
+    ->addStat("sagepay", 30)
+    ->addStat("braintree", 40);
+
+// lets get all transaction stats using the wildcard operator
+$transactions = $StatsCollector->getStat("transactions.*");
+// $transactions = Array ( [0] => 10 [1] => 20 [2] => 30 [3] => 40 )
+
+// lets get all transaction stats using the wildcard operator including their full namespace as the key
+$transactionsWithKeys = $StatsCollector->getStat("transactions.*", true);
+// $transactions = Array ( [transactions.paypal] => 10 [transactions.ayden] => 20 [transactions.sagepay] => 30 [transactions.braintree] => 40 )
+
+// getStat() and getStats() will auto-deduplicate results if you accidently include the same stat twice using wildcards
+$transactionsWithUniqueStats = $StatsCollector->getStats(["transactions.*", ".transactions.paypal"]);
+// only one paypal stat of '10' is present in the result $transactionsWithUniqueStats = Array ( [0] => 10 [1] => 20 [2] => 30 [3] => 40 )
 
 
 /**
- * flat number (int/float) stats usage
+ * Working with stats, basic functions (increment/decrement)
  */
-
-### lets add some stats (basic usage) ###
-$StatsCollector->addStat("clicks", 104103); // add stat to "general" default namespace
-
-### lets add some stats to an absolute path namespace (notice the first character of the namespace is '.') ###
-$StatsCollector->addStat(".this.is.an.absolute.namespace.path.clicks", 55);
-
-### lets add a custom default namespace, and then add a bunch of stats to it ###
-$StatsCollector->setNamespace("noahs.ark.passengers")
-    ->addStat("humans", 2)
-    ->addStat("aliens", 0)
-    ->addStat("animal.cats", 3)// adds sub-namespace 'noahs.ark.passengers.animal.cats'
-    ->addStat("animal.dogs", 6)
-    ->addStat("animal.chickens", 25);
 
 ### lets increment some stats ###
 $StatsCollector->setNamespace("general.stats")
@@ -70,23 +88,23 @@ $StatsCollector->setNamespace("general.other.stats")
     ->decrementStat("days_until_christmas"); // skip 24 hours
 echo $StatsCollector->getStat("days_until_christmas"); // 52
 
-### lets retrieve multiple stats in one go ###
-// find two stats by absolute path
-$statsAbsolute = $StatsCollector->getStats([
-    '.general.stats.days_on_the_earth',
-    '.general.other.stats.days_until_christmas'
-]);
 
-// find two stats, one using absolute namespace and one using relative namespace in relation to path on line 30
-$statsRelative = $StatsCollector->getStats(['.general.stats.days_on_the_earth', 'days_until_christmas']);
-$statsRelativeWithKeys = $StatsCollector->getStats([
-    '.general.stats.days_on_the_earth',
-    'days_until_christmas'
-], true); // with namespace as keys
+/**
+ * Working with stats, basic aggregate functions (increment/decrement)
+ */
 
-var_dump($statsAbsolute); // array(2) { [0] => int(12046) [1] => int(52) }
-var_dump($statsRelative); // array(2) { [0] => int(12046) [1] => int(52) }
-var_dump($statsRelativeWithKeys); // array(2) { 'general.stats.days_on_the_earth' => int(12046) 'general.other.stats.days_until_christmas' => int(52) }
+
+### lets add a bunch of stats and sum them ###
+$StatsCollector->setNamespace("noahs.ark.passengers")
+    ->addStat("humans", 2)
+    ->addStat("aliens", 0)
+    ->addStat("animal.cats", 3)// adds sub-namespace 'noahs.ark.passengers.animal.cats'
+    ->addStat("animal.dogs", 6)
+    ->addStat("animal.chickens", 25);
+
+// lets get the total passenger count on noahs ark
+echo $StatsCollector->getStat("noahs.ark.passengers.*") . PHP_EOL; // same as above 12046
+exit();
 
 ### lets sum up some stats ##
 $StatsCollector->setNamespace("donation.count")

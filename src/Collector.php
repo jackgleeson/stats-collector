@@ -203,6 +203,11 @@ class Collector
      */
     public function getStats($names = [], $withKeys = false)
     {
+
+        if (!is_array($names)) {
+            throw new StatisticsCollectorException("getStats() expects the first argument to be an array of paths");
+        }
+
         //check through paths for wildcards and expand wildcard paths if present
         $paths = [];
         foreach ($names as $name) {
@@ -213,13 +218,16 @@ class Collector
                 $paths[] = $name;
             }
         }
+        // remove any duplicate paths pulled in due to wildcarding
+        $paths = array_unique($paths);
 
         //iterate over paths and retrieve values
-        $values = [];
+        $stats = [];
         foreach ($paths as $path) {
-            $values[] = $this->getStat($path, $withKeys);
+            $stat = $this->getStat($path, $withKeys);
+            $stats = array_merge($stats, (is_array($stat) ? $stat : [$stat]));
         }
-        return $values;
+        return $stats;
     }
 
     /**
@@ -398,14 +406,16 @@ class Collector
     protected function determineWildcardPathTargetNS($namespace)
     {
         //clear absolute path starting '.' as not needed for wildcard
-        if(strpos($namespace, static::SEPARATOR) === 0) {
+        if (strpos($namespace, static::SEPARATOR) === 0) {
             $namespace = $target = substr($namespace, 1);
         }
 
         $expandedPaths = [];
         foreach ($this->getPopulatedNamespaces() as $populatedNamespace) {
             if (fnmatch($namespace, $populatedNamespace)) {
-                $expandedPaths[] = $populatedNamespace;
+                // we convert the expanded wildcard path to an absolute path by prepending '.'
+                // this prevents the namespace resolution method from treating the full namespace as a sub namespace
+                $expandedPaths[] = static::SEPARATOR . $populatedNamespace;
             }
         }
         return $expandedPaths;
