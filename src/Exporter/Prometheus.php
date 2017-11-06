@@ -23,7 +23,7 @@ class Prometheus implements iExporter
     protected $path;
 
     /**
-     * @param string $prometheusPath
+     * @param string $path
      */
     public function __construct($path = '.')
     {
