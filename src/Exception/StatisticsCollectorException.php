@@ -1,6 +1,6 @@
 <?php
 
-namespace Statistics\Exceptions;
+namespace Statistics\Exception;
 
 class StatisticsCollectorException extends \Exception
 {

@@ -7,7 +7,7 @@ namespace Statistics\Exporter;
  * Each component gets its own file, and each call to
  * reportMetrics overwrites the file with the new data.
  */
-class Prometheus implements ExporterInterface
+class Prometheus implements iExporter
 {
     /**
      * Prometheus files file extension

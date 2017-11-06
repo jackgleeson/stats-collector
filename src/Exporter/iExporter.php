@@ -1,7 +1,7 @@
 <?php
 namespace Statistics\Exporter;
 
-interface ExporterInterface
+interface iExporter
 {
     public function export($data);
 

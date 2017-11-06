@@ -1,28 +1,28 @@
 <?php
 
 
-namespace Statistics;
+namespace Statistics\Collector;
 
-use Statistics\Exporter\ExporterInterface;
+use Statistics\Exporter\iExporter;
 use Dflydev\DotAccessData\Data as Container;
-use Statistics\Exceptions\StatisticsCollectorException;
+use Statistics\Exception\StatisticsCollectorException;
 
 /**
  * Statistics Collector
  *
- * This object is intended to serve as storage for application-wide statistics
- * captured during the lifecycle of a request. Recorded statistics can then be exported
- * via a backend specific exporter class to file, log, db, queue, other.
+ * This utility is designed to allow simple namespace structured key/value storage for statistics recording
+ * during the lifecycle of a request or process.
  *
- * Reportable subjects are defined as custom namespaces. The identifier namespace is
- * entirely up to the user e.g. queue.donations.received or civi.user.unsubscribed
+ * Recorded statistics can then be exported via a backend specific exporter class to file, log, db, queue, other.
+ *
+ * Reportable stats are stored in defined namespaces. The namespace structure/convention/naming is entirely up to the
+ * user e.g. queue.emails.inbox , civi.user.unsubscribed, server1.website.clicks are all acceptable
  *
  * TODO:
  * - implement exporter strategy object to handle backend specific export/output logic (Prometheus being the first)
  * - add support for tagging stats
- *
  */
-class Collector
+abstract class AbstractCollector implements iCollector
 {
     /**
      * Singleton instances container
@@ -81,10 +81,10 @@ class Collector
     }
 
     /**
-     * It is possible this container singleton will be extended to allow subject specific conveniences
+     * It is possible this singleton will be extended to allow subject specific conveniences
      * for statistics collection e.g. a fixed default namespace of "queue." in QueueStatsCollector
      *
-     * @return Collector
+     * @return \Statistics\Collector\ICollector
      */
     public static function getInstance()
     {
@@ -104,7 +104,7 @@ class Collector
      * @param string $name name of statistic to be added to namespace
      * @param mixed $value
      * @param array $options
-     * @return Collector
+     * @return \Statistics\Collector\ICollector
      */
     public function addStat($name, $value, $options = [])
     {
@@ -120,7 +120,7 @@ class Collector
     /**
      * Delete a statistic
      * @param string $namespace
-     * @return Collector
+     * @return \Statistics\Collector\ICollector
      * @throws StatisticsCollectorException
      */
     public function removeStat($namespace)
@@ -137,7 +137,7 @@ class Collector
      * Increment a statistic
      * @param string $namespace
      * @param int $increment
-     * @return Collector
+     * @return \Statistics\Collector\ICollector
      * @throws StatisticsCollectorException
      */
     public function incrementStat($namespace, $increment = 1)
@@ -156,7 +156,7 @@ class Collector
      * Decrement a statistic
      * @param $namespace
      * @param int $decrement
-     * @return Collector
+     * @return \Statistics\Collector\ICollector
      * @throws StatisticsCollectorException
      */
     public function decrementStat($namespace, $decrement = -1)
@@ -329,11 +329,11 @@ class Collector
      * - take array of namespaces to target specific namespaces
      *
      * @param string $namespaces
-     * @param ExporterInterface $Exporter
+     * @param iExporter $Exporter
      * @return
      * @throws StatisticsCollectorException
      */
-    public function export($namespaces = "*", ExporterInterface $Exporter)
+    public function export($namespaces = "*", iExporter $Exporter)
     {
         if ($namespaces === "*") {
             return $Exporter->export($this->getAllStats());
@@ -346,26 +346,13 @@ class Collector
 
     /**
      * @param $namespace
-     * @return Collector
+     * @return \Statistics\Collector\ICollector
      */
     public function setNamespace($namespace)
     {
         return $this->setCurrentNamespace($namespace);
 
     }
-
-    /**
-     * TODO:
-     * - validate namespace argument
-     * @param $namespace
-     * @return Collector
-     */
-    public function setCurrentNamespace($namespace)
-    {
-        $this->namespace = $namespace;
-        return $this;
-    }
-
 
     /**
      * Return the current namespace. Default to default namespace if none set.
@@ -376,13 +363,24 @@ class Collector
         return ($this->namespace === null) ? $this->getDefaultNamespace() : $this->namespace;
     }
 
-
     /**
      * @return array
      */
-    public function getPopulatedNamespaces()
+    protected function getPopulatedNamespaces()
     {
         return $this->populatedNamespaces;
+    }
+
+    /**
+     * TODO:
+     * - validate namespace argument
+     * @param $namespace
+     * @return \Statistics\Collector\ICollector
+     */
+    protected function setCurrentNamespace($namespace)
+    {
+        $this->namespace = $namespace;
+        return $this;
     }
 
     /**
@@ -452,7 +450,7 @@ class Collector
      * @param string $namespace
      * @param mixed $value
      * @param array $options
-     * @return Collector
+     * @return \Statistics\Collector\ICollector
      */
     protected function addValueToNamespace($namespace, $value, $options)
     {
@@ -485,7 +483,7 @@ class Collector
     /**
      * @param $namespace
      * @param $value
-     * @return Collector
+     * @return \Statistics\Collector\ICollector
      * @throws StatisticsCollectorException
      * @internal param $name
      */
@@ -502,7 +500,7 @@ class Collector
 
     /**
      * @param $name
-     * @return Collector
+     * @return \Statistics\Collector\ICollector
      */
     protected function removeValueFromNamespace($name)
     {

@@ -3,30 +3,30 @@ require __DIR__ . '/vendor/autoload.php';
 /**
  * Get an instance of the Collector
  */
-$StatsCollector = Statistics\Collector::getInstance();
+$StatsCollector = Statistics\Collector\General::getInstance();
 
 /**
  * Setting & Getting stats
  */
 
 // basic usage (add to default namespace)
-$StatsCollector->addStat("clicks", 45); // add stat to "root" default general namespace
+$StatsCollector->addStat("clicks", 45); // add stat to "general" default general namespace
 $clicks = $StatsCollector->getStat("clicks"); // 45
-$clicksWithNamespaceInKey = $StatsCollector->getStat("clicks", $withKeys = true); // Array ( [root.clicks] => 45 )
+$clicksWithNamespaceInKey = $StatsCollector->getStat("clicks", $withKeys = true); // Array ( [general.clicks] => 45 )
 
 // define a new default namespace and add stats to it
 $StatsCollector->setNamespace("website")
     ->addStat("clicks", 30)
     ->addStat("banner.views", 20); // add a sub-namespace to the current namespace (in a relative fashion)
 
-// get single stat by relative (resolves to website.clicks due to last set namespace being "website" on line 20)
+// get single stat by relative (resolves to website.clicks due to last set namespace being "website" on line 18)
 $clicks = $StatsCollector->getStat("clicks"); // 30 - the getStat() call is relative to your last default namespace
 
 // get single stat by sub-namespace relative (resolves to website.banner.views)
 $bannerViews = $StatsCollector->getStat("banner.views"); // 20 - the getStat() call is made to website.banner.clicks
 
 // get single stat by absolute path
-$websiteClicks = $StatsCollector->getStat(".website.clicks"); // 30 - prepending paths with '.' resolves to absolute paths
+$websiteClicks = $StatsCollector->getStat(".website.clicks"); // 30 - prepending paths with '.' resolves to an absolute path
 
 // get multiple stats back using absolute paths
 $statsAbsolute = $StatsCollector->getStats([
@@ -50,10 +50,10 @@ $clicks = $StatsCollector->getStat("this.*.age"); // 33
 
 //define a namespace, add some stats and retrieve them all with wildcard paths
 $StatsCollector->setNamespace("transactions")
-    ->addStat("paypal", 10)
-    ->addStat("ayden", 20)
-    ->addStat("sagepay", 30)
-    ->addStat("braintree", 40);
+    ->addStat("mobile", 10)
+    ->addStat("website", 20)
+    ->addStat("tablet", 30)
+    ->addStat("other", 40);
 
 // lets get all transaction stats using the wildcard operator
 $transactions = $StatsCollector->getStat("transactions.*");
@@ -61,26 +61,26 @@ $transactions = $StatsCollector->getStat("transactions.*");
 
 // lets get all transaction stats using the wildcard operator including their full namespace as the key
 $transactionsWithKeys = $StatsCollector->getStat("transactions.*", true);
-// $transactions = Array ( [transactions.paypal] => 10 [transactions.ayden] => 20 [transactions.sagepay] => 30 [transactions.braintree] => 40 )
+// $transactions = Array ( [transactions.mobile] => 10 [transactions.website] => 20 [transactions.tablet] => 30 [transactions.other] => 40 )
 
 
 // getStat() and getStats() will auto-deduplicate results if you accidently include the same stat twice using wildcards
-$transactionsWithUniqueStats = $StatsCollector->getStats(["transactions.*", ".transactions.paypal"]);
-// only one paypal stat of '10' is present in the result $transactionsWithUniqueStats = Array ( [0] => 10 [1] => 20 [2] => 30 [3] => 40 )
+$transactionsWithUniqueStats = $StatsCollector->getStats(["transactions.*", ".transactions.mobile"]);
+// only one mobile stat of '10' is present in the result $transactionsWithUniqueStats = Array ( [0] => 10 [1] => 20 [2] => 30 [3] => 40 )
 
 
 /**
  * Working with stats, basic functions (increment/decrement)
  */
 
-### lets increment some stats ###
+// lets increment some stats
 $StatsCollector->setNamespace("general.stats")
     ->addStat("days_on_the_earth", (33 * 365))// 12045 added to 'general.stats.days_on_the_earth'
     ->incrementStat("days_on_the_earth"); // we time travel forward 24 hours.
 $daysOnEarth = $StatsCollector->getStat("days_on_the_earth"); // 12046
 $daysOnEarthAbsolute = $StatsCollector->getStat(".general.stats.days_on_the_earth"); // same as above 12046
 
-### lets decrement some stats###
+// lets decrement some stats
 $StatsCollector->setNamespace("general.other.stats")
     ->addStat("days_until_christmas", 53)// 53 as of 11/02/2017
     ->decrementStat("days_until_christmas"); // skip 24 hours
@@ -102,7 +102,7 @@ $StatsCollector->setNamespace("noahs.ark.passengers")
 $numberOfPassengers = $StatsCollector->getStatSum("noahs.ark.passengers.*"); // 36
 
 // lets sum up some individual stats
-$StatsCollector->setNamespace("donations.month")
+$StatsCollector->setNamespace("visits.month")
     ->addStat("jan", 553)
     ->addStat("feb", 223)
     ->addStat("mar", 434)
@@ -117,50 +117,52 @@ $StatsCollector->setNamespace("donations.month")
     ->addStat("dec", 2346);
 
 // get the total of the above stats
-$donationsForTheYear = $StatsCollector->getStatsSum([
-        'jan',
-        'feb',
-        'mar',
-        'apr',
-        'may',
-        'june',
-        'july',
-        'aug',
-        'sept',
-        'oct',
-        'nov',
-        'dec'
-    ]); //7783
+$visitsForTheYear = $StatsCollector->getStatsSum([
+    'jan',
+    'feb',
+    'mar',
+    'apr',
+    'may',
+    'june',
+    'july',
+    'aug',
+    'sept',
+    'oct',
+    'nov',
+    'dec'
+]); //7783
 
+// you could also use a wildcard to get the sum of visits by targeting  'visits.month.*'
+$visitsForTheYearWildcard = $StatsCollector->getStatSum("visits.month.*"); ////7783
 
 // lets work out the average donations per month based on the above stats
-$averageDonationsPerMonth = $StatsCollector->getStatsAverage([
-        'jan',
-        'feb',
-        'mar',
-        'apr',
-        'may',
-        'june',
-        'july',
-        'aug',
-        'sept',
-        'oct',
-        'nov',
-        'dec'
-    ]); //648.58333333333
+$averageVisitsPerMonth = $StatsCollector->getStatsAverage([
+    'jan',
+    'feb',
+    'mar',
+    'apr',
+    'may',
+    'june',
+    'july',
+    'aug',
+    'sept',
+    'oct',
+    'nov',
+    'dec'
+]); //648.58333333333
+
+$averageVisitsPerMonthWildcard = $StatsCollector->getStatAverage("visits.month.*"); //648.58333333333
 
 
 /**
- * Working with compound stats
+ * Working with compound stats (averages/sum/count)
  *
- * Stats become "compound" when you add either an array of scalars as the value or when you add a stat to
+ * Stats become "compound" when you add either an array of values to a single stat or when you add a stat to
  * an already existing namespace.
  */
 
-### Compound Averages
-
 // lets get the average of a compound stat
-$StatsCollector->setNamespace("test.averages")
+$StatsCollector->setNamespace("users")
     ->addStat("age", 23)
     ->addStat("age", 12)
     ->addStat("age", 74)
@@ -168,97 +170,86 @@ $StatsCollector->setNamespace("test.averages")
     ->addStat("age", 9);
 $averageAges = $StatsCollector->getStatAverage('age'); //33.4
 
-// another way to add or convert to a compound stat is just to pass an array of values as the value (it will auto-flatten by default)
-$StatsCollector->setNamespace("test.averages")
-    ->addStat("heights", 17)
+// another way to convert to a compound stat is just to pass an array of values as the value (it will auto-flatten by default)
+$StatsCollector->setNamespace("users")
+    ->addStat("heights", 171)
     ->addStat("heights", [
-        18,
-        22,
-        46,
-        43,
-        23,
-        61,
-        84
+        181,
+        222,
+        194,
+        143,
+        123,
+        161,
+        184
     ]);
 
-$averageHeights =  $StatsCollector->getStatAverage('heights'); //39.25
+$averageHeights = $StatsCollector->getStatAverage('heights'); //172.375
 
-// lets take two different compound stats and work out the collective average
-$StatsCollector->setNamespace("donation.amounts")
-    ->addStat("paypal", 10)
-    ->addStat("paypal", 22)
-    ->addStat("paypal", 16)
-    ->addStat("paypal", 15)
-    ->addStat("paypal", 50)
-    ->addStat("ayden", 18)
-    ->addStat("ayden", 22)
-    ->addStat("ayden", 20)
-    ->addStat("ayden", 33)
-    ->addStat("ayden", 14);
+// lets take three different compound stats and work out the collective sum
+$StatsCollector->setNamespace("website.referrals")
+    ->addStat("google", 110)
+    ->addStat("google", 222)
+    ->addStat("google", 146)
+    ->addStat("google", 125)
+    ->addStat("yahoo", 510)
+    ->addStat("yahoo", 148)
+    ->addStat("yahoo", 2122)
+    ->addStat("bing", 230)
+    ->addStat("bing", 335)
+    ->addStat("bing", 141);
 
-$averageAcrossTwoProcessors = $StatsCollector->getStatsAverage(['paypal', 'ayden']) . PHP_EOL; //22
-$averageAcrossTwoProcessorsAbsolute = $StatsCollector->getStatsAverage(['.donation.amounts.paypal', '.donation.amounts.ayden']) . PHP_EOL; //22
+$totalReferrals = $StatsCollector->getStatsSum(['google', 'yahoo', 'bing']); // 4089
 
-## Compound Count (the number of values for a given stat)
-
-// count how many values there are in one namespace
-echo $StatsCollector->getStatCount(".test.averages.age") . PHP_EOL; //5 (stats set on line 117)
-
-// count how many values there are in a collection of namespaces
-echo $StatsCollector->getStatsCount([
-        ".test.averages.age",
-        ".donation.amounts.paypal",
-        ".donation.amounts.ayden"
-    ]) . PHP_EOL; //15
+// lets take three different compound stats and work out the collective sum by usng absolute namespace paths
+$totalReferralsAbsolute = $StatsCollector->getStatsSum([
+    '.website.referrals.google',
+    '.website.referrals.yahoo',
+    '.website.referrals.bing'
+]); // 4089
 
 
-## Compound Summation
+// Lets count how many values there are in a namespace
+// (count will return the number of values, not the sum of the values)
+$googleReferralEntryCount = $StatsCollector->getStatCount(".website.referrals.google"); //4
+
+// count how many values there are in a collection of namespaces at once
+$totalReferralEntries = $StatsCollector->getStatsCount([
+    ".website.referrals.google",
+    ".website.referrals.yahoo",
+    ".website.referrals.bing",
+]); //15
 
 // lets get the sum of a compound stat
-$StatsCollector->setNamespace("gateway.tracking")
-    ->addStat("timeouts", 23)
-    ->addStat("timeouts", 12)
-    ->addStat("timeouts", 74)
-    ->addStat("timeouts", 49)
-    ->addStat("timeouts", 9);
+$StatsCollector->setNamespace("api.response")
+    ->addStat("success", 23223)
+    ->addStat("success", 1322)
+    ->addStat("success", 7324)
+    ->addStat("success", 24922)
+    ->addStat("success", 94234);
 
-echo $StatsCollector->getStatSum('timeouts') . PHP_EOL; // 167
-
+$totalSuccessfulResponses = $StatsCollector->getStatSum('.api.response.success'); // 151025
 
 // lets get the combined sum of two different compound stats
-$StatsCollector->setNamespace("gateway.tracking")
-    ->addStat("server_errors", 23)
-    ->addStat("server_errors", 12)
-    ->addStat("server_errors", 74)
-    ->addStat("server_errors", 49)
-    ->addStat("server_errors", 9);
+$StatsCollector->setNamespace("api.response")// we don't need to redeclare this unless the namespace changes
+->addStat("error", 23)
+    ->addStat("error", 12)
+    ->addStat("error", 74)
+    ->addStat("error", 49)
+    ->addStat("error", 9);
 
-echo $StatsCollector->getStatsSum(['timeouts', 'server_errors']) . PHP_EOL; // 334
+$totalResponses = $StatsCollector->getStatsSum(['.api.response.success', '.api.response.error']); // 151192
 
 
 /**
- * Work in progress below
+ * Extending the Stats Collector with your own subject specific instance is also possible by extending the AbstractCollector
  */
 
-//stats grouped by tags
-//$StatsCollector->setNamespace("test.averages")
-//    ->addStat([
-//        'name' => "paypal_processing",
-//        'tags' => ['process_times']
-//    ], 23);
+$CiviCRMCollector = Statistics\Collector\CiviCRM::getInstance();
+$CiviCRMCollector->addStat("donations.created", 500);
+$donationsPending = $CiviCRMCollector->getStat("donations.created");
 
-
-/*
- * Targeting convention
- * .path.to.namespace = absolute
- * path.to.namespace = sub-namespace relative to current namespace
- * path = leafnode in current name space
- * #path = tags ?
- */
-//
-//
-//$StatsCollector->getStatsCountByTag("tag1");
-//$StatsCollector->getStatsCountByTags(['tag1', 'tag2']);
-
+$QueueStatsCollector = Statistics\Collector\QueueStats::getInstance();
+$QueueStatsCollector->addStat("redis.messages.processed", 150);
+$redisMessagesProcessed = $QueueStatsCollector->getStat("redis.messages.processed");
 
 ?>
