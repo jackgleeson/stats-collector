@@ -241,6 +241,12 @@ $totalResponses = $StatsCollector->getStatsSum(['.api.response.success', '.api.r
 
 
 /**
+ * Exporting stats
+ */
+
+$StatsCollector->export("*", new \Statistics\Exporter\Prometheus($path = "./out/Prometheus/"));
+
+/**
  * Extending the Stats Collector with your own subject specific instance is also possible by extending the AbstractCollector
  */
 

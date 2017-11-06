@@ -27,35 +27,35 @@ class Prometheus implements iExporter
      */
     public function __construct($path = '.')
     {
-        $this->$path = $path;
+        $this->path = $path;
     }
 
-    public function export($data)
+    public function export(array $data)
     {
-        print_r($data);
-        exit();
+        $this->writeDataToFiles($data);
     }
 
-    /**
-     * Update the component's metrics. The entire component file will be
-     * overwritten each time this is called.
-     * TODO: might be nice to update just the affected rows so we can call
-     * this multiple times. When we want that, we'll need locking.
-     *
-     * @param string $component name of the component doing the reporting
-     * @param array $metrics associative array of metric names to values
-     */
-    public function reportMetrics($component, $metrics = array())
+    protected function writeDataToFiles(array $data)
     {
-        $contents = array();
-        foreach ($metrics as $name => $value) {
-            $contents[] = "$name $value\n";
+        foreach ($data as $subject => $stats) {
+            $subject = $this->mapDotsToUnderscore($subject);
+
+            if (is_array($stats)) {
+                foreach ($stats as $stat) {
+                    $contents[] = "$subject $stat\n";
+                }
+            } else {
+                $contents[] = "$subject $stats\n";
+            }
         }
-        $path = $this->prometheusPath .
-            DIRECTORY_SEPARATOR .
-            $component .
-            self::$extension;
-        file_put_contents($path, implode('', $contents));
+
+        // prometheus for now?
+        file_put_contents($this->path . "prometheus" . self::$extension, implode('', $contents));
+    }
+
+    private function mapDotsToUnderscore($input)
+    {
+        return str_replace(".", "_", $input);
     }
 
 
