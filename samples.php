@@ -241,13 +241,6 @@ $totalResponses = $statsCollector->getStatsSum(['.api.response.success', '.api.r
 
 
 /**
- * Exporting stats to Prometheus exporter
- */
-
-$exporter = new Statistics\Exporter\Prometheus("jack");
-$exporter->export($statsCollector);
-
-/**
  * Extending the Stats Collector with your own subject specific instance is also possible by extending the AbstractCollector
  */
 
@@ -258,5 +251,21 @@ $usersCreated = $CiviCRMCollector->getStat("users.created");
 $QueueStatsCollector = Statistics\Collector\QueueStats::getInstance();
 $QueueStatsCollector->addStat("redis.messages.processed", 150);
 $redisMessagesProcessed = $QueueStatsCollector->getStat("redis.messages.processed");
+
+
+/**
+ * Exporting stats to Prometheus exporter
+ */
+
+$exporter = new Statistics\Exporter\Prometheus("samples");
+$exporter->export($statsCollector);
+
+$CiviCRMExporter = new Statistics\Exporter\Prometheus("civicrm");
+$CiviCRMExporter->export($CiviCRMCollector);
+
+$QueueStatsExporter = new Statistics\Exporter\Prometheus("queues");
+$QueueStatsExporter->export($QueueStatsCollector);
+
+
 
 ?>
