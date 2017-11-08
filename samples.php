@@ -79,7 +79,7 @@ $transactionsWithUniqueStats = $statsCollector->getStats(["transactions.*", ".tr
 // lets increment some stats
 $statsCollector->setNamespace("general.stats")
     ->addStat("days_on_the_earth", (33 * 365))// 12045 added to 'general.stats.days_on_the_earth'
-    ->incrementStat("days_on_the_earth"); // we time travel forward 24 hours.
+    ->incrementStat("days_on_the_earth",5); // we time travel forward 24 hours.
 $daysOnEarth = $statsCollector->getStat("days_on_the_earth"); // 12046
 $daysOnEarthAbsolute = $statsCollector->getStat(".general.stats.days_on_the_earth"); // same as above 12046
 

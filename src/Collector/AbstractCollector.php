@@ -126,8 +126,11 @@ abstract class AbstractCollector implements iCollector
             throw new StatisticsCollectorException("Wildcard usage forbidden when removing stats (to protect you from yourself!)");
         }
 
-        $this->checkExists($namespace);
-        $this->removeValueFromNamespace($namespace);
+        if ($this->checkExists($namespace) === true) {
+            $this->removeValueFromNamespace($namespace);
+        } else {
+            throw new StatisticsCollectorException("Attempting to remove a statistic that does not exist: " . $namespace);
+        }
         return $this;
     }
 
@@ -140,6 +143,10 @@ abstract class AbstractCollector implements iCollector
      */
     public function incrementStat($namespace, $increment = 1)
     {
+        if ($this->checkExists($namespace) !== true) {
+            $this->addStat($namespace, 0);
+        }
+
         $currentValue = $this->getStat($namespace);
         if ($this->is_incrementable($currentValue)) {
             $this->updateValueAtNamespace($namespace, $currentValue + $increment);
@@ -159,6 +166,10 @@ abstract class AbstractCollector implements iCollector
      */
     public function decrementStat($namespace, $decrement = -1)
     {
+        if ($this->checkExists($namespace) !== true) {
+            $this->addStat($namespace, 0);
+        }
+
         $currentValue = $this->getStat($namespace);
         if ($this->is_incrementable($currentValue)) {
             $this->updateValueAtNamespace($namespace, $currentValue - abs($decrement));
@@ -173,37 +184,47 @@ abstract class AbstractCollector implements iCollector
      * Retrieve statistic for a given namespace
      * @param string $namespace
      * @param bool $withKeys
+     * @param mixed $default default value to be returned if stat $namespace empty
      * @return mixed
      */
-    public function getStat($namespace, $withKeys = false)
+    public function getStat($namespace, $withKeys = false, $default = null)
     {
-        // send wildcards to the plural method for wildcard expansion
-        if (strpos($namespace, static::WILDCARD) !== false) {
-            return $this->getStats([$namespace], $withKeys);
+        // send wildcards and multi-namespaces to the plural method
+        if (strpos($namespace, static::WILDCARD) !== false ||
+            is_array($namespace)
+        ) {
+            return $this->getStats([$namespace], $withKeys, $default);
         }
 
-        $this->checkExists($namespace);
-        $resolvedNamespace = $this->getTargetNamespaces($namespace);
+        if ($this->checkExists($namespace) === true) {
+            $resolvedNamespace = $this->getTargetNamespaces($namespace);
 
-        if ($withKeys === true) {
-            $value[$resolvedNamespace] = $this->getValueFromNamespace($namespace);
+            if ($withKeys === true) {
+                $value[$resolvedNamespace] = $this->getValueFromNamespace($namespace);
+            } else {
+                $value = $this->getValueFromNamespace($namespace);
+            }
         } else {
-            $value = $this->getValueFromNamespace($namespace);
+            if ($withKeys === true) {
+                $value[$namespace] = $default;
+            } else {
+                $value = $default;
+            }
         }
         return $value;
+
     }
 
     /**
      * Retrieve a collection of statistics with an array of subject namespaces
      * @param array $namespaces
      * @param bool $withKeys
+     * @param mixed $default default value to be returned if stat $namespace empty
      * @return array
-     * @throws StatisticsCollectorException
      */
-    public function getStats(array $namespaces, $withKeys = false)
+    public function getStats(array $namespaces, $withKeys = false, $default = null)
     {
         $resolvedNamespaces = $this->getTargetNamespaces($namespaces, true);
-        $this->checkExists($resolvedNamespaces);
         if (!is_array($resolvedNamespaces)) {
             $resolvedNamespaces = [$resolvedNamespaces];
         }
@@ -211,7 +232,7 @@ abstract class AbstractCollector implements iCollector
         //iterate over $namespaces and retrieve values
         $stats = [];
         foreach ($resolvedNamespaces as $namespace) {
-            $stat = $this->getStat($namespace, $withKeys);
+            $stat = $this->getStat($namespace, $withKeys, $default);
             $stats = array_merge($stats, (is_array($stat) ? $stat : [$stat]));
         }
         return $stats;
@@ -567,9 +588,10 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * Check that namespace element(s) exist
+     *
+     * TODO: write the value of the non-existent namespace for arrays of namespaces out somewhere
      * @param mixed $namespace
      * @return bool
-     * @throws StatisticsCollectorException
      */
     protected function checkExists($namespace)
     {
@@ -577,12 +599,12 @@ abstract class AbstractCollector implements iCollector
         if (is_array($resolvedNamespace)) {
             foreach ($resolvedNamespace as $ns) {
                 if (!$this->container->has($ns)) {
-                    throw new StatisticsCollectorException("The namespace does not exist: " . $ns);
+                    return false;
                 }
             }
         } else {
             if (!$this->container->has($resolvedNamespace)) {
-                throw new StatisticsCollectorException("The namespace does not exist: " . $resolvedNamespace);
+                return false;
             }
         }
         return true;
