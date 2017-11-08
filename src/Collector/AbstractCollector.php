@@ -18,9 +18,6 @@ use Statistics\Exception\StatisticsCollectorException;
  * Reportable stats are stored in defined namespaces. The namespace structure/convention/naming is entirely up to the
  * user e.g. queue.emails.inbox , civi.user.unsubscribed, server1.website.clicks are all acceptable
  *
- * TODO:
- * - implement exporter strategy object to handle backend specific export/output logic (Prometheus being the first)
- * - add support for tagging stats
  */
 abstract class AbstractCollector implements iCollector
 {
@@ -129,6 +126,7 @@ abstract class AbstractCollector implements iCollector
             throw new StatisticsCollectorException("Wildcard usage forbidden when removing stats (to protect you from yourself!)");
         }
 
+        $this->checkExists($namespace);
         $this->removeValueFromNamespace($namespace);
         return $this;
     }
@@ -531,14 +529,14 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * Check to see if value can be incremented.
-     * Currently PHP only allows numbers and strings to be incremented.
+     * Currently PHP only allows numbers and strings to be incremented. We only want numbers
      *
      * @param mixed $value
      * @return bool
      */
     protected function is_incrementable($value)
     {
-        return (is_int($value) || is_string($value));
+        return (is_int($value) || is_float($value));
     }
 
     /**

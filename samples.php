@@ -43,6 +43,9 @@ $statsAbsoluteWithKeys = $statsCollector->getStats([
 // get multiple stats, one using absolute namespace and one using relative namespace
 $statsRelative = $statsCollector->getStats(['clicks', '.website.banner.views']); // Array ( [0] => 30 [1] => 20 )
 
+//removing a stat
+$statsCollector->removeStat('clicks');
+
 //define a long namespace, add a stat related stats and retrieve it using a wildcard operator
 $statsCollector->setNamespace("this.is.a.really.long.namespace.path")
     ->addStat("age", 33);
