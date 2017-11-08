@@ -6,6 +6,6 @@ use Statistics\Collector\iCollector;
 
 interface iExporter
 {
-    public function export(iCollector $data);
+    public function export($data);
 
 }

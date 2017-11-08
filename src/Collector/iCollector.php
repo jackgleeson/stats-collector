@@ -28,7 +28,7 @@ interface iCollector
 
     public function incrementStat($namespace, $increment);
 
-    public function getAllStats($namespace);
+    public function getAllStats();
 
     public function setNamespace($namespace);
 

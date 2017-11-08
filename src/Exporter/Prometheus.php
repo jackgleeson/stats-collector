@@ -9,8 +9,10 @@ use Statistics\Collector\iCollector;
  */
 class Prometheus implements iExporter
 {
+
     /**
      * Prometheus files extension
+     *
      * @var string
      */
     public static $extension = '.prom';
@@ -24,6 +26,7 @@ class Prometheus implements iExporter
 
     /**
      * Filename to write statistics out to
+     *
      * @var string
      */
     public $filename;
@@ -40,21 +43,31 @@ class Prometheus implements iExporter
 
 
     /**
-     * @param iCollector $Statistics
+     * Take either an array of key=>value statistical data or an instance of
+     * iCollector.
+     *
+     * @param array|iCollector $statistics
+     *
      * @return bool
      */
-    public function export(iCollector $Statistics)
+    public function export($statistics)
     {
-        $this->writeStatisticsToPrometheusFile($Statistics);
+        if ($statistics instanceof iCollector) {
+            $statistics = $statistics->getAllStats();
+        }
+        $this->writeStatisticsToPrometheusFile($statistics);
         return true;
     }
 
     /**
-     * @param iCollector $Statistics
+     * Transform array of statistical data into Prometheus metrics output and
+     * write to file.
+     *
+     * @param array $statistics
      */
-    protected function writeStatisticsToPrometheusFile($Statistics)
+    protected function writeStatisticsToPrometheusFile(array $statistics)
     {
-        foreach ($Statistics->getAllStats() as $subject => $stats) {
+        foreach ($statistics as $subject => $stats) {
             $subject = $this->mapDotsToUnderscore($subject);
 
             if (is_array($stats)) {
@@ -66,7 +79,8 @@ class Prometheus implements iExporter
             }
         }
 
-        file_put_contents($this->path . $this->filename . self::$extension, implode('', $contents));
+        file_put_contents($this->path . $this->filename . self::$extension,
+          implode('', $contents));
     }
 
     private function mapDotsToUnderscore($input)

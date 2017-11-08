@@ -10,19 +10,25 @@ use Statistics\Exception\StatisticsCollectorException;
 /**
  * Statistics Collector
  *
- * This utility is designed to allow simple namespace structured key/value storage for statistics recording
- * during the lifecycle of a request or process.
+ * This utility is designed to allow simple namespace structured key/value
+ * storage for statistics recording during the lifecycle of a request or
+ * process.
  *
- * Recorded statistics can then be exported via a backend specific exporter class to file, log, db, queue, other.
+ * Recorded statistics can then be exported via a backend specific exporter
+ * class to file, log, db, queue, other.
  *
- * Reportable stats are stored in defined namespaces. The namespace structure/convention/naming is entirely up to the
- * user e.g. queue.emails.inbox , civi.user.unsubscribed, server1.website.clicks are all acceptable
+ * Reportable stats are stored in defined namespaces. The namespace
+ * structure/convention/naming is entirely up to the user e.g.
+ * queue.emails.inbox , civi.user.unsubscribed, server1.website.clicks are all
+ * acceptable
  *
  */
 abstract class AbstractCollector implements iCollector
 {
+
     /**
      * Singleton instances container
+     *
      * @var array
      */
     private static $instances = [];
@@ -41,6 +47,7 @@ abstract class AbstractCollector implements iCollector
      * @var null|string
      */
     protected $namespace = null;
+
     /**
      * @var string
      */
@@ -48,6 +55,7 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * Container for stats data
+     *
      * @var Container
      */
     protected $container;
@@ -78,8 +86,9 @@ abstract class AbstractCollector implements iCollector
     }
 
     /**
-     * It is possible this singleton will be extended to allow subject specific conveniences
-     * for statistics collection e.g. a fixed default namespace of "queue." in QueueStatsCollector
+     * It is possible this singleton will be extended to allow subject specific
+     * conveniences for statistics collection e.g. a fixed default namespace of
+     * "queue." in QueueStatsCollector
      *
      * @return \Statistics\Collector\ICollector
      */
@@ -98,9 +107,11 @@ abstract class AbstractCollector implements iCollector
      *
      * TODO:
      * - workout how to handle backend specific types as values
+     *
      * @param string $name name of statistic to be added to namespace
      * @param mixed $value
      * @param array $options
+     *
      * @return \Statistics\Collector\ICollector
      */
     public function addStat($name, $value, $options = [])
@@ -116,7 +127,9 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * Delete a statistic
+     *
      * @param string $namespace
+     *
      * @return \Statistics\Collector\ICollector
      * @throws StatisticsCollectorException
      */
@@ -136,8 +149,10 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * Increment a statistic
+     *
      * @param string $namespace
      * @param int $increment
+     *
      * @return \Statistics\Collector\ICollector
      * @throws StatisticsCollectorException
      */
@@ -149,7 +164,8 @@ abstract class AbstractCollector implements iCollector
 
         $currentValue = $this->getStat($namespace);
         if ($this->is_incrementable($currentValue)) {
-            $this->updateValueAtNamespace($namespace, $currentValue + $increment);
+            $this->updateValueAtNamespace($namespace,
+              $currentValue + $increment);
             return $this;
         } else {
             throw new StatisticsCollectorException("Attempted to increment a value which cannot be incremented! (" . $namespace . ":" . gettype($currentValue) . ")");
@@ -159,8 +175,10 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * Decrement a statistic
+     *
      * @param $namespace
      * @param int $decrement
+     *
      * @return \Statistics\Collector\ICollector
      * @throws StatisticsCollectorException
      */
@@ -172,7 +190,8 @@ abstract class AbstractCollector implements iCollector
 
         $currentValue = $this->getStat($namespace);
         if ($this->is_incrementable($currentValue)) {
-            $this->updateValueAtNamespace($namespace, $currentValue - abs($decrement));
+            $this->updateValueAtNamespace($namespace,
+              $currentValue - abs($decrement));
             return $this;
         } else {
             throw new StatisticsCollectorException("Attempted to decrement a value which cannot be decremented! (" . $namespace . ":" . gettype($currentValue) . ")");
@@ -182,16 +201,19 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * Retrieve statistic for a given namespace
+     *
      * @param string $namespace
      * @param bool $withKeys
-     * @param mixed $default default value to be returned if stat $namespace empty
+     * @param mixed $default default value to be returned if stat $namespace
+     *   empty
+     *
      * @return mixed
      */
     public function getStat($namespace, $withKeys = false, $default = null)
     {
         // send wildcards and multi-namespaces to the plural method
         if (strpos($namespace, static::WILDCARD) !== false ||
-            is_array($namespace)
+          is_array($namespace)
         ) {
             return $this->getStats([$namespace], $withKeys, $default);
         }
@@ -217,13 +239,19 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * Retrieve a collection of statistics with an array of subject namespaces
+     *
      * @param array $namespaces
      * @param bool $withKeys
-     * @param mixed $default default value to be returned if stat $namespace empty
+     * @param mixed $default default value to be returned if stat $namespace
+     *   empty
+     *
      * @return array
      */
-    public function getStats(array $namespaces, $withKeys = false, $default = null)
-    {
+    public function getStats(
+      array $namespaces,
+      $withKeys = false,
+      $default = null
+    ) {
         $resolvedNamespaces = $this->getTargetNamespaces($namespaces, true);
         if (!is_array($resolvedNamespaces)) {
             $resolvedNamespaces = [$resolvedNamespaces];
@@ -240,7 +268,9 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * Count the number of values recorded for a given stat
+     *
      * @param $namespace
+     *
      * @return int
      */
     public function getStatCount($namespace)
@@ -251,7 +281,9 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * Count the number of values recorded for a collection of given stats
+     *
      * @param array $namespaces
+     *
      * @return int
      * @internal param array $names
      */
@@ -266,6 +298,7 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * @param $namespace
+     *
      * @return float|int
      */
     public function getStatAverage($namespace)
@@ -276,6 +309,7 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * @param array $namespaces
+     *
      * @return float|int
      */
     public function getStatsAverage(array $namespaces)
@@ -294,6 +328,7 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * @param $namespace
+     *
      * @return float|int
      */
     public function getStatSum($namespace)
@@ -304,6 +339,7 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * @param array $namespaces
+     *
      * @return float|int
      */
     public function getStatsSum(array $namespaces)
@@ -322,23 +358,16 @@ abstract class AbstractCollector implements iCollector
     /**
      *  Retrieve statistics for all subject namespaces
      *
-     * TODO:
-     * - take array of namespaces with wildcards to target specific namespaces
-     * @param string $namespace
      * @return array
      * @throws StatisticsCollectorException
      */
-    public function getAllStats($namespace = "*")
+    public function getAllStats()
     {
-        if ($namespace === "*") {
-            $data = [];
-            foreach ($this->populatedNamespaces as $namespace) {
-                $data[$namespace] = $this->container->get($namespace);
-            }
-            return $data;
-        } else {
-            throw new StatisticsCollectorException("Not currently implemented!");
+        $data = [];
+        foreach ($this->populatedNamespaces as $namespace) {
+            $data[$namespace] = $this->container->get($namespace);
         }
+        return $data;
     }
 
     /**
@@ -349,6 +378,7 @@ abstract class AbstractCollector implements iCollector
      *
      * @param string $namespaces
      * @param iExporter $Exporter
+     *
      * @return
      * @throws StatisticsCollectorException
      */
@@ -365,6 +395,7 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * @param $namespace
+     *
      * @return \Statistics\Collector\ICollector
      */
     public function setNamespace($namespace)
@@ -375,6 +406,7 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * Return the current namespace. Default to default namespace if none set.
+     *
      * @return string
      */
     public function getCurrentNamespace()
@@ -393,7 +425,9 @@ abstract class AbstractCollector implements iCollector
     /**
      * TODO:
      * - validate namespace argument
+     *
      * @param $namespace
+     *
      * @return \Statistics\Collector\ICollector
      */
     protected function setCurrentNamespace($namespace)
@@ -404,6 +438,7 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * @param string $namespace
+     *
      * @return mixed
      */
     protected function resolveWildcardNamespace($namespace)
@@ -428,11 +463,14 @@ abstract class AbstractCollector implements iCollector
     /**
      * Determine the target namespace(s) based on the namespace value(s)
      * '.' present at beginning indicates absolute namespace path
-     * '.' present but not at the beginning indicates branch namespace path of the current namespace
+     * '.' present but not at the beginning indicates branch namespace path of
+     * the current namespace
      * '.' not present indicates leaf-node namespace of current namespace
      * '*' present indicates wildcard namespace path expansion required
+     *
      * @param mixed $namespaces
      * @param bool $returnAbsolute
+     *
      * @return mixed $resolvedNamespaces
      */
     protected function getTargetNamespaces($namespaces, $returnAbsolute = false)
@@ -446,18 +484,20 @@ abstract class AbstractCollector implements iCollector
             if (strpos($namespace, static::WILDCARD) !== false) {
                 // wildcard
                 $wildcardPaths = $this->resolveWildcardNamespace($namespace);
-                $resolvedNamespaces = array_merge($resolvedNamespaces, $wildcardPaths);
+                $resolvedNamespaces = array_merge($resolvedNamespaces,
+                  $wildcardPaths);
             } else {
                 // non-wildcard
                 if (strpos($namespace, static::SEPARATOR) === 0) {
                     // absolute path namespace e.g. '.this.a.full.path.beginning.with.separator'
-                    $resolvedNamespaces[] = ($returnAbsolute === false) ? substr($namespace, 1) : $namespace;
+                    $resolvedNamespaces[] = ($returnAbsolute === false) ? substr($namespace,
+                      1) : $namespace;
                 } else {
                     // leaf-node namespace of current namespace e.g. 'dates' or
                     // sub-namespace e.g 'sub.path.of.current.namespace'
                     $resolvedNamespaces[] = ($returnAbsolute === false) ?
-                        $this->getCurrentNamespace() . static::SEPARATOR . $namespace :
-                        static::SEPARATOR . $this->getCurrentNamespace() . static::SEPARATOR . $namespace;
+                      $this->getCurrentNamespace() . static::SEPARATOR . $namespace :
+                      static::SEPARATOR . $this->getCurrentNamespace() . static::SEPARATOR . $namespace;
                 }
             }
         }
@@ -469,13 +509,14 @@ abstract class AbstractCollector implements iCollector
      * @param string $namespace
      * @param mixed $value
      * @param array $options
+     *
      * @return \Statistics\Collector\ICollector
      */
     protected function addValueToNamespace($namespace, $value, $options)
     {
         if (array_key_exists("flatten", $options) &&
-            $options['flatten'] === true &&
-            is_array($value)
+          $options['flatten'] === true &&
+          is_array($value)
         ) {
             $flatten = true;
             $flattenedValues = $this->arrayFlatten($value);
@@ -487,7 +528,9 @@ abstract class AbstractCollector implements iCollector
             if (isset($flatten) && $flatten === true) {
                 $currentValue = $this->container->get($targetNS);
                 $values = (is_array($currentValue)) ?
-                    array_merge($currentValue, $flattenedValues) : array_merge([$currentValue], $flattenedValues);
+                  array_merge($currentValue,
+                    $flattenedValues) : array_merge([$currentValue],
+                    $flattenedValues);
                 $this->container->set($targetNS, $values);
             } else {
                 $this->container->append($targetNS, $value);
@@ -502,6 +545,7 @@ abstract class AbstractCollector implements iCollector
     /**
      * @param $namespace
      * @param $value
+     *
      * @return \Statistics\Collector\ICollector
      * @throws StatisticsCollectorException
      * @internal param $name
@@ -519,6 +563,7 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * @param $name
+     *
      * @return \Statistics\Collector\ICollector
      */
     protected function removeValueFromNamespace($name)
@@ -531,7 +576,9 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * Retrieve stats value from container, return null if not found.
+     *
      * @param $name
+     *
      * @return mixed
      */
     protected function getValueFromNamespace($name)
@@ -550,9 +597,11 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * Check to see if value can be incremented.
-     * Currently PHP only allows numbers and strings to be incremented. We only want numbers
+     * Currently PHP only allows numbers and strings to be incremented. We only
+     * want numbers
      *
      * @param mixed $value
+     *
      * @return bool
      */
     protected function is_incrementable($value)
@@ -562,7 +611,9 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * Keep track of populated namespaces
+     *
      * @param $namespace
+     *
      * @return bool
      */
     protected function addPopulatedNamespace($namespace)
@@ -572,13 +623,17 @@ abstract class AbstractCollector implements iCollector
     }
 
     /**
-     * Remove a namespace from the populated namespaces array (typically when it becomes empty)
+     * Remove a namespace from the populated namespaces array (typically when
+     * it becomes empty)
+     *
      * @param $namespace
+     *
      * @return bool
      */
     protected function removePopulatedNamespace($namespace)
     {
-        if (($index = array_search($namespace, $this->populatedNamespaces)) !== false) {
+        if (($index = array_search($namespace,
+            $this->populatedNamespaces)) !== false) {
             unset($this->populatedNamespaces[$index]);
             return true;
         } else {
@@ -589,8 +644,11 @@ abstract class AbstractCollector implements iCollector
     /**
      * Check that namespace element(s) exist
      *
-     * TODO: write the value of the non-existent namespace for arrays of namespaces out somewhere
+     * TODO: write the value of the non-existent namespace for arrays of
+     * namespaces out somewhere
+     *
      * @param mixed $namespace
+     *
      * @return bool
      */
     protected function checkExists($namespace)
@@ -648,7 +706,9 @@ abstract class AbstractCollector implements iCollector
     /**
      * TODO:
      * - this is the same as is averageable(). refactor both into one method?
+     *
      * @param mixed $value
+     *
      * @return bool
      */
     protected function is_summable($value)
@@ -670,11 +730,15 @@ abstract class AbstractCollector implements iCollector
     }
 
     /**
-     * Check if value is a number or a collection of numbers available to averaged.
+     * Check if value is a number or a collection of numbers available to
+     * averaged.
      *
      * TODO:
-     * - work out how to prevent subnamespaces of the current breaking current averaging
+     * - work out how to prevent subnamespaces of the current breaking current
+     * averaging
+     *
      * @param $value
+     *
      * @return bool
      */
     protected function is_averageable($value)
@@ -697,7 +761,9 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * Get the average of a collection of values
+     *
      * @param array $values
+     *
      * @return float|int
      */
     protected function average($values = [])
@@ -707,7 +773,9 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * Get the sum of a collection of values
+     *
      * @param array $values
+     *
      * @return float|int
      */
     protected function sum($values = [])
@@ -717,7 +785,9 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * Flatten a multi-dimensional array down to a single array
+     *
      * @param array $array
+     *
      * @return array
      */
     protected function arrayFlatten($array = [])
@@ -730,7 +800,8 @@ abstract class AbstractCollector implements iCollector
     }
 
     /**
-     * During getInstance() we want to configure the container to be an instance of Container()
+     * During getInstance() we want to configure the container to be an
+     * instance of Container()
      */
     protected function containerSetup()
     {
