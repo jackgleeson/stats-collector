@@ -2,15 +2,15 @@
 
 namespace Statistics\Exporter;
 
+use Statistics\Collector\iCollector;
+
 /**
  * Write out metrics in a Prometheus-readable format.
- * Each component gets its own file, and each call to
- * reportMetrics overwrites the file with the new data.
  */
 class Prometheus implements iExporter
 {
     /**
-     * Prometheus files file extension
+     * Prometheus files extension
      * @var string
      */
     public static $extension = '.prom';
@@ -20,24 +20,41 @@ class Prometheus implements iExporter
      *
      * @var string $path
      */
-    protected $path;
+    public $path;
+
+    /**
+     * Filename to write statistics out to
+     * @var string
+     */
+    public $filename;
 
     /**
      * @param string $path
+     * @param string $filename
      */
-    public function __construct($path = '.')
+    public function __construct($filename = "prometheus", $path = "./")
     {
+        $this->filename = $filename;
         $this->path = $path;
     }
 
-    public function export(array $data)
+
+    /**
+     * @param iCollector $Statistics
+     * @return bool
+     */
+    public function export(iCollector $Statistics)
     {
-        $this->writeDataToFiles($data);
+        $this->writeStatisticsToPrometheusFile($Statistics);
+        return true;
     }
 
-    protected function writeDataToFiles(array $data)
+    /**
+     * @param iCollector $Statistics
+     */
+    protected function writeStatisticsToPrometheusFile($Statistics)
     {
-        foreach ($data as $subject => $stats) {
+        foreach ($Statistics->getAllStats() as $subject => $stats) {
             $subject = $this->mapDotsToUnderscore($subject);
 
             if (is_array($stats)) {
@@ -49,8 +66,7 @@ class Prometheus implements iExporter
             }
         }
 
-        // prometheus for now?
-        file_put_contents($this->path . "prometheus" . self::$extension, implode('', $contents));
+        file_put_contents($this->path . $this->filename . self::$extension, implode('', $contents));
     }
 
     private function mapDotsToUnderscore($input)

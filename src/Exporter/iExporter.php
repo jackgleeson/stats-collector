@@ -1,8 +1,11 @@
 <?php
+
 namespace Statistics\Exporter;
+
+use Statistics\Collector\iCollector;
 
 interface iExporter
 {
-    public function export(array $data);
+    public function export(iCollector $data);
 
 }

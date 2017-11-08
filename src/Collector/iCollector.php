@@ -2,8 +2,6 @@
 
 namespace Statistics\Collector;
 
-use Statistics\Exporter\iExporter;
-
 interface iCollector
 {
     public static function getInstance();
@@ -35,8 +33,5 @@ interface iCollector
     public function setNamespace($namespace);
 
     public function getCurrentNamespace();
-
-    public function export($namespaces, iExporter $Exporter);
-
 
 }
