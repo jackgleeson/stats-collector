@@ -3,7 +3,7 @@
 
 namespace Statistics\Collector;
 
-class QueueStats extends AbstractCollector
+class QueueStatsCollector extends AbstractCollector
 {
     protected $defaultNamespace = "queue_stats";
 }

@@ -3,7 +3,7 @@
 
 namespace Statistics\Collector;
 
-class CiviCRM extends AbstractCollector
+class CiviCRMCollector extends AbstractCollector
 {
     protected $defaultNamespace = "civi";
 }

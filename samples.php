@@ -3,7 +3,7 @@ require __DIR__ . '/vendor/autoload.php';
 /**
  * Get an instance of the Collector
  */
-$statsCollector = Statistics\Collector\General::getInstance();
+$statsCollector = Statistics\Collector\Collector::getInstance();
 
 /**
  * Setting & Getting stats
@@ -247,11 +247,11 @@ $totalResponses = $statsCollector->getStatsSum(['.api.response.success', '.api.r
  * Extending the Stats Collector with your own subject specific instance is also possible by extending the AbstractCollector
  */
 
-$CiviCRMCollector = Statistics\Collector\CiviCRM::getInstance();
+$CiviCRMCollector = Statistics\Collector\CiviCRMCollector::getInstance();
 $CiviCRMCollector->addStat("users.created", 500);
 $usersCreated = $CiviCRMCollector->getStat("users.created");
 
-$QueueStatsCollector = Statistics\Collector\QueueStats::getInstance();
+$QueueStatsCollector = Statistics\Collector\QueueStatsCollector::getInstance();
 $QueueStatsCollector->addStat("redis.messages.processed", 150);
 $redisMessagesProcessed = $QueueStatsCollector->getStat("redis.messages.processed");
 

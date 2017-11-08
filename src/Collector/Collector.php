@@ -3,7 +3,7 @@
 
 namespace Statistics\Collector;
 
-class General extends AbstractCollector
+class Collector extends AbstractCollector
 {
     protected $defaultNamespace = "general";
 }
