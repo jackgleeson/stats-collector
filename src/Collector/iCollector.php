@@ -4,6 +4,7 @@ namespace Statistics\Collector;
 
 interface iCollector
 {
+
     public static function getInstance();
 
     public function addStat($name, $value, $options = null);
@@ -27,6 +28,8 @@ interface iCollector
     public function getStatsSum(array $namespace);
 
     public function incrementStat($namespace, $increment);
+
+    public function decrementStat($namespace, $decrement);
 
     public function getAllStats();
 
