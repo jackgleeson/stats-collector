@@ -90,7 +90,7 @@ abstract class AbstractCollector implements iCollector
      * conveniences for statistics collection e.g. a fixed default namespace of
      * "queue." in QueueStatsCollector
      *
-     * @return \Statistics\Collector\ICollector
+     * @return \Statistics\Collector\iCollector
      */
     public static function getInstance()
     {
@@ -112,7 +112,7 @@ abstract class AbstractCollector implements iCollector
      * @param mixed $value
      * @param array $options
      *
-     * @return \Statistics\Collector\ICollector
+     * @return \Statistics\Collector\iCollector
      */
     public function addStat($name, $value, $options = [])
     {
@@ -130,7 +130,7 @@ abstract class AbstractCollector implements iCollector
      *
      * @param string $namespace
      *
-     * @return \Statistics\Collector\ICollector
+     * @return \Statistics\Collector\iCollector
      * @throws StatisticsCollectorException
      */
     public function removeStat($namespace)
@@ -153,7 +153,7 @@ abstract class AbstractCollector implements iCollector
      * @param string $namespace
      * @param int $increment
      *
-     * @return \Statistics\Collector\ICollector
+     * @return \Statistics\Collector\iCollector
      * @throws StatisticsCollectorException
      */
     public function incrementStat($namespace, $increment = 1)
@@ -179,7 +179,7 @@ abstract class AbstractCollector implements iCollector
      * @param $namespace
      * @param int $decrement
      *
-     * @return \Statistics\Collector\ICollector
+     * @return \Statistics\Collector\iCollector
      * @throws StatisticsCollectorException
      */
     public function decrementStat($namespace, $decrement = -1)
@@ -396,7 +396,7 @@ abstract class AbstractCollector implements iCollector
     /**
      * @param $namespace
      *
-     * @return \Statistics\Collector\ICollector
+     * @return \Statistics\Collector\iCollector
      */
     public function setNamespace($namespace)
     {
@@ -428,7 +428,7 @@ abstract class AbstractCollector implements iCollector
      *
      * @param $namespace
      *
-     * @return \Statistics\Collector\ICollector
+     * @return \Statistics\Collector\iCollector
      */
     protected function setCurrentNamespace($namespace)
     {
@@ -510,7 +510,7 @@ abstract class AbstractCollector implements iCollector
      * @param mixed $value
      * @param array $options
      *
-     * @return \Statistics\Collector\ICollector
+     * @return \Statistics\Collector\iCollector
      */
     protected function addValueToNamespace($namespace, $value, $options)
     {
@@ -546,7 +546,7 @@ abstract class AbstractCollector implements iCollector
      * @param $namespace
      * @param $value
      *
-     * @return \Statistics\Collector\ICollector
+     * @return \Statistics\Collector\iCollector
      * @throws StatisticsCollectorException
      * @internal param $name
      */
@@ -564,7 +564,7 @@ abstract class AbstractCollector implements iCollector
     /**
      * @param $name
      *
-     * @return \Statistics\Collector\ICollector
+     * @return \Statistics\Collector\iCollector
      */
     protected function removeValueFromNamespace($name)
     {

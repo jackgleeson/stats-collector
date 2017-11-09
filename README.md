@@ -17,4 +17,4 @@ $ git clone https://github.com/jackgleeson/stats-collector.git
 $ php composer install
 ```
 
-Checkout *samples.php* for usage until I have time to add the full README.
+Checkout *samples/samples.php* for usage examples until I have time to add the full README.

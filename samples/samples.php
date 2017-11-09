@@ -1,5 +1,5 @@
 <?php
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . DIRECTORY_SEPARATOR . '../vendor/autoload.php';
 /**
  * Get an instance of the Collector
  */
@@ -267,32 +267,33 @@ $totalResponses = $statsCollector->getStatsSum([
  * also possible by extending the AbstractCollector
  */
 
-$CiviCRMCollector = Statistics\Collector\CiviCRMCollector::getInstance();
+$CiviCRMCollector = Samples\CiviCRMCollector::getInstance();
 $CiviCRMCollector->addStat("users.created", 500);
 $usersCreated = $CiviCRMCollector->getStat("users.created");
-
-$QueueStatsCollector = Statistics\Collector\QueueStatsCollector::getInstance();
-$QueueStatsCollector->addStat("redis.messages.processed", 150);
-$redisMessagesProcessed = $QueueStatsCollector->getStat("redis.messages.processed");
 
 
 /**
  * Exporting stats to Prometheus exporter
  */
 
-$exporter = new Statistics\Exporter\Prometheus("samples");
+//export all stats collected so far to sample_stats.prom file
+//exporter also takes care of any mapping required for output. In the case of
+//Prometheus, we map dots to underscores before writing to .prom files.
+$exporter = new Statistics\Exporter\Prometheus("sample_stats");
+$exporter->path = __DIR__ . DIRECTORY_SEPARATOR . 'prometheus_out'; // output path
 $exporter->export($statsCollector);
 
-// export again a bunch of targeted namespaces
-$exporter->filename = "noahs_people";
-$exporter->export($statsCollector->getStat("noahs.ark.passengers.*",true));
+// export a bunch of targeted stats
+// you can update $exporter->filename & $exporter->path before each export() call for a different output dir/name
+$exporter->filename = "noahs_ark_stats";
 
-$CiviCRMExporter = new Statistics\Exporter\Prometheus("civicrm");
-$CiviCRMExporter->export($CiviCRMCollector);
+// return as associative array of namespace=>value to pass to export() due to $withKeys=true being passed
+$noahsArkStats = $statsCollector->getStat("noahs.ark.passengers.*", true);
+$exporter->export($noahsArkStats);
 
-$QueueStatsExporter = new Statistics\Exporter\Prometheus("queues2");
-$QueueStatsExporter->export($QueueStatsCollector->getStat("redis . messages . processed",
-  true));
+//export a custom collector instance
+$exporter->filename = "civicrm_stats";
+$exporter->export($CiviCRMCollector);
 
 
 ?>

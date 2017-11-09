@@ -35,7 +35,7 @@ class Prometheus implements iExporter
      * @param string $path
      * @param string $filename
      */
-    public function __construct($filename = "prometheus", $path = "./")
+    public function __construct($filename = "prometheus", $path = ".")
     {
         $this->filename = $filename;
         $this->path = $path;
@@ -79,7 +79,7 @@ class Prometheus implements iExporter
             }
         }
 
-        file_put_contents($this->path . $this->filename . self::$extension,
+        file_put_contents($this->path . DIRECTORY_SEPARATOR . $this->filename . self::$extension,
           implode('', $contents));
     }
 

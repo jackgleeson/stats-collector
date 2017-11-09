@@ -1,9 +1,11 @@
 <?php
 
+namespace Samples;
 
-namespace Statistics\Collector;
+use Statistics\Collector\AbstractCollector;
 
 class CiviCRMCollector extends AbstractCollector
 {
+
     protected $defaultNamespace = "civi";
 }
