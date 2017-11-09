@@ -121,6 +121,11 @@ abstract class AbstractCollector implements iCollector
             $options['flatten'] = true;
         }
 
+        // if true, we overwrite existing value
+        if (!array_key_exists("clobber", $options)) {
+            $options['clobber'] = false;
+        }
+
         $this->addValueToNamespace($name, $value, $options);
         return $this;
     }
@@ -506,6 +511,8 @@ abstract class AbstractCollector implements iCollector
     }
 
     /**
+     * TODO: split this function into subfunctions.
+     *
      * @param string $namespace
      * @param mixed $value
      * @param array $options
@@ -514,6 +521,7 @@ abstract class AbstractCollector implements iCollector
      */
     protected function addValueToNamespace($namespace, $value, $options)
     {
+        $flatten = false;
         if (array_key_exists("flatten", $options) &&
           $options['flatten'] === true &&
           is_array($value)
@@ -522,10 +530,19 @@ abstract class AbstractCollector implements iCollector
             $flattenedValues = $this->arrayFlatten($value);
         }
 
+        $clobber = false;
+        if (array_key_exists("clobber", $options) &&
+          $options['clobber'] === true
+        ) {
+            $clobber = true;
+        }
+
         $targetNS = $this->getTargetNamespaces($namespace);
 
-        if ($this->container->has($targetNS)) {
-            if (isset($flatten) && $flatten === true) {
+        // if value exists and is not to be overwritten(clobbered)
+        if ($this->container->has($targetNS) && ($clobber === false)) {
+            // need to combine the flatten behaviour and move into flatten add method
+            if ($flatten === true) {
                 $currentValue = $this->container->get($targetNS);
                 $values = (is_array($currentValue)) ?
                   array_merge($currentValue,
@@ -536,7 +553,12 @@ abstract class AbstractCollector implements iCollector
                 $this->container->append($targetNS, $value);
             }
         } else {
-            $this->container->set($targetNS, $value);
+            // if value doesn't exist or clobber=true, create new entry with value
+            if ($flatten === true) {
+                $this->container->set($targetNS, $flattenedValues);
+            } else {
+                $this->container->set($targetNS, $value);
+            }
             $this->addPopulatedNamespace($targetNS);
         }
         return $this;

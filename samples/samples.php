@@ -10,17 +10,14 @@ $statsCollector = Statistics\Collector\Collector::getInstance();
  */
 
 // basic usage (add to default namespace)
-$statsCollector->addStat("clicks",
-  45); // add stat to "general" default general namespace
+$statsCollector->addStat("clicks", 45); // add stat to "general" default general namespace
 $clicks = $statsCollector->getStat("clicks"); // 45
-$clicksWithNamespaceInKey = $statsCollector->getStat("clicks",
-  $withKeys = true); // Array ( [general.clicks] => 45 )
+$clicksWithNamespaceInKey = $statsCollector->getStat("clicks", $withKeys = true); // Array ( [general.clicks] => 45 )
 
 // define a new default namespace and add stats to it
 $statsCollector->setNamespace("website")
   ->addStat("clicks", 30)
-  ->addStat("banner.views",
-    20); // add a sub-namespace to the current namespace (in a relative fashion)
+  ->addStat("banner.views", 20); // add a sub-namespace to the current namespace (in a relative fashion)
 
 // get single stat by relative (resolves to website.clicks due to last set namespace being "website" on line 18)
 $clicks = $statsCollector->getStat("clicks"); // 30 - the getStat() call is relative to your last default namespace
@@ -88,8 +85,7 @@ $transactionsWithUniqueStats = $statsCollector->getStats([
 
 // lets increment some stats
 $statsCollector->setNamespace("general.stats")
-  ->addStat("days_on_the_earth",
-    (33 * 365))// 12045 added to 'general.stats.days_on_the_earth'
+  ->addStat("days_on_the_earth", (33 * 365))// 12045 added to 'general.stats.days_on_the_earth'
   ->incrementStat("days_on_the_earth", 5); // we time travel forward 24 hours.
 $daysOnEarth = $statsCollector->getStat("days_on_the_earth"); // 12046
 $daysOnEarthAbsolute = $statsCollector->getStat(".general.stats.days_on_the_earth"); // same as above 12046
@@ -108,8 +104,7 @@ $daysUntilChristmas = $statsCollector->getStat("days_until_christmas"); // 52
 $statsCollector->setNamespace("noahs.ark.passengers")
   ->addStat("humans", 2)
   ->addStat("aliens", 0)
-  ->addStat("animal.cats",
-    3)// adds sub-namespace 'noahs.ark.passengers.animal.cats'
+  ->addStat("animal.cats", 3)//adds sub-namespace 'noahs.ark.passengers.animal.cats'
   ->addStat("animal.dogs", 6)
   ->addStat("animal.chickens", 25);
 
@@ -256,11 +251,11 @@ $statsCollector->setNamespace("api.response")// we don't need to redeclare this 
   ->addStat("error", 49)
   ->addStat("error", 9);
 
+
 $totalResponses = $statsCollector->getStatsSum([
   '.api.response.success',
   '.api.response.error',
 ]); // 151192
-
 
 /**
  * Extending the Stats Collector with your own subject specific instance is
