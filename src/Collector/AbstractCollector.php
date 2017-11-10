@@ -729,6 +729,7 @@ abstract class AbstractCollector implements iCollector
 
     /**
      * sort namespaces into groups by namespace level size alphabetical order
+     *
      * @return bool
      */
     protected function sortPopulatedNamespaces()
@@ -805,7 +806,7 @@ abstract class AbstractCollector implements iCollector
      */
     protected function average($values = [])
     {
-        return array_sum($values) / count($values);
+        return (count($values) > 0) ? array_sum($values) / count($values) : 0;
     }
 
     /**
