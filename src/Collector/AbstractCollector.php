@@ -369,7 +369,7 @@ abstract class AbstractCollector implements iCollector
     public function getAllStats()
     {
         $data = [];
-        foreach ($this->populatedNamespaces as $namespace) {
+        foreach ( $this->populatedNamespaces as $namespace) {
             $data[$namespace] = $this->container->get($namespace);
         }
         return $data;
@@ -641,6 +641,7 @@ abstract class AbstractCollector implements iCollector
     protected function addPopulatedNamespace($namespace)
     {
         array_push($this->populatedNamespaces, $namespace);
+        sort($this->populatedNamespaces, SORT_NATURAL);
         return true;
     }
 
@@ -657,6 +658,7 @@ abstract class AbstractCollector implements iCollector
         if (($index = array_search($namespace,
             $this->populatedNamespaces)) !== false) {
             unset($this->populatedNamespaces[$index]);
+            sort($this->populatedNamespaces, SORT_NATURAL);
             return true;
         } else {
             return false;
