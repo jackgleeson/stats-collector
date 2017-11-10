@@ -700,7 +700,7 @@ abstract class AbstractCollector implements iCollector
         if ($this->is_summable($stats)) {
             switch (gettype($stats)) {
                 case "integer":
-                case "float":
+                case "double":
                     return $stats;
                 case "array":
                     return $this->sum($stats);
@@ -718,7 +718,7 @@ abstract class AbstractCollector implements iCollector
         if ($this->is_averageable($stats)) {
             switch (gettype($stats)) {
                 case "integer":
-                case "float":
+                case "double":
                     return $stats;
                 case "array":
                     return $this->average($stats);
@@ -756,7 +756,7 @@ abstract class AbstractCollector implements iCollector
     {
         switch (gettype($value)) {
             case "integer":
-            case "float":
+            case "double":
                 return true;
             case "array":
                 foreach ($value as $v) {
@@ -786,7 +786,7 @@ abstract class AbstractCollector implements iCollector
     {
         switch (gettype($value)) {
             case "integer":
-            case "float":
+            case "double":
                 return true;
             case "array":
                 foreach ($value as $v) {
