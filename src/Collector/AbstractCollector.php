@@ -369,7 +369,7 @@ abstract class AbstractCollector implements iCollector
     public function getAllStats()
     {
         $data = [];
-        foreach ( $this->populatedNamespaces as $namespace) {
+        foreach ($this->populatedNamespaces as $namespace) {
             $data[$namespace] = $this->container->get($namespace);
         }
         return $data;
@@ -641,7 +641,7 @@ abstract class AbstractCollector implements iCollector
     protected function addPopulatedNamespace($namespace)
     {
         array_push($this->populatedNamespaces, $namespace);
-        sort($this->populatedNamespaces, SORT_NATURAL);
+        $this->sortPopulatedNamespaces();
         return true;
     }
 
@@ -658,7 +658,7 @@ abstract class AbstractCollector implements iCollector
         if (($index = array_search($namespace,
             $this->populatedNamespaces)) !== false) {
             unset($this->populatedNamespaces[$index]);
-            sort($this->populatedNamespaces, SORT_NATURAL);
+            $this->sortPopulatedNamespaces();
             return true;
         } else {
             return false;
@@ -725,6 +725,19 @@ abstract class AbstractCollector implements iCollector
         } else {
             throw new StatisticsCollectorException("Unable to return average for this collection of values (are they all numbers?)");
         }
+    }
+
+    /**
+     * sort namespaces into groups by namespace level size alphabetical order
+     * @return bool
+     */
+    protected function sortPopulatedNamespaces()
+    {
+        sort($this->populatedNamespaces, SORT_NATURAL);
+        usort($this->populatedNamespaces, function ($a, $b) {
+            return strnatcmp(substr_count($a, '.'), substr_count($b, '.'));
+        });
+        return true;
     }
 
     /**
