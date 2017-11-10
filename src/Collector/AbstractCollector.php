@@ -453,9 +453,12 @@ abstract class AbstractCollector implements iCollector
             $namespace = $target = substr($namespace, 1);
         }
 
+        // add a left wildcard alternative namespace by prepending '*.' to namespace to search across all root namespaces
+        $leftWildcardNamespace = static::WILDCARD . "." . $namespace;
+
         $expandedPaths = [];
         foreach ($this->getPopulatedNamespaces() as $populatedNamespace) {
-            if (fnmatch($namespace, $populatedNamespace)) {
+            if (fnmatch($namespace, $populatedNamespace) || fnmatch($leftWildcardNamespace, $populatedNamespace)) {
                 // we convert the expanded wildcard path to an absolute path by prepending '.'
                 // this prevents the namespace resolution method from treating the full namespace as a sub namespace
                 $expandedPaths[] = static::SEPARATOR . $populatedNamespace;
