@@ -11,9 +11,9 @@ interface iCollector
 
     public function removeStat($namespace);
 
-    public function getStat($namespace, $withKeys = null);
+    public function getStat($namespace, $withKeys = null, $default = null);
 
-    public function getStats(array $namespaces, $withKeys = null);
+    public function getStats(array $namespaces, $withKeys = null, $default = null);
 
     public function getStatCount($namespace);
 
