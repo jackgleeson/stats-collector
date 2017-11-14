@@ -9,10 +9,10 @@ $statsCollector = Statistics\Collector\Collector::getInstance();
  * Setting & Getting stats
  */
 
-// basic usage (add to default namespace)
-$statsCollector->addStat("clicks", 45); // add stat to "general" default general namespace
-$clicks = $statsCollector->getStat("clicks"); // 45
-$clicksWithNamespaceInKey = $statsCollector->getStat("clicks", $withKeys = true); // Array ( [general.clicks] => 45 )
+// basic usage (add to root namespace)
+$statsCollector->addStat("users", 45); // add stat to "general" default general namespace
+$users= $statsCollector->getStat("users"); // 45
+$usersWithNamespaceInKey = $statsCollector->getStat("users", $withKeys = true); // Array ( [root.users] => 45 )
 
 // define a new default namespace and add stats to it
 $statsCollector->setNamespace("website")

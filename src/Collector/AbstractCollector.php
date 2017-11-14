@@ -156,7 +156,7 @@ abstract class AbstractCollector implements iCollector
      * Increment a statistic
      *
      * @param string $namespace
-     * @param int $increment
+     * @param int|float $increment
      *
      * @return \Statistics\Collector\iCollector
      * @throws StatisticsCollectorException
@@ -182,7 +182,7 @@ abstract class AbstractCollector implements iCollector
      * Decrement a statistic
      *
      * @param $namespace
-     * @param int $decrement
+     * @param int|float $decrement
      *
      * @return \Statistics\Collector\iCollector
      * @throws StatisticsCollectorException
@@ -418,6 +418,7 @@ abstract class AbstractCollector implements iCollector
     {
         return ($this->namespace === null) ? $this->getDefaultNamespace() : $this->namespace;
     }
+
 
     /**
      * @return array
@@ -703,7 +704,7 @@ abstract class AbstractCollector implements iCollector
                 case "double":
                     return $stats;
                 case "array":
-                    return $this->sum($stats);
+                    return $this->summate($stats);
                 default:
                     throw new StatisticsCollectorException("Unable to return sum for this collection of values (are they all numbers?)");
             }
@@ -819,7 +820,7 @@ abstract class AbstractCollector implements iCollector
      *
      * @return float|int
      */
-    protected function sum($values = [])
+    protected function summate($values = [])
     {
         return array_sum($values);
     }
