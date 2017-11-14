@@ -3,6 +3,7 @@
 namespace Statistics\Exporter;
 
 use Statistics\Collector\iCollector;
+use Statistics\Collector\iCollectorShorthand;
 
 /**
  * Write out metrics in a Prometheus-readable format.
@@ -54,6 +55,8 @@ class Prometheus implements iExporter
     {
         if ($statistics instanceof iCollector) {
             $statistics = $statistics->getAllStats();
+        } elseif ($statistics instanceof iCollectorShorthand) {
+            $statistics = $statistics->all();
         }
         $this->writeStatisticsToPrometheusFile($statistics);
         return true;
