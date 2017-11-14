@@ -7,7 +7,7 @@ This utility allows you to capture application-wide statisitics during a PHP pro
   - Import() - allow Stats Collector to import previously exported data and carry on where it left off. 
   - Tests!
   - getOverallStatsNamespaceCount() & getOverallStatsCount()  (stats count will be higher due to compound stats)
-
+  - investigate custom export formats e.g. google analytics and other tools
 ### Credits
 
 * [github.com/dflydev/dflydev-dot-access-data](https://github.com/dflydev/dflydev-dot-access-data)  - small but powerful dot namesapce utility
