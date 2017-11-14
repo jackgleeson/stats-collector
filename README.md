@@ -6,6 +6,7 @@ This utility allows you to capture application-wide statisitics during a PHP pro
 
   - Import() - allow Stats Collector to import previously exported data and carry on where it left off. 
   - Tests!
+  - getOverallStatsNamespaceCount() & getOverallStatsCount()  (stats count will be higher due to compound stats)
 
 ### Credits
 
