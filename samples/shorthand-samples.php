@@ -3,7 +3,7 @@ require __DIR__ . DIRECTORY_SEPARATOR . '../vendor/autoload.php';
 /**
  * Get an instance of the Collector
  */
-$stats = Statistics\Collector\ShorthandCollector::getInstance();
+$stats = Statistics\Collector\Collector::getInstance();
 
 /**
  * Setting & Getting stats

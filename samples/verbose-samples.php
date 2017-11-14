@@ -11,7 +11,7 @@ $statsCollector = Statistics\Collector\Collector::getInstance();
 
 // basic usage (add to root namespace)
 $statsCollector->addStat("users", 45); // add stat to "general" default general namespace
-$users= $statsCollector->getStat("users"); // 45
+$users = $statsCollector->getStat("users"); // 45
 $usersWithNamespaceInKey = $statsCollector->getStat("users", $withKeys = true); // Array ( [root.users] => 45 )
 
 // define a new default namespace and add stats to it

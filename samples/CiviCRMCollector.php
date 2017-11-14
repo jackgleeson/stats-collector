@@ -2,9 +2,9 @@
 
 namespace Samples;
 
-use Statistics\Collector\ShorthandCollector;
+use Statistics\Collector\Collector;
 
-class CiviCRMCollector extends ShorthandCollector
+class CiviCRMCollector extends Collector
 {
 
     protected $defaultNamespace = "civi";
