@@ -71,7 +71,7 @@ $transactionsWithKeys = $statsCollector->getStat("transactions.*", true);
 // $transactions = Array ( [transactions.mobile] => 10 [transactions.website] => 20 [transactions.tablet] => 30 [transactions.other] => 40 )
 
 
-// getStat() and getStats() will auto-deduplicate results if you accidently include the same stat twice using wildcards
+// getStat() and getStats() will auto-deduplicate results if you accidentally include the same stat twice using wildcards
 $transactionsWithUniqueStats = $statsCollector->getStats([
   "transactions.*",
   ".transactions.mobile",
@@ -214,7 +214,7 @@ $totalReferrals = $statsCollector->getStatsSum([
   'bing',
 ]); // 4089
 
-// lets take three different compound stats and work out the collective sum by usng absolute namespace paths
+// lets take three different compound stats and work out the collective sum by using absolute namespace paths
 $totalReferralsAbsolute = $statsCollector->getStatsSum([
   '.website.referrals.google',
   '.website.referrals.yahoo',

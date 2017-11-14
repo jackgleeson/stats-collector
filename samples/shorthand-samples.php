@@ -54,7 +54,8 @@ $stats->ns("this.is.a.really.long.namespace.path")
 $clicks = $stats->get("this.*.age"); // 33
 
 //define a namespace, add some stats and retrieve them all with wildcard paths
-$stats->ns("transactions")->add("mobile", 10)->add("website", 20)->add("tablet", 30)->add("other", 40);
+$stats->ns("transactions")
+  ->add("mobile", 10)->add("website", 20)->add("tablet", 30)->add("other", 40);
 
 // lets get all transaction stats using the wildcard operator
 $transactions = $stats->get("transactions.*");
@@ -65,7 +66,7 @@ $transactionsWithKeys = $stats->getWithKey("transactions.*");
 // $transactions = Array ( [transactions.mobile] => 10 [transactions.website] => 20 [transactions.tablet] => 30 [transactions.other] => 40 )
 
 
-// get() and get() will auto-deduplicate results if you accidently include the same stat twice using wildcards
+// get() will auto-deduplicate results if you accidentally include the same stat twice using wildcards
 $transactionsWithUniqueStats = $stats->get([
   "transactions.*",
   ".transactions.mobile",
@@ -79,16 +80,17 @@ $transactionsWithUniqueStats = $stats->get([
 
 // lets increment some stats
 
-// 12045 added to 'general.stats.days_on_the_earth
-// we time travel forward 24 hours.
-$stats->ns("general.stats")->add("days_on_the_earth", (33 * 365))->inc("days_on_the_earth", 1);
+$daysOnEarth = (33 * 365); // 12045 added to 'general.stats.days_on_the_earth and then we increment by 1 day
+$stats->ns("general.stats")
+  ->add("days_on_the_earth", $daysOnEarth)->inc("days_on_the_earth", 1);
 $daysOnEarth = $stats->get("days_on_the_earth"); // 12046
 $daysOnEarthAbsolute = $stats->get(".general.stats.days_on_the_earth"); // same as above 12046
 
 // lets decrement some stats
 
 // 53 as of 11/02/2017
-$stats->ns("general.other.stats")->add("days_until_christmas", 53)->dec("days_until_christmas"); // skip 24 hours
+$stats->ns("general.other.stats")
+  ->add("days_until_christmas", 53)->dec("days_until_christmas"); // skip 24 hours
 $daysUntilChristmas = $stats->get("days_until_christmas"); // 52
 
 
@@ -97,8 +99,8 @@ $daysUntilChristmas = $stats->get("days_until_christmas"); // 52
  */
 
 // lets add a bunch of stats and sum them
-$stats->ns("noahs.ark.passengers")->add("humans", 2)->add("aliens", 0)->add("animal.cats", 3)->add("animal.dogs", 6)
-  ->add("animal.chickens", 25);
+$stats->ns("noahs.ark.passengers")
+  ->add("humans", 2)->add("aliens", 0)->add("animal.cats", 3)->add("animal.dogs", 6)->add("animal.chickens", 25);
 
 // total number of passengers on noahs ark
 $numberOfPassengers = $stats->sum("noahs.ark.passengers.*"); // 36
@@ -133,25 +135,14 @@ $averageVisitsPerMonthWildcard = $stats->avg("month.*"); //648.58333333333
 
 // lets get the average of a compound stat
 $stats->ns("users")
-  ->add("age", 23)
-  ->add("age", 12)
-  ->add("age", 74)
-  ->add("age", 49)
-  ->add("age", 9);
+  ->add("age", 23)->add("age", 12)->add("age", 74)->add("age", 49)->add("age", 9);
+
 $averageAges = $stats->avg('age'); //33.4
 
 // another way to convert to a compound stat is just to pass an array of values as the value (it will auto-flatten by default)
 $stats->ns("users")
   ->add("heights", 171)
-  ->add("heights", [
-    181,
-    222,
-    194,
-    143,
-    123,
-    161,
-    184,
-  ]);
+  ->add("heights", [181, 222, 194, 143, 123, 161, 184]);
 
 $averageHeights = $stats->avg('heights'); //172.375
 
@@ -174,7 +165,7 @@ $totalReferrals = $stats->sum([
   'bing',
 ]); // 4089
 
-// lets take three different compound stats and work out the collective sum by usng absolute namespace paths
+// lets take three different compound stats and work out the collective sum by using absolute namespace paths
 $totalReferralsAbsolute = $stats->sum([
   '.website.referrals.google',
   '.website.referrals.yahoo',
@@ -195,21 +186,13 @@ $totalReferralEntries = $stats->count([
 
 // lets get the sum of a compound stat
 $stats->ns("api.response")
-  ->add("success", 23223)
-  ->add("success", 1322)
-  ->add("success", 7324)
-  ->add("success", 24922)
-  ->add("success", 94234);
+  ->add("success", 23223)->add("success", 1322)->add("success", 7324)->add("success", 24922)->add("success", 94234);
 
 $totalSuccessfulResponses = $stats->sum('.api.response.success'); // 151025
 
 // lets get the combined sum of two different compound stats
-$stats->ns("api.response")// we don't need to redeclare this unless the namespace changes
-->add("error", 23)
-  ->add("error", 12)
-  ->add("error", 74)
-  ->add("error", 49)
-  ->add("error", 9);
+$stats->ns("api.response")
+  ->add("error", 23)->add("error", 12)->add("error", 74)->add("error", 49)->add("error", 9);
 
 
 $totalResponses = $stats->sum([
