@@ -376,29 +376,6 @@ abstract class AbstractCollector implements iCollector
     }
 
     /**
-     * Export statistics using backend specific $Exporter
-     *
-     * TODO:
-     * - take array of namespaces to target specific namespaces
-     *
-     * @param string $namespaces
-     * @param iExporter $Exporter
-     *
-     * @return
-     * @throws StatisticsCollectorException
-     */
-    public function export($namespaces = "*", iExporter $Exporter)
-    {
-        if ($namespaces === "*") {
-            return $Exporter->export($this->getAllStats());
-        } else {
-            throw new StatisticsCollectorException("Not currently implemented!");
-
-        }
-    }
-
-
-    /**
      * @param $namespace
      *
      * @return \Statistics\Collector\iCollector
@@ -515,7 +492,7 @@ abstract class AbstractCollector implements iCollector
     }
 
     /**
-     * TODO: split this function into subfunctions.
+     * TODO: split this method into smaller methods.
      *
      * @param string $namespace
      * @param mixed $value
@@ -672,8 +649,9 @@ abstract class AbstractCollector implements iCollector
     /**
      * Check that namespace element(s) exist
      *
-     * TODO: write the value of the non-existent namespace for arrays of
-     * namespaces out somewhere
+     * TODO: write the value of the non-existent namespaces for arrays of
+     * namespaces checks, out somewhere. It would be frustrating if 9/10 were valid
+     * but due to the 1 non-existent, the check fails and you don't know why.
      *
      * @param mixed $namespace
      *
