@@ -73,7 +73,6 @@ $transactionsWithUniqueStats = $stats->get([
 ]);
 // only one mobile stat of '10' is present in the result $transactionsWithUniqueStats = Array ( [0] => 10 [1] => 20 [2] => 30 [3] => 40 )
 
-
 /**
  * Working with stats, basic functions (increment/decrement)
  */
@@ -145,6 +144,16 @@ $stats->ns("users")
   ->add("heights", [181, 222, 194, 143, 123, 161, 184]);
 
 $averageHeights = $stats->avg('heights'); //172.375
+
+// clobber/overwrite existing stat when adding to prevent compound behaviour
+$stats->ns("cart");
+$stats->add("last_checkout_time", strtotime('-1 day', strtotime('now')));
+$stats->add("last_checkout_time", strtotime('now'));
+$checkoutTimes = $stats->get("last_checkout_time"); //Array ( [0] => 1510593647 [1] => 1510680047 )
+
+$stats->clobber("last_checkout_time", strtotime('-1 day', strtotime('now')));
+$stats->clobber("last_checkout_time", strtotime('now'));
+$lastCheckoutTimeSingleResult = $stats->get("last_checkout_time"); //1510680136
 
 // lets take three different compound stats and work out the collective sum
 $stats->ns("website.referrals")
