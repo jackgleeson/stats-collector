@@ -30,7 +30,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
      *
      * @var array
      */
-    private static $instances = [];
+    protected static $instances = [];
 
     /**
      * namespace separator
@@ -99,6 +99,22 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
             self::$instances[$class]->containerSetup();
         }
         return self::$instances[$class];
+    }
+
+    /**
+     * Empty singleton instances.
+     * This method is workaround to add singleton testability as explained here
+     * https://gonzalo123.com/2012/09/24/the-reason-why-singleton-is-a-problem-with-phpunit/
+     */
+    public static function tearDown($all = false)
+    {
+        if ($all === false) {
+            $class = get_called_class();
+            unset(static::$instances[$class]);
+        } else {
+            static::$instances = [];
+        }
+        return true;
     }
 
     /**

@@ -289,5 +289,4 @@ $exporter->export($noahsArkStats);
 //export a custom collector instance
 $exporter->filename = "civicrm_stats";
 $exporter->export($CiviCRMCollector);
-
 ?>
