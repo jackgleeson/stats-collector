@@ -74,7 +74,7 @@ $transactionsWithUniqueStats = $stats->get([
 // only one mobile stat of '10' is present in the result $transactionsWithUniqueStats = Array ( [0] => 10 [1] => 20 [2] => 30 [3] => 40 )
 
 /**
- * Working with stats, basic functions (increment/decrement)
+ * Working with basic stats, basic functions (increment/decrement)
  */
 
 // lets increment some stats
@@ -94,7 +94,7 @@ $daysUntilChristmas = $stats->get("days_until_christmas"); // 52
 
 
 /**
- * Working with stats, aggregate functions (sum/average)
+ * Working with basic stats, aggregate functions (sum/average)
  */
 
 // lets add a bunch of stats and sum them
@@ -145,7 +145,7 @@ $stats->ns("users")
 
 $averageHeights = $stats->avg('heights'); //172.375
 
-// clobber/overwrite existing stat when adding to prevent compound behaviour
+// clobber/overwrite existing stat when adding to prevent compound behaviour (e.g. updating timestamps)
 $stats->ns("cart");
 $stats->add("last_checkout_time", strtotime('-1 day', strtotime('now')));
 $stats->add("last_checkout_time", strtotime('now'));
@@ -214,9 +214,11 @@ $totalResponses = $stats->sum([
  * also possible by extending the AbstractCollector
  */
 
+// this instance of stats collector has a custom 'civi' root namespace
 $CiviCRMCollector = Samples\CiviCRMCollector::getInstance();
+
 $CiviCRMCollector->add("users.created", 500);
-$usersCreated = $CiviCRMCollector->get("users.created");
+$usersCreated = $CiviCRMCollector->get("users.created"); // 500
 
 
 /**
@@ -231,17 +233,15 @@ $exporter->path = __DIR__ . DIRECTORY_SEPARATOR . 'prometheus_out'; // output pa
 $exporter->export($stats);
 
 // export a bunch of targeted stats
-// you can update $exporter->filename & $exporter->path before each export() call for a different output dir/name
-$exporter->filename = "noahs_ark_stats";
-
 // return as associative array of namespace=>value to pass to export() due to getWithKey() being called
 $noahsArkStats = $stats->getWithKey("noahs.ark.passengers.*");
+// you can update $exporter->filename & $exporter->path before each export() call for a different output dir/name
+$exporter->filename = "noahs_ark_stats";
 $exporter->export($noahsArkStats);
 
-//export a custom collector instance
+//export an entire custom collector instance.  export() takes either an array of stats or an instance of AbstractCollector.
 $exporter->filename = "civicrm_stats";
 $exporter->export($CiviCRMCollector);
 
-
-
+// checkout the resulting output for the above export code here: https://github.com/jackgleeson/stats-collector/tree/master/samples/prometheus_out
 ?>

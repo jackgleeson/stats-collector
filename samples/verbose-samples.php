@@ -80,7 +80,7 @@ $transactionsWithUniqueStats = $statsCollector->getStats([
 
 
 /**
- * Working with stats, basic functions (increment/decrement)
+ * Working with basic stats, basic functions (increment/decrement)
  */
 
 // lets increment some stats
@@ -96,8 +96,9 @@ $statsCollector->setNamespace("general.other.stats")
   ->decrementStat("days_until_christmas"); // skip 24 hours
 $daysUntilChristmas = $statsCollector->getStat("days_until_christmas"); // 52
 
+
 /**
- * Working with stats, aggregate functions (sum/average)
+ * Working with basic stats, aggregate functions (sum/average)
  */
 
 // lets add a bunch of stats and sum them
@@ -126,23 +127,8 @@ $statsCollector->setNamespace("visits.month")
   ->addStat("nov", 1020)
   ->addStat("dec", 2346);
 
-// get the total of the above stats
-$visitsForTheYear = $statsCollector->getStatsSum([
-  'jan',
-  'feb',
-  'mar',
-  'apr',
-  'may',
-  'june',
-  'july',
-  'aug',
-  'sept',
-  'oct',
-  'nov',
-  'dec',
-]); //7783
 
-// you could also use a wildcard to get the sum of visits by targeting  'visits.month.*'
+// you could use a wildcard to get the sum of visits by targeting  'visits.month.*'
 $visitsForTheYearWildcard = $statsCollector->getStatSum("visits.month.*"); ////7783
 
 // lets work out the average visits per month based on the above stats
@@ -183,17 +169,22 @@ $averageAges = $statsCollector->getStatAverage('age'); //33.4
 // another way to convert to a compound stat is just to pass an array of values as the value (it will auto-flatten by default)
 $statsCollector->setNamespace("users")
   ->addStat("heights", 171)
-  ->addStat("heights", [
-    181,
-    222,
-    194,
-    143,
-    123,
-    161,
-    184,
-  ]);
+  ->addStat("heights", [181, 222, 194, 143, 123, 161, 184]);
 
 $averageHeights = $statsCollector->getStatAverage('heights'); //172.375
+
+
+// clobber/overwrite existing stats when adding to prevent compound behaviour (e.g. updating timestamps)
+$statsCollector->setNamespace("cart");
+$statsCollector->addStat("last_checkout_time", strtotime('-1 day', strtotime('now')));
+$statsCollector->addStat("last_checkout_time", strtotime('now'));
+$checkoutTimes = $statsCollector->getStat("last_checkout_time"); //Array ( [0] => 1510593647 [1] => 1510680047 )
+
+$options['clobber'] = true;
+$statsCollector->addStat("last_checkout_time", strtotime('-1 day', strtotime('now')), $options);
+$statsCollector->addStat("last_checkout_time", strtotime('now'), $options);
+$lastCheckoutTimeSingleResult = $statsCollector->getStat("last_checkout_time"); //1510680047
+
 
 // lets take three different compound stats and work out the collective sum
 $statsCollector->setNamespace("website.referrals")
@@ -262,9 +253,11 @@ $totalResponses = $statsCollector->getStatsSum([
  * also possible by extending the AbstractCollector
  */
 
+// this instance of stats collector has a custom 'civi' root namespace
 $CiviCRMCollector = Samples\CiviCRMCollector::getInstance();
+
 $CiviCRMCollector->addStat("users.created", 500);
-$usersCreated = $CiviCRMCollector->getStat("users.created");
+$usersCreated = $CiviCRMCollector->getStat("users.created"); // 500
 
 
 /**
@@ -279,14 +272,15 @@ $exporter->path = __DIR__ . DIRECTORY_SEPARATOR . 'prometheus_out'; // output pa
 $exporter->export($statsCollector);
 
 // export a bunch of targeted stats
+// return as associative array of namespace=>value to pass to export() due to getWithKey() being called
+$noahsArkStats = $statsCollector->getStat("noahs.ark.passengers.*", true);
 // you can update $exporter->filename & $exporter->path before each export() call for a different output dir/name
 $exporter->filename = "noahs_ark_stats";
-
-// return as associative array of namespace=>value to pass to export() due to $withKeys=true being passed
-$noahsArkStats = $statsCollector->getStat("noahs.ark.passengers.*", true);
 $exporter->export($noahsArkStats);
 
-//export a custom collector instance
+//export an entire custom collector instance.  export() takes either an array of stats or an instance of AbstractCollector.
 $exporter->filename = "civicrm_stats";
 $exporter->export($CiviCRMCollector);
+
+// checkout the resulting output for the above export code here: https://github.com/jackgleeson/stats-collector/tree/master/samples/prometheus_out
 ?>
