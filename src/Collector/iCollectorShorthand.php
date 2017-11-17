@@ -5,7 +5,7 @@ namespace Statistics\Collector;
 interface iCollectorShorthand
 {
 
-    public function get($namespace, $withKeys = false, $default = null);
+    public function get($namespace, $withKeys = null, $default = null);
 
     public function getWithKey($namespace, $default = null);
 
@@ -15,9 +15,9 @@ interface iCollectorShorthand
 
     public function del($namespace);
 
-    public function inc($namespace, $increment = 1);
+    public function inc($namespace, $increment);
 
-    public function dec($namespace, $decrement = -1);
+    public function dec($namespace, $decrement);
 
     public function avg($namespace);
 
