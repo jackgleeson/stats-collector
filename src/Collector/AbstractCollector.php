@@ -22,7 +22,7 @@ use Statistics\Exception\StatisticsCollectorException;
  * acceptable
  *
  */
-abstract class AbstractCollector implements iCollector, iCollectorShorthand
+abstract class AbstractCollector implements iCollector
 {
 
     /**

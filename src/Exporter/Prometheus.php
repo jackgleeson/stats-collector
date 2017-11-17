@@ -55,8 +55,6 @@ class Prometheus implements iExporter
     {
         if ($statistics instanceof iCollector) {
             $statistics = $statistics->getAllStats();
-        } elseif ($statistics instanceof iCollectorShorthand) {
-            $statistics = $statistics->all();
         }
         $this->writeStatisticsToPrometheusFile($statistics);
         return true;
