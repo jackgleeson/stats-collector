@@ -3,7 +3,6 @@
 namespace Statistics\Exporter;
 
 use Statistics\Collector\iCollector;
-use Statistics\Collector\iCollectorShorthand;
 
 /**
  * Write out metrics in a Prometheus-readable format.
@@ -68,6 +67,7 @@ class Prometheus implements iExporter
      */
     protected function writeStatisticsToPrometheusFile(array $statistics)
     {
+        $contents=[];
         foreach ($statistics as $subject => $stats) {
             $subject = $this->mapDotsToUnderscore($subject);
 
