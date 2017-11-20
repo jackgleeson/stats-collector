@@ -4,6 +4,8 @@
 namespace Statistics\Collector;
 
 use Dflydev\DotAccessData\Data as Container;
+use Statistics\Collector\Traits\MathAggregate;
+use Statistics\Collector\Traits\SingletonInheritance;
 use Statistics\Exception\StatisticsCollectorException;
 
 /**
@@ -25,12 +27,7 @@ use Statistics\Exception\StatisticsCollectorException;
 abstract class AbstractCollector implements iCollector
 {
 
-    /**
-     * Singleton instances container
-     *
-     * @var array
-     */
-    protected static $instances = [];
+    use SingletonInheritance, MathAggregate;
 
     /**
      * namespace separator
@@ -61,61 +58,6 @@ abstract class AbstractCollector implements iCollector
 
     private $populatedNamespaces = [];
 
-
-    /**
-     * Add some Singleton visibility restrictions to avoid inconsistencies.
-     */
-
-    private function __construct()
-    {
-    }
-
-    private function __clone()
-    {
-    }
-
-    public function __sleep()
-    {
-        return [];
-    }
-
-    public function __wakeup()
-    {
-        return [];
-    }
-
-    /**
-     * It is possible this singleton will be extended to allow subject specific
-     * conveniences for statistics collection e.g. a fixed default namespace of
-     * "queue." in QueueStatsCollector
-     *
-     * @return \Statistics\Collector\AbstractCollector
-     */
-    public static function getInstance()
-    {
-        $class = get_called_class(); // late-static-bound class name
-        if (!isset(self::$instances[$class])) {
-            self::$instances[$class] = new static;
-            self::$instances[$class]->containerSetup();
-        }
-        return self::$instances[$class];
-    }
-
-    /**
-     * Empty singleton instances.
-     * This method is workaround to add singleton testability as explained here
-     * https://gonzalo123.com/2012/09/24/the-reason-why-singleton-is-a-problem-with-phpunit/
-     */
-    public static function tearDown($all = false)
-    {
-        if ($all === false) {
-            $class = get_called_class();
-            unset(static::$instances[$class]);
-        } else {
-            static::$instances = [];
-        }
-        return true;
-    }
 
     /**
      * Alias method for getting stats
@@ -898,7 +840,7 @@ abstract class AbstractCollector implements iCollector
                 case "double":
                     return $stats;
                 case "array":
-                    return $this->summate($stats);
+                    return $this->mathSum($stats);
                 default:
                     throw new StatisticsCollectorException("Unable to return sum for this collection of values (are they all numbers?)");
             }
@@ -916,7 +858,7 @@ abstract class AbstractCollector implements iCollector
                 case "double":
                     return $stats;
                 case "array":
-                    return $this->average($stats);
+                    return $this->mathAverage($stats);
                 default:
                     throw new StatisticsCollectorException("Unable to return average for this collection of values (are they all numbers?)");
             }
@@ -993,30 +935,6 @@ abstract class AbstractCollector implements iCollector
             default:
                 return false;
         }
-    }
-
-    /**
-     * Get the average of a collection of values
-     *
-     * @param array $values
-     *
-     * @return float|int
-     */
-    protected function average($values = [])
-    {
-        return (count($values) > 0) ? array_sum($values) / count($values) : 0;
-    }
-
-    /**
-     * Get the sum of a collection of values
-     *
-     * @param array $values
-     *
-     * @return float|int
-     */
-    protected function summate($values = [])
-    {
-        return array_sum($values);
     }
 
     /**
