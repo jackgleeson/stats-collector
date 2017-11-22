@@ -102,7 +102,8 @@ $stats->ns("noahs.ark.passengers")
   ->add("humans", 2)->add("aliens", 0)->add("animal.cats", 3)->add("animal.dogs", 6)->add("animal.chickens", 25);
 
 // total number of passengers on noahs ark
-$numberOfPassengers = $stats->sum("noahs.ark.passengers.*"); // 36
+$numberOfTotalPassengers = $stats->sum("noahs.ark.passengers.*"); // 36
+$numberOfAnimalPassengers = $stats->sum("animal.*"); // 34
 
 // lets sum up some individual stats
 $stats->ns("visits.month")
@@ -120,7 +121,7 @@ $stats->ns("visits.month")
   ->add("dec", 2346);
 
 // you could use a wildcard to get the sum of visits by targeting  'visits.month.*'
-$visitsForTheYearWildcard = $stats->sum("visits.month.*"); ////7783
+$visitsForTheYearWildcard = $stats->sum(".visits.month.*"); ////7783
 
 $averageVisitsPerMonthWildcard = $stats->avg("month.*"); //648.58333333333
 
