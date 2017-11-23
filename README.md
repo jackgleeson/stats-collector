@@ -18,4 +18,4 @@ $ git clone https://github.com/jackgleeson/stats-collector.git
 $ php composer install
 ```
 
-Checkout *samples/shorthand-samples.php* and *samples/verbose-samples.php* for usage examples until I have time to add the full README.
+Checkout *samples/shorthand-samples.php* and *samples/samples.php* for usage examples until I have time to add the full README.

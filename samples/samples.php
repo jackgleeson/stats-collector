@@ -147,7 +147,7 @@ $averageVisitsPerMonth = $statsCollector->getStatsAverage([
   'dec',
 ]); //648.58333333333
 
-$averageVisitsPerMonthWildcard = $statsCollector->getStatAverage("month.*"); //648.58333333333
+$averageVisitsPerMonthWildcard = $statsCollector->getStatAverage("visits.month.*"); //648.58333333333
 
 
 /**

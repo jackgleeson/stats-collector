@@ -59,7 +59,7 @@ $stats->ns("transactions")
 
 // lets get all transaction stats using the wildcard operator
 $transactions = $stats->get("transactions.*");
-// $transactions = Array ( [0] => 10 [1] => 20 [2] => 30 [3] => 40 )
+// $transactions = Array ( [0] => 10 [1] => 40 [2] => 30 [3] => 20 )
 
 // lets get all transaction stats using the wildcard operator including their full namespace as the key
 $transactionsWithKeys = $stats->getWithKey("transactions.*");
@@ -123,8 +123,6 @@ $stats->ns("visits.month")
 // you could use a wildcard to get the sum of visits by targeting  'visits.month.*'
 $visitsForTheYearWildcard = $stats->sum(".visits.month.*"); ////7783
 
-$averageVisitsPerMonthWildcard = $stats->avg("month.*"); //648.58333333333
-
 
 /**
  * Working with compound stats (averages/sum/count)
@@ -181,7 +179,6 @@ $totalReferralsAbsolute = $stats->sum([
   '.website.referrals.yahoo',
   '.website.referrals.bing',
 ]); // 4089
-
 
 // Lets count how many values there are in a namespace
 // (count will return the number of values, not the sum of the values)
