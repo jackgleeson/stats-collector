@@ -31,7 +31,6 @@ trait SingletonInheritance
         $class = get_called_class(); // late-static-bound class name
         if (!isset(self::$instances[$class])) {
             self::$instances[$class] = new static;
-//            self::$instances[$class]->containerSetup();
         }
         return self::$instances[$class];
     }
