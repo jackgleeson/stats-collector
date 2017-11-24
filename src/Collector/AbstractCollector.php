@@ -579,8 +579,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
      */
     protected function removePopulatedNamespace($namespace)
     {
-        if (($index = array_search($namespace,
-            $this->populatedNamespaces)) !== false) {
+        if (($index = array_search($namespace, $this->populatedNamespaces)) !== false) {
             unset($this->populatedNamespaces[$index]);
             $this->sortPopulatedNamespaces();
             return true;
@@ -655,15 +654,24 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
     }
 
     /**
-     * sort namespaces into groups by namespace level size alphabetical order
+     * Sort populated namespaces first by namespace level and then alphabetical order
      *
      * @return bool
      */
     protected function sortPopulatedNamespaces()
     {
-        sort($this->populatedNamespaces, SORT_NATURAL);
         usort($this->populatedNamespaces, function ($a, $b) {
-            return strnatcmp(substr_count($a, '.'), substr_count($b, '.'));
+            //sort on namespace nesting level
+            $namespaceLevel = strnatcmp(substr_count($a, '.'), substr_count($b, '.'));
+            if ($namespaceLevel === 0) {
+                // if nesting level is equal (0), sort on alphabetical order
+                if ($a == $b) {
+                    return 0;
+                }
+                return ($a < $b) ? -1 : 1;
+            } else {
+                return $namespaceLevel;
+            }
         });
         return true;
     }

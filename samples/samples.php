@@ -173,17 +173,15 @@ $statsCollector->setNamespace("users")
 
 $averageHeights = $statsCollector->getStatAverage('heights'); //172.375
 
+// clobber/overwrite existing stat when addStating to prevent compound behaviour (e.g. updating timestamps)
+$statsCollector->setNamespace("batch.jobs");
+$statsCollector->addStat("last_run", strtotime('-1 day', strtotime('now')));
+$statsCollector->addStat("last_run", strtotime('now'));
+$runTimes = $statsCollector->getStat("last_run"); //Array ( [0] => 1510593647 [1] => 1510680047 )
 
-// clobber/overwrite existing stats when adding to prevent compound behaviour (e.g. updating timestamps)
-$statsCollector->setNamespace("cart");
-$statsCollector->addStat("last_checkout_time", strtotime('-1 day', strtotime('now')));
-$statsCollector->addStat("last_checkout_time", strtotime('now'));
-$checkoutTimes = $statsCollector->getStat("last_checkout_time"); //Array ( [0] => 1510593647 [1] => 1510680047 )
-
-$options['clobber'] = true;
-$statsCollector->addStat("last_checkout_time", strtotime('-1 day', strtotime('now')), $options);
-$statsCollector->addStat("last_checkout_time", strtotime('now'), $options);
-$lastCheckoutTimeSingleResult = $statsCollector->getStat("last_checkout_time"); //1510680047
+$statsCollector->clobber("last_run", strtotime('-1 day', strtotime('now')));
+$statsCollector->clobber("last_run", strtotime('now'));
+$runTimeSingleResult = $statsCollector->getStat("last_run"); //1510680136
 
 
 // lets take three different compound stats and work out the collective sum

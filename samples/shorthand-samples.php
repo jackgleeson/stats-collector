@@ -145,14 +145,14 @@ $stats->ns("users")
 $averageHeights = $stats->avg('heights'); //172.375
 
 // clobber/overwrite existing stat when adding to prevent compound behaviour (e.g. updating timestamps)
-$stats->ns("cart");
-$stats->add("last_checkout_time", strtotime('-1 day', strtotime('now')));
-$stats->add("last_checkout_time", strtotime('now'));
-$checkoutTimes = $stats->get("last_checkout_time"); //Array ( [0] => 1510593647 [1] => 1510680047 )
+$stats->ns("batch.jobs");
+$stats->add("last_run", strtotime('-1 day', strtotime('now')));
+$stats->add("last_run", strtotime('now'));
+$runTimes = $stats->get("last_run"); //Array ( [0] => 1510593647 [1] => 1510680047 )
 
-$stats->clobber("last_checkout_time", strtotime('-1 day', strtotime('now')));
-$stats->clobber("last_checkout_time", strtotime('now'));
-$lastCheckoutTimeSingleResult = $stats->get("last_checkout_time"); //1510680136
+$stats->clobber("last_run", strtotime('-1 day', strtotime('now')));
+$stats->clobber("last_run", strtotime('now'));
+$runTimeSingleResult = $stats->get("last_run"); //1510680136
 
 // lets take three different compound stats and work out the collective sum
 $stats->ns("website.referrals")
