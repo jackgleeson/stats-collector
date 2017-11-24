@@ -695,6 +695,8 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
     /**
      * See AbstractCollector::addValueToNamespace() for documentation
      *
+     * @see AbstractCollector::addValueToNamespace()
+     *
      * @param $namespace
      * @param $value
      * @param $flatten
@@ -715,6 +717,8 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
     /**
      * See AbstractCollector::addValueToNamespace() for documentation
      *
+     * @see AbstractCollector::addValueToNamespace()
+     *
      * @param $namespace
      * @param $value
      * @param $flatten
@@ -727,6 +731,8 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
 
     /**
      * See AbstractCollector::addValueToNamespace() for documentation
+     *
+     * @see AbstractCollector::addValueToNamespace()
      *
      * @param $namespace
      * @param $value
