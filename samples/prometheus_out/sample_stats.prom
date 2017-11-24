@@ -26,8 +26,11 @@ api_response_success 1322
 api_response_success 7324
 api_response_success 24922
 api_response_success 94234
-batch_jobs_last_run 1511537679
+batch_jobs_last_run 1511547516
 general_stats_days_on_the_earth 12050
+olympics_100m_winners{filter="<10s"} 5
+olympics_100m_winners{filter="10s-12s"} 9
+olympics_100m_winners{filter="12s+"} 20
 visits_month_apr 731
 visits_month_aug 353
 visits_month_dec 2346

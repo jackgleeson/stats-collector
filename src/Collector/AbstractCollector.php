@@ -616,6 +616,12 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
         return true;
     }
 
+    /**
+     * @param  mixed $stats
+     *
+     * @return float|int
+     * @throws \Statistics\Exception\StatisticsCollectorException
+     */
     protected function calculateStatsSum($stats)
     {
         $mathHelper = new MathHelper();
@@ -635,6 +641,12 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
 
     }
 
+    /**
+     * @param mixed $stats
+     *
+     * @return float|int
+     * @throws \Statistics\Exception\StatisticsCollectorException
+     */
     protected function calculateStatsAverage($stats)
     {
         $mathHelper = new MathHelper();
@@ -664,11 +676,8 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
             //sort on namespace nesting level
             $namespaceLevel = strnatcmp(substr_count($a, '.'), substr_count($b, '.'));
             if ($namespaceLevel === 0) {
-                // if nesting level is equal (0), sort on alphabetical order
-                if ($a == $b) {
-                    return 0;
-                }
-                return ($a < $b) ? -1 : 1;
+                // if nesting level is equal (0), sort on alphabetical order using "natural order" algorithm
+                return strnatcmp($a,$b);
             } else {
                 return $namespaceLevel;
             }

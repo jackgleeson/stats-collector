@@ -207,6 +207,22 @@ $totalResponses = $stats->sum([
   '.api.response.error',
 ]); // 151192
 
+
+/**
+ * Advanced usage. Associative arrays as values (mapped to metric labels in Prometheus)
+ */
+
+$winners = [
+  "<10s" => 5,
+  '10s-12s' => 9,
+  '12s+' => 20,
+];
+
+$stats->setNamespace("olympics.100m")->add("winners", $winners);
+
+$olympic100mWinners = $stats->get('winners'); // Array ( [<10s] => 5 [10s-12s] => 9 [12s+] => 20 )
+$totalOlympic100mWinners = $stats->sum('winners'); // 34
+
 /**
  * Extending the Stats Collector with your own subject specific instance is
  * also possible by extending the AbstractCollector
