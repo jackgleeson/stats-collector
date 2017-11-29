@@ -185,7 +185,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
      * @param bool $withKeys
      * @param mixed $default default value to be returned if stat $namespace is empty
      *
-     * @return array
+     * @return mixed
      */
     public function getStats(array $namespaces, $withKeys = false, $default = null)
     {
@@ -199,7 +199,12 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
             $stat = $this->getStat($namespace, $withKeys, $default);
             $stats = array_merge($stats, (is_array($stat) ? $stat : [$stat]));
         }
-        return $stats;
+
+        if (count($stats) === 1 && ($withKeys == false)) {
+            return $stats[0];
+        } else {
+            return $stats;
+        }
     }
 
     /**
@@ -677,7 +682,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
             $namespaceLevel = strnatcmp(substr_count($a, '.'), substr_count($b, '.'));
             if ($namespaceLevel === 0) {
                 // if nesting level is equal (0), sort on alphabetical order using "natural order" algorithm
-                return strnatcmp($a,$b);
+                return strnatcmp($a, $b);
             } else {
                 return $namespaceLevel;
             }

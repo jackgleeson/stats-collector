@@ -54,6 +54,7 @@ $statsCollector->removeStat('clicks');
 $statsCollector->setNamespace("this.is.a.really.long.namespace.path")
   ->addStat("age", 33);
 $clicks = $statsCollector->getStat("this.*.age"); // 33
+print_r($clicks);
 
 //define a namespace, add some stats and retrieve them all with wildcard paths
 $statsCollector->setNamespace("transactions")
