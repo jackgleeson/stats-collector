@@ -54,7 +54,6 @@ $statsCollector->removeStat('clicks');
 $statsCollector->setNamespace("this.is.a.really.long.namespace.path")
   ->addStat("age", 33);
 $clicks = $statsCollector->getStat("this.*.age"); // 33
-print_r($clicks);
 
 //define a namespace, add some stats and retrieve them all with wildcard paths
 $statsCollector->setNamespace("transactions")
@@ -180,10 +179,9 @@ $statsCollector->addStat("last_run", strtotime('-1 day', strtotime('now')));
 $statsCollector->addStat("last_run", strtotime('now'));
 $runTimes = $statsCollector->getStat("last_run"); //Array ( [0] => 1510593647 [1] => 1510680047 )
 
-$statsCollector->clobber("last_run", strtotime('-1 day', strtotime('now')));
-$statsCollector->clobber("last_run", strtotime('now'));
+$statsCollector->addStat("last_run", strtotime('-1 day', strtotime('now')));
+$statsCollector->addStat("last_run", strtotime('now'), $options = ['clobber' => true]);
 $runTimeSingleResult = $statsCollector->getStat("last_run"); //1510680136
-
 
 // lets take three different compound stats and work out the collective sum
 $statsCollector->setNamespace("website.referrals")
