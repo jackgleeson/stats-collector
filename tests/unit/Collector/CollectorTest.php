@@ -5,11 +5,6 @@ use PHPUnit\Framework\Constraint\IsType as PHPUnit_IsType;
 class CollectorTest extends \PHPUnit\Framework\TestCase
 {
 
-    public function setUp()
-    {
-        parent::setUp();
-    }
-
     public function testCollectorImplementAbstractCollector()
     {
         $statsCollector = Statistics\Collector\Collector::getInstance();

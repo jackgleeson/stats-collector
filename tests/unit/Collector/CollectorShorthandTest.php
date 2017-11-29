@@ -5,11 +5,6 @@ use PHPUnit\Framework\Constraint\IsType as PHPUnit_IsType;
 class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 {
 
-    public function setUp()
-    {
-        parent::setUp();
-    }
-
     public function testCollectorImplementAbstractCollector()
     {
         $statsCollector = Statistics\Collector\Collector::getInstance();
@@ -368,7 +363,7 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $nonExistentStats = $statsCollector->get([
           "i_dont_exist",
           "i_dont_exist_either",
-        ], $withKeys=false, $default = false);
+        ], $withKeys = false, $default = false);
 
         $expected = [
           false,
