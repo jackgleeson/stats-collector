@@ -19,7 +19,7 @@ class PrometheusTest extends \PHPUnit\Framework\TestCase
 
     public function testExportStatsToPrometheusFile()
     {
-        $tmpPath = $this->createTmpDir(). "/";
+        $tmpPath = $this->createTmpDir() . "/";
         $tmpPrometheusFilename = "test_stats";
         $prometheusExtension = Statistics\Exporter\Prometheus::$extension;
 
@@ -39,7 +39,6 @@ class PrometheusTest extends \PHPUnit\Framework\TestCase
         $this->removeTmpDir($tmpPath);
     }
 
-
     private function getTestStatsCollectorInstance()
     {
         $statsCollector = Statistics\Collector\Collector::getInstance();
@@ -47,7 +46,6 @@ class PrometheusTest extends \PHPUnit\Framework\TestCase
         $statsCollector->addStat("test", 1);
         return $statsCollector;
     }
-
 
     private function createTmpDir()
     {

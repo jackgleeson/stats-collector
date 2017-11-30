@@ -37,7 +37,7 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals("phpunit", $currentNamespace);
     }
 
-    public function testCanadd()
+    public function testCanAddStat()
     {
         $statsCollector = $this->getTestStatsCollectorInstance();
         $statsCollector->add("number_of_planets", 8);
