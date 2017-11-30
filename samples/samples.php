@@ -274,6 +274,27 @@ $usersCreated = $CiviCRMCollector->getStat("users.created"); // 500
 
 
 /**
+ * Exporting stats
+ */
+
+//export all stats collected so far to sample_stats.stats file
+$exporter = new Statistics\Exporter\File("sample_stats");
+$exporter->path = __DIR__ . DIRECTORY_SEPARATOR . 'out'; // output path
+$exporter->export($statsCollector);
+
+// export a bunch of targeted stats
+// return as associative array of namespace=>value to pass to export() due to getWithKey() being called
+$noahsArkStats = $statsCollector->getStat("noahs.ark.passengers.*", true);
+
+// you can update $exporter->filename & $exporter->path before each export() call for a different output dir/name
+$exporter->filename = "noahs_ark_stats";
+$exporter->export($noahsArkStats);
+
+//export an entire custom collector instance.  export() takes either an array of stats or an instance of AbstractCollector.
+$exporter->filename = "civicrm_stats";
+$exporter->export($CiviCRMCollector);
+
+/**
  * Exporting stats to Prometheus exporter
  */
 

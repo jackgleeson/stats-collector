@@ -4,11 +4,11 @@
 class PrometheusTest extends \PHPUnit\Framework\TestCase
 {
 
-    protected $statsFilename;
+    protected $promFilename;
 
-    protected $statsFilePath;
+    protected $promFilePath;
 
-    protected $statsFileExtension;
+    protected $promFileExtension;
 
     public function testPrometheusExporterImplementsiExporterInterface()
     {
@@ -17,34 +17,115 @@ class PrometheusTest extends \PHPUnit\Framework\TestCase
         $this->assertInstanceOf(Statistics\Exporter\iExporter::class, $prometheusExporter);
     }
 
-    public function testExportStatsToPrometheusFile()
+    public function testExportCreatesPrometheusFile()
     {
-        $tmpPath = $this->createTmpDir() . "/";
-        $tmpPrometheusFilename = "test_stats";
-        $prometheusExtension = Statistics\Exporter\Prometheus::$extension;
+        $this->setupTmpStatsFileProperties();
+        $promFileLocation = $this->promFilePath . DIRECTORY_SEPARATOR . $this->promFilename . $this->promFileExtension;
 
         // confirm file doesn't exist before export
-        $this->assertFileNotExists($tmpPath . $tmpPrometheusFilename . $prometheusExtension);
+        $this->assertFileNotExists($promFileLocation);
 
         $statsCollector = $this->getTestStatsCollectorInstance();
-        $prometheusExporter = new Statistics\Exporter\Prometheus("test_stats");
-        $prometheusExporter->path = $tmpPath;
+        $statsCollector->addStat("test", 1);
+
+        $prometheusExporter = new Statistics\Exporter\Prometheus($this->promFilename, $this->promFilePath);
         $prometheusExporter->export($statsCollector);
 
         // confirm file now exists after export
-        $this->assertFileExists($tmpPath . $tmpPrometheusFilename . $prometheusExtension);
+        $this->assertFileExists($promFileLocation);
 
         //clean up
-        $this->removeTmpFile($tmpPath . $tmpPrometheusFilename . $prometheusExtension);
-        $this->removeTmpDir($tmpPath);
+        $this->removeTmpFile($promFileLocation);
+        $this->removeTmpDir($this->promFilePath);
+    }
+
+    public function testExportMapsNamespaceDotsToUnderscores()
+    {
+        $this->setupTmpStatsFileProperties();
+        $promFileLocation = $this->promFilePath . DIRECTORY_SEPARATOR . $this->promFilename . $this->promFileExtension;
+
+        $statsCollector = Statistics\Collector\Collector::getInstance();
+        $statsCollector->setNamespace("this.is.a.really.long.namespace");
+        $statsCollector->addStat("pi", 3.14159265359);
+
+        $prometheusExporter = new Statistics\Exporter\Prometheus($this->promFilename, $this->promFilePath);
+        $prometheusExporter->export($statsCollector);
+
+        $statsAssocArray = $this->buildArrayFromPrometheusOutputFile($promFileLocation);
+        $expectedStatName = 'this_is_a_really_long_namespace_pi';
+
+        $this->assertArrayHasKey($expectedStatName, $statsAssocArray);
+
+        //clean up
+        $this->removeTmpFile($promFileLocation);
+        $this->removeTmpDir($this->promFilePath);
+    }
+
+    public function testExportOutputsValidStats()
+    {
+        $this->setupTmpStatsFileProperties();
+        $promFileLocation = $this->promFilePath . DIRECTORY_SEPARATOR . $this->promFilename . $this->promFileExtension;
+
+        $statsCollector = Statistics\Collector\Collector::getInstance();
+        $statsCollector->setNamespace("milky_way");
+        $statsCollector->addStat("planets", 100000000000);
+        $statsCollector->addStat("stars", 400000000000);
+        $statsCollector->addStat("age_in_years", 13800000000);
+
+        $prometheusExporter = new Statistics\Exporter\Prometheus($this->promFilename, $this->promFilePath);
+        $prometheusExporter->export($statsCollector);
+
+        $statsAssocArray = $this->buildArrayFromPrometheusOutputFile($promFileLocation);
+
+        $expectedStats = [
+          'milky_way_planets' => 100000000000,
+          'milky_way_stars' => 400000000000,
+          'milky_way_age_in_years' => 13800000000,
+        ];
+
+        $this->assertEquals($expectedStats, $statsAssocArray);
+
+        //clean up
+        $this->removeTmpFile($promFileLocation);
+        $this->removeTmpDir($this->promFilePath);
+    }
+
+
+    public function tearDown()
+    {
+        Statistics\Collector\Collector::tearDown(true);
     }
 
     private function getTestStatsCollectorInstance()
     {
         $statsCollector = Statistics\Collector\Collector::getInstance();
         $statsCollector->setNamespace("test_namespace");
-        $statsCollector->addStat("test", 1);
         return $statsCollector;
+    }
+
+    private function buildArrayFromPrometheusOutputFile($prometheusFileLocation)
+    {
+        $statsWrittenAssocArray = [];
+        if (file_exists($prometheusFileLocation)) {
+            $statsFileFullPath = $prometheusFileLocation;
+            $statsWritten = rtrim(file_get_contents($statsFileFullPath)); // remove trailing \n
+            $statsWrittenLinesArray = explode("\n", $statsWritten);
+            foreach ($statsWrittenLinesArray as $statsLine) {
+                list($name, $value) = explode(' ', $statsLine);
+                $statsWrittenAssocArray[$name] = $value;
+            }
+        } else {
+            return "Prometheus file does not exist";
+        }
+
+        return $statsWrittenAssocArray;
+    }
+
+    private function setupTmpStatsFileProperties($filename = "test_stats")
+    {
+        $this->promFilename = $filename;
+        $this->promFilePath = $this->createTmpDir();
+        $this->promFileExtension = Statistics\Exporter\Prometheus::$extension;
     }
 
     private function createTmpDir()
@@ -72,6 +153,4 @@ class PrometheusTest extends \PHPUnit\Framework\TestCase
             unlink($tmpFile);
         }
     }
-
-
 }
