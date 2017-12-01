@@ -5,6 +5,8 @@
 language: php
 
 dist: trusty
+
+install: composer install
  
 matrix:
   include:
