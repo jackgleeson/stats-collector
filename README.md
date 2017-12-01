@@ -57,4 +57,4 @@ crons.payment_stats.payments=30
 crons.payment_stats.succeeded=20
 ```
 
-Checkout *samples/shorthand-samples.php* and *samples/samples.php* for full coverage of available functionaluty in action. 
+Checkout *samples/shorthand-samples.php* and *samples/samples.php* for full coverage of available functionality in action. 
