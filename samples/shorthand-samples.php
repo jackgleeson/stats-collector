@@ -15,7 +15,9 @@ $users = $stats->get("users"); // 45
 $usersWithNamespaceInKey = $stats->getWithKey("users"); // Array ( [root.users] => 45 )
 
 // define a new default namespace and add stats to it
-$stats->ns("website")->add("clicks", 30)->add("banner.views", 20);
+$stats->ns("website")
+  ->add("clicks", 30)
+  ->add("banner.views", 20);
 // also add a sub-namespace to the current 'website' namespace (in a relative fashion)
 
 // get single stat by relative (resolves to website.clicks due to last set namespace being "website" on line 18)
