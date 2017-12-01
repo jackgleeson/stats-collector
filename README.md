@@ -14,7 +14,6 @@ This utility allows you to capture custom statistics during any PHP process. Onc
 ### Add Stats Collector to your project
 ```sh
 $ composer require jackgleeson/stats-collector 
-$ composer install
 ```
 ### Basic Usage
 ```php
