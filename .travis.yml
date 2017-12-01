@@ -19,5 +19,5 @@ matrix:
     - php: 7.0
     - php: hhvm
 
-script: phpunit --coverage-text -c phpunit.xml
+script: vendor/bin/phpunit --coverage-text -c phpunit.xml
 
