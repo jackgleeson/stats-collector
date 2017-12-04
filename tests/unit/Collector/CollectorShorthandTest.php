@@ -47,6 +47,9 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(8, $Stats["test_namespace.number_of_planets"]);
     }
 
+	/**
+	 * @requires PHPUnit 6
+	 */
     public function testCanAddIntegerAsStat()
     {
         $statsCollector = $this->getTestStatsCollectorInstance();
@@ -57,6 +60,9 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $this->assertInternalType(PHPUnit_IsType::TYPE_INT, $Stats["test_namespace.days_per_year"]);
     }
 
+	/**
+	 * @requires PHPUnit 6
+	 */
     public function testCanAddFloatAsStat()
     {
         $statsCollector = $this->getTestStatsCollectorInstance();
@@ -67,6 +73,9 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $this->assertInternalType(PHPUnit_IsType::TYPE_FLOAT, $Stats["test_namespace.pi"]);
     }
 
+	/**
+	 * @requires PHPUnit 6
+	 */
     public function testCanAddArrayAsStat()
     {
         $statsCollector = $this->getTestStatsCollectorInstance();
@@ -78,6 +87,9 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $this->assertInternalType(PHPUnit_IsType::TYPE_ARRAY, $Stats["test_namespace.fibonacci_sequence"]);
     }
 
+	/**
+	 * @requires PHPUnit 6
+	 */
     public function testCanAddAssociativeArrayAsStat()
     {
         $statsCollector = $this->getTestStatsCollectorInstance();
