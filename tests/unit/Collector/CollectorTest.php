@@ -106,16 +106,16 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $statsCollector = $this->getTestStatsCollectorInstance();
 
         $mathConstants = [
-          "pi" => 5,
-          'golden_ratio' => 9,
+          "pi" => 3.14159265359,
+          'golden_ratio' => 1.61803398875,
         ];
 
         $statsCollector->addStat("math_constants", $mathConstants);
         $Stats = $statsCollector->getAllStats();
 
         $expected = [
-          "pi" => 5,
-          'golden_ratio' => 9,
+          "pi" => 3.14159265359,
+          'golden_ratio' => 1.61803398875,
         ];
 
         $this->assertInternalType(PHPUnit_IsType::TYPE_ARRAY, $Stats["test_namespace.math_constants"]);
