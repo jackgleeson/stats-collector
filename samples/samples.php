@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . DIRECTORY_SEPARATOR . '../vendor/autoload.php';
+
 /**
  * Get an instance of the Collector
  */

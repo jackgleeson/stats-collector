@@ -101,7 +101,11 @@ $daysUntilChristmas = $stats->get("days_until_christmas"); // 52
 
 // lets add a bunch of stats and sum them
 $stats->ns("noahs.ark.passengers")
-  ->add("humans", 2)->add("aliens", 0)->add("animal.cats", 3)->add("animal.dogs", 6)->add("animal.chickens", 25);
+  ->add("humans", 2)
+  ->add("aliens", 0)
+  ->add("animal.cats", 3)
+  ->add("animal.dogs", 6)
+  ->add("animal.chickens", 25);
 
 // total number of passengers on noahs ark
 $numberOfTotalPassengers = $stats->sum("noahs.ark.passengers.*"); // 36
