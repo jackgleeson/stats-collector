@@ -120,4 +120,4 @@ $averageHeights = $stats->avg('heights'); //172.375
 ```
 
 
-## Checkout [samples/shorthand-samples.php](https://github.com/jackgleeson/stats-collector/blob/master/samples/shorthand-samples.php) for a nore complete list of available functionality in action. 
+## Checkout [samples/shorthand-samples.php](https://github.com/jackgleeson/stats-collector/blob/master/samples/shorthand-samples.php) for a complete list of available functionality in action. 
