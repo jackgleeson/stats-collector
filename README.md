@@ -6,6 +6,7 @@ Once you have recorded some stats, you can create new stats from your data using
 
 ### To-do
   - Import behaviour. Allow Stats Collector to import previously exported data and carry on where it left off. 
+  - Add tests for helpers and improve exporter tests by mocking Collector
 ### Credits
 
 * [github.com/dflydev/dflydev-dot-access-data](https://github.com/dflydev/dflydev-dot-access-data)  - small but powerful dot namesapce utility

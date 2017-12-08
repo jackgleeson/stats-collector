@@ -2,116 +2,136 @@
 
 use PHPUnit\Framework\Constraint\IsType as PHPUnit_IsType;
 
+/**
+ * @covers \Statistics\Collector\Traits\SingletonInheritance
+ * @covers \Statistics\Collector\Collector<extended>
+ */
 class CollectorTest extends \PHPUnit\Framework\TestCase
 {
 
+    /**
+     * @var \Statistics\Collector\Collector
+     */
+    protected $statsCollector;
+
+    public function setUp()
+    {
+        $this->statsCollector = Statistics\Collector\Collector::getInstance();
+        parent::setUp();
+    }
+
     public function testCollectorImplementAbstractCollector()
     {
-        $statsCollector = Statistics\Collector\Collector::getInstance();
-
-        $this->assertInstanceOf(Statistics\Collector\AbstractCollector::class, $statsCollector);
+        $this->assertInstanceOf(Statistics\Collector\AbstractCollector::class, $this->statsCollector);
     }
 
     public function testCollectorImplementsiCollectorInterface()
     {
-        $statsCollector = Statistics\Collector\Collector::getInstance();
-
-        $this->assertInstanceOf(Statistics\Collector\iCollector::class, $statsCollector);
+        $this->assertInstanceOf(Statistics\Collector\iCollector::class, $this->statsCollector);
     }
 
     public function testDefaultRootNamespaceSetInCollectorClass()
     {
-        $statsCollector = Statistics\Collector\Collector::getInstance();
-        $currentNamespace = $statsCollector->getCurrentNamespace();
+        $currentNamespace = $this->statsCollector->getCurrentNamespace();
 
         $this->assertEquals("root", $currentNamespace);
     }
 
     public function testCanChangeRootNamespace()
     {
-        $statsCollector = Statistics\Collector\Collector::getInstance();
-        $statsCollector->setNamespace("phpunit");
+        $this->statsCollector->setNamespace("phpunit");
 
-        $currentNamespace = $statsCollector->getCurrentNamespace();
+        $currentNamespace = $this->statsCollector->getCurrentNamespace();
 
         $this->assertEquals("phpunit", $currentNamespace);
     }
 
     public function testCanAddStat()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("number_of_planets", 8);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("number_of_planets", 8);
 
-        $Stats = $statsCollector->getAllStats();
+        $Stats = $this->statsCollector->getAllStats();
 
         $this->assertEquals(8, $Stats["test_namespace.number_of_planets"]);
     }
 
-	/**
-	 * @requires PHPUnit 6
-	 */
+    /**
+     * @requires PHPUnit 6
+     */
     public function testCanAddIntegerAsStat()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("days_per_year", 365);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("days_per_year", 365);
 
-        $Stats = $statsCollector->getAllStats();
+        $Stats = $this->statsCollector->getAllStats();
 
         $this->assertInternalType(PHPUnit_IsType::TYPE_INT, $Stats["test_namespace.days_per_year"]);
     }
 
-	/**
-	 * @requires PHPUnit 6
-	 */
+    /**
+     * @requires PHPUnit 6
+     */
     public function testCanAddFloatAsStat()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("pi", 3.14159265359);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("pi", 3.14159265359);
 
-        $Stats = $statsCollector->getAllStats();
+        $Stats = $this->statsCollector->getAllStats();
 
         $this->assertInternalType(PHPUnit_IsType::TYPE_FLOAT, $Stats["test_namespace.pi"]);
     }
 
-	/**
-	 * @requires PHPUnit 6
-	 */
+    /**
+     * @requires PHPUnit 6
+     */
     public function testCanAddArrayAsStat()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
+        $this->statsCollector->setNamespace("test_namespace");
         $fibonacciSequence = [0, 1, 1, 2, 3, 5, 8, 13, 21, 34];
-        $statsCollector->addStat("fibonacci_sequence", $fibonacciSequence);
+        $this->statsCollector->addStat("fibonacci_sequence", $fibonacciSequence);
 
-        $Stats = $statsCollector->getAllStats();
+        $Stats = $this->statsCollector->getAllStats();
 
         $this->assertInternalType(PHPUnit_IsType::TYPE_ARRAY, $Stats["test_namespace.fibonacci_sequence"]);
     }
 
     public function testCanClobberStat()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("value_to_be_overwritten", 1);
-        $statsCollector->addStat("value_to_be_overwritten", 2, $options = ['clobber' => true]);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("value_to_be_overwritten", 1);
+        $this->statsCollector->addStat("value_to_be_overwritten", 2, $options = ['clobber' => true]);
 
-        $Stats = $statsCollector->getAllStats();
+        $Stats = $this->statsCollector->getAllStats();
 
         $this->assertEquals(2, $Stats["test_namespace.value_to_be_overwritten"]);
     }
 
-	/**
-	 * @requires PHPUnit 6
-	 */
+    public function testCanCreateCompoundStat()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("compound_stat", 1);
+        $this->statsCollector->addStat("compound_stat", 2);
+
+        $Stats = $this->statsCollector->getAllStats();
+
+        $this->assertEquals([1, 2], $Stats["test_namespace.compound_stat"]);
+    }
+
+    /**
+     * @requires PHPUnit 6
+     */
     public function testCanAddAssociativeArrayAsStat()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
+        $this->statsCollector->setNamespace("test_namespace");
 
         $mathConstants = [
           "pi" => 3.14159265359,
           'golden_ratio' => 1.61803398875,
         ];
 
-        $statsCollector->addStat("math_constants", $mathConstants);
-        $Stats = $statsCollector->getAllStats();
+        $this->statsCollector->addStat("math_constants", $mathConstants);
+        $Stats = $this->statsCollector->getAllStats();
 
         $expected = [
           "pi" => 3.14159265359,
@@ -124,12 +144,12 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCanAddStatToNewSubNamespace()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("math.golden_ratio", 1.61803398875);
-        $statsCollector->setNamespace("test_namespace.math");
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("math.golden_ratio", 1.61803398875);
+        $this->statsCollector->setNamespace("test_namespace.math");
 
-        $currentNamespace = $statsCollector->getCurrentNamespace();
-        $Stats = $statsCollector->getAllStats();
+        $currentNamespace = $this->statsCollector->getCurrentNamespace();
+        $Stats = $this->statsCollector->getAllStats();
 
         $this->assertEquals("test_namespace.math", $currentNamespace);
         $this->assertEquals(1.61803398875, $Stats["test_namespace.math.golden_ratio"]);
@@ -137,20 +157,20 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetIndividualStat()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("planets", 8);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("planets", 8);
 
-        $numberOfPlanets = $statsCollector->getStat("planets");
+        $numberOfPlanets = $this->statsCollector->getStat("planets");
 
         $this->assertEquals(8, $numberOfPlanets);
     }
 
     public function testCanGetIndividualStatWithKey()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("planets", 8);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("planets", 8);
 
-        $numberOfPlanets = $statsCollector->getStat("planets", $withKeys = true);
+        $numberOfPlanets = $this->statsCollector->getStat("planets", $withKeys = true);
 
         $expected = [
           'test_namespace.planets' => 8,
@@ -160,11 +180,30 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetMultipleStats()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("planets", 8);
-        $statsCollector->addStat("dwarf_planets", 1);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("planets", 8);
+        $this->statsCollector->addStat("dwarf_planets", 1);
 
-        $planetStats = $statsCollector->getStats([
+        $planetStats = $this->statsCollector->getStats([
+          "planets",
+          "dwarf_planets",
+        ]);
+
+        $expected = [8, 1];
+
+        $this->assertEquals($expected, $planetStats);
+    }
+
+    /**
+     * This test
+     */
+    public function testCallToGetStatWithMultipleNamespacesReturnsMultipleStats()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("planets", 8);
+        $this->statsCollector->addStat("dwarf_planets", 1);
+
+        $planetStats = $this->statsCollector->getStat([
           "planets",
           "dwarf_planets",
         ]);
@@ -177,11 +216,11 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetMultipleStatsWithKeys()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("planets", 8);
-        $statsCollector->addStat("dwarf_planets", 1);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("planets", 8);
+        $this->statsCollector->addStat("dwarf_planets", 1);
 
-        $planetStats = $statsCollector->getStats([
+        $planetStats = $this->statsCollector->getStats([
           "planets",
           "dwarf_planets",
         ], $withKeys = true);
@@ -196,20 +235,20 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetIndividualStatUsingAbsoluteNamespace()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("planets", 8);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("planets", 8);
 
-        $numberOfPlanets = $statsCollector->getStat(".test_namespace.planets");
+        $numberOfPlanets = $this->statsCollector->getStat(".test_namespace.planets");
 
         $this->assertEquals(8, $numberOfPlanets);
     }
 
     public function testCanGetIndividualStatWithKeyUsingAbsoluteNamespace()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("planets", 8);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("planets", 8);
 
-        $numberOfPlanets = $statsCollector->getStat(".test_namespace.planets", $withKeys = true);
+        $numberOfPlanets = $this->statsCollector->getStat(".test_namespace.planets", $withKeys = true);
 
         $expected = [
           'test_namespace.planets' => 8,
@@ -220,11 +259,11 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetMultipleStatsUsingAbsoluteNamespace()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("planets", 8);
-        $statsCollector->addStat("dwarf_planets", 1);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("planets", 8);
+        $this->statsCollector->addStat("dwarf_planets", 1);
 
-        $planetStats = $statsCollector->getStats([
+        $planetStats = $this->statsCollector->getStats([
           ".test_namespace.planets",
           ".test_namespace.dwarf_planets",
         ]);
@@ -237,11 +276,11 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetMultipleStatsWithKeysUsingAbsoluteNamespace()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("planets", 8);
-        $statsCollector->addStat("dwarf_planets", 1);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("planets", 8);
+        $this->statsCollector->addStat("dwarf_planets", 1);
 
-        $planetStats = $statsCollector->getStats([
+        $planetStats = $this->statsCollector->getStats([
           ".test_namespace.planets",
           ".test_namespace.dwarf_planets",
         ], $withKeys = true);
@@ -256,11 +295,22 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetIndividualStatUsingWildcardOperator()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->setNamespace("this.is.a.really.long.namespace.path");
-        $statsCollector->addStat("pi", 3.14159265359);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->setNamespace("this.is.a.really.long.namespace.path");
+        $this->statsCollector->addStat("pi", 3.14159265359);
 
-        $piStat = $statsCollector->getStat("this.*.pi");
+        $piStat = $this->statsCollector->getStat("this.*.pi");
+
+        $this->assertEquals(3.14159265359, $piStat);
+    }
+
+    public function testCanGetIndividualStatUsingAbsolutePathWithWildcardOperator()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->setNamespace("this.is.a.really.long.namespace.path");
+        $this->statsCollector->addStat("pi", 3.14159265359);
+
+        $piStat = $this->statsCollector->getStat(".this.is.*.pi");
 
         $this->assertEquals(3.14159265359, $piStat);
     }
@@ -268,11 +318,11 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetIndividualStatWithKeyUsingWildcardOperator()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->setNamespace("this.is.a.really.long.namespace.path");
-        $statsCollector->addStat("pi", 3.14159265359);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->setNamespace("this.is.a.really.long.namespace.path");
+        $this->statsCollector->addStat("pi", 3.14159265359);
 
-        $piStat = $statsCollector->getStat("this.*.pi", $withKeys = true);
+        $piStat = $this->statsCollector->getStat("this.*.pi", $withKeys = true);
 
         $expected = [
           'this.is.a.really.long.namespace.path.pi' => 3.14159265359,
@@ -283,12 +333,12 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetMultipleStatsUsingWildcardOperatorTargetingLeafNodes()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->setNamespace("this.is.a.really.long.namespace.path.with.math.constants");
-        $statsCollector->addStat("pi", 3.14159265359);
-        $statsCollector->addStat("golden_ratio", 1.61803398875);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->setNamespace("this.is.a.really.long.namespace.path.with.math.constants");
+        $this->statsCollector->addStat("pi", 3.14159265359);
+        $this->statsCollector->addStat("golden_ratio", 1.61803398875);
 
-        $wildcardLeafNodes = $statsCollector->getStats([
+        $wildcardLeafNodes = $this->statsCollector->getStats([
           "this.*.pi",
           "this.*.golden_ratio",
         ]);
@@ -303,12 +353,12 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetMultipleStatsUsingWildcardOperatorTargetingCommonParentNode()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->setNamespace("this.is.a.really.long.namespace.path.with.math.constants");
-        $statsCollector->addStat("pi", 3.14159265359);
-        $statsCollector->addStat("golden_ratio", 1.61803398875);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->setNamespace("this.is.a.really.long.namespace.path.with.math.constants");
+        $this->statsCollector->addStat("pi", 3.14159265359);
+        $this->statsCollector->addStat("golden_ratio", 1.61803398875);
 
-        $wildcardConstantCommonParentChildNodes = $statsCollector->getStat("this.*.math.constants.*");
+        $wildcardConstantCommonParentChildNodes = $this->statsCollector->getStat("this.*.math.constants.*");
 
         $expected = [
           1.61803398875,
@@ -320,12 +370,12 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetMultipleStatsWithKeysUsingWildcardOperatorTargetingLeafNodes()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->setNamespace("this.is.a.really.long.namespace.path.with.math.constants");
-        $statsCollector->addStat("pi", 3.14159265359);
-        $statsCollector->addStat("golden_ratio", 1.61803398875);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->setNamespace("this.is.a.really.long.namespace.path.with.math.constants");
+        $this->statsCollector->addStat("pi", 3.14159265359);
+        $this->statsCollector->addStat("golden_ratio", 1.61803398875);
 
-        $wildcardLeafNodes = $statsCollector->getStats([
+        $wildcardLeafNodes = $this->statsCollector->getStats([
           "this.*.pi",
           "this.*.golden_ratio",
         ], $withKeys = true);
@@ -340,12 +390,12 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetMultipleStatsWithKeysUsingWildcardOperatorTargetingCommonParentNode()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->setNamespace("this.is.a.really.long.namespace.path.with.math.constants");
-        $statsCollector->addStat("pi", 3.14159265359);
-        $statsCollector->addStat("golden_ratio", 1.61803398875);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->setNamespace("this.is.a.really.long.namespace.path.with.math.constants");
+        $this->statsCollector->addStat("pi", 3.14159265359);
+        $this->statsCollector->addStat("golden_ratio", 1.61803398875);
 
-        $wildcardConstantCommonParentChildNodes = $statsCollector->getStats([
+        $wildcardConstantCommonParentChildNodes = $this->statsCollector->getStats([
           "this.*.math.constants.*",
         ], $withKeys = true);
 
@@ -360,18 +410,31 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCanSetDefaultResultIfStatDoesNotExist()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
+        $this->statsCollector->setNamespace("test_namespace");
 
-        $nonExistentStat = $statsCollector->getStat("i_dont_exist", $withKeys = false, $default = false);
+        $nonExistentStat = $this->statsCollector->getStat("i_dont_exist", $withKeys = false, $default = false);
 
         $this->assertFalse($nonExistentStat);
     }
 
+    public function testCanSetDefaultResultIfStatWithKeysDoesNotExist()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+
+        $nonExistentStat = $this->statsCollector->getStat("i_dont_exist", $withKeys = true, $default = false);
+
+        $expected = [
+          "i_dont_exist" => false,
+        ];
+
+        $this->assertEquals($expected, $nonExistentStat);
+    }
+
     public function testCanSetDefaultResultForMultipleResultsIfStatsDoesNotExist()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
+        $this->statsCollector->setNamespace("test_namespace");
 
-        $nonExistentStats = $statsCollector->getStats([
+        $nonExistentStats = $this->statsCollector->getStats([
           "i_dont_exist",
           "i_dont_exist_either",
         ], $withKeys = false, $default = false);
@@ -386,78 +449,137 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCanIncrementStat()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("counter", 1);
-        $statsCollector->incrementStat("counter");
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counter", 1);
+        $this->statsCollector->incrementStat("counter");
 
-        $counter = $statsCollector->getStat("counter");
+        $counter = $this->statsCollector->getStat("counter");
 
         $this->assertEquals(2, $counter);
     }
 
     public function testCanIncrementStatWithCustomIncrementer()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("counter", 1);
-        $statsCollector->incrementStat("counter", $increment = 2);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counter", 1);
+        $this->statsCollector->incrementStat("counter", $increment = 2);
 
-        $counter = $statsCollector->getStat("counter");
+        $counter = $this->statsCollector->getStat("counter");
 
         $this->assertEquals(3, $counter);
     }
 
+    public function testIncrementingEmptyStatCreatesNewStatAndIncrementsIt()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->incrementStat("counter");
+
+        $counter = $this->statsCollector->getStat("counter");
+
+        $this->assertEquals(1, $counter);
+    }
+
+    public function testIncrementStatWhichIsNotIncrementableThrowsException()
+    {
+        $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
+        $this->expectExceptionMessage("Attempted to increment a value which cannot be incremented!");
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("text", "dummy text");
+        $this->statsCollector->incrementStat("text");
+    }
+
     public function testCanDecrementStat()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("counter", 10);
-        $statsCollector->decrementStat("counter");
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counter", 10);
+        $this->statsCollector->decrementStat("counter");
 
-        $counter = $statsCollector->getStat("counter");
+        $counter = $this->statsCollector->getStat("counter");
 
         $this->assertEquals(9, $counter);
     }
 
     public function testCanDecrementStatWithCustomDecrementer()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("counter", 10);
-        $statsCollector->decrementStat("counter", $decrement = 5);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counter", 10);
+        $this->statsCollector->decrementStat("counter", $decrement = 5);
 
-        $counter = $statsCollector->getStat("counter");
+        $counter = $this->statsCollector->getStat("counter");
 
         $this->assertEquals(5, $counter);
     }
 
+    public function testDecrementingEmptyStatCreatesNewStatAndDecrementsIt()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->decrementStat("counter");
+
+        $counter = $this->statsCollector->getStat("counter");
+
+        $this->assertEquals(-1, $counter);
+    }
+
+    public function testDecrementStatWhichIsNotDecrementableThrowsException()
+    {
+        $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
+        $this->expectExceptionMessage("Attempted to decrement a value which cannot be decremented!");
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("text", "dummy text");
+        $this->statsCollector->decrementStat("text");
+    }
+
     public function testCanRemoveStat()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("planets", 8);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("planets", 8);
 
-        $numberOfPlanets = $statsCollector->getStat("planets");
+        $numberOfPlanets = $this->statsCollector->getStat("planets");
         $this->assertEquals(8, $numberOfPlanets);
 
-        $statsCollector->removeStat('planets');
-        $numberOfPlanets = $statsCollector->getStat("planets");
+        $this->statsCollector->removeStat('planets');
+        $numberOfPlanets = $this->statsCollector->getStat("planets");
         $this->assertEquals(null, $numberOfPlanets);
+    }
+
+    public function testRemovingStatsWithWildcardThrowsException()
+    {
+        $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
+        $this->expectExceptionMessage("Wildcard usage forbidden when removing stats (to protect you from yourself!)");
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("planets", 8);
+        $this->statsCollector->removeStat('test_namespace.*');
+    }
+
+    public function testRemovingNonExistentStatsThrowsException()
+    {
+        $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
+        $this->expectExceptionMessage("Attempting to remove a statistic that does not exist: test_namespace.i_dont_exist");
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->removeStat('test_namespace.i_dont_exist');
     }
 
     public function testCanGetCountOfIndividualStat()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("heights", [181, 222, 194, 143, 190]);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("heights", [181, 222, 194, 143, 190]);
 
-        $numberOfHeights = $statsCollector->getStatCount("heights");
+        $numberOfHeights = $this->statsCollector->getStatCount("heights");
 
         $this->assertEquals(5, $numberOfHeights);
     }
 
     public function testCanGetCountOfMultipleStats()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("heights", [181, 222, 194, 143, 190]);
-        $statsCollector->addStat("weights", [200, 211, 173, 130, 187]);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("heights", [181, 222, 194, 143, 190]);
+        $this->statsCollector->addStat("weights", [200, 211, 173, 130, 187]);
 
-        $combinedNumberOfHeightsAndWeights = $statsCollector->getStatsCount([
+        $combinedNumberOfHeightsAndWeights = $this->statsCollector->getStatsCount([
           'heights',
           'weights',
         ]);
@@ -467,11 +589,11 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetCountOfMultipleStatsUsingWildcardOperator()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("measurements.heights", [181, 222, 194, 143, 190]);
-        $statsCollector->addStat("measurements.weights", [200, 211, 173, 130, 187]);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("measurements.heights", [181, 222, 194, 143, 190]);
+        $this->statsCollector->addStat("measurements.weights", [200, 211, 173, 130, 187]);
 
-        $combinedNumberOfHeightsAndWeights = $statsCollector->getStatCount("measurements.*");
+        $combinedNumberOfHeightsAndWeights = $this->statsCollector->getStatCount("measurements.*");
 
         $this->assertEquals(10, $combinedNumberOfHeightsAndWeights);
     }
@@ -479,44 +601,57 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetAverageValuesOfIndividualStat()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
+        $this->statsCollector->setNamespace("test_namespace");
         $heights = [181, 222, 194, 143, 190];
-        $statsCollector->addStat("heights", $heights);
+        $this->statsCollector->addStat("heights", $heights);
 
-        $averageHeight = $statsCollector->getStatAverage("heights");
+        $averageHeight = $this->statsCollector->getStatAverage("heights");
         $expectedAverage = array_sum($heights) / count($heights); // 186
 
         $this->assertEquals($expectedAverage, $averageHeight);
     }
 
+    public function testCanGetAverageValuesOfIndividualStatWithSingleValue()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("height", 155.5);
+
+        $averageHeight = $this->statsCollector->getStatAverage("height");
+
+        $this->assertEquals(155.5, $averageHeight);
+    }
+
     public function testCanGetAverageValuesOfMultipleStats()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
+        $this->statsCollector->setNamespace("test_namespace");
         $gondorHeights = [181, 222, 194, 143, 190];
         $shireHeights = [96, 110, 85, 120, 111];
-        $statsCollector->addStat("gondor_heights", $gondorHeights);
-        $statsCollector->addStat("shire_heights", $shireHeights);
+        $mordorHeight = 140;
+        $this->statsCollector->addStat("gondor_heights", $gondorHeights);
+        $this->statsCollector->addStat("shire_heights", $shireHeights);
+        $this->statsCollector->addStat("mordor_height", $mordorHeight);
 
-        $averageHeightAcrossGondorAndTheShire = $statsCollector->getStatsAverage([
+        $averageHeightAcrossMiddleEarth = $this->statsCollector->getStatsAverage([
           'gondor_heights',
           'shire_heights',
+          'mordor_height',
         ]);
 
-        $combinedHeights = array_merge($gondorHeights, $shireHeights);
-        $expectedCombinedHeightsAverage = array_sum($combinedHeights) / count($combinedHeights); // 145.2
+        $combinedHeights = array_merge($gondorHeights, $shireHeights, [$mordorHeight]);
+        $expectedCombinedHeightsAverage = array_sum($combinedHeights) / count($combinedHeights); // 144.72727272727272
 
-        $this->assertEquals($expectedCombinedHeightsAverage, $averageHeightAcrossGondorAndTheShire);
+        $this->assertEquals($expectedCombinedHeightsAverage, $averageHeightAcrossMiddleEarth);
     }
 
     public function testCanGetAverageValuesOfMultipleStatsUsingWildcardOperator()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
+        $this->statsCollector->setNamespace("test_namespace");
         $gondorHeights = [181, 222, 194, 143, 190];
         $shireHeights = [96, 110, 85, 120, 111];
-        $statsCollector->addStat("middle_earth.gondor_heights", $gondorHeights);
-        $statsCollector->addStat("middle_earth.shire_heights", $shireHeights);
+        $this->statsCollector->addStat("middle_earth.gondor_heights", $gondorHeights);
+        $this->statsCollector->addStat("middle_earth.shire_heights", $shireHeights);
 
-        $averageHeightAcrossGondorAndTheShire = $statsCollector->getStatAverage("middle_earth.*");
+        $averageHeightAcrossGondorAndTheShire = $this->statsCollector->getStatAverage("middle_earth.*");
 
         $combinedHeights = array_merge($gondorHeights, $shireHeights);
         $expectedCombinedHeightsAverage = array_sum($combinedHeights) / count($combinedHeights); // 145.2
@@ -524,25 +659,47 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedCombinedHeightsAverage, $averageHeightAcrossGondorAndTheShire);
     }
 
+    public function testTryingToAverageANonNumberThrowsException()
+    {
+        $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
+        $this->expectExceptionMessage("Unable to return average for this collection of values (are they all numbers?)");
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $heights = [181, 222, 194, 143, 190, "one hundred and fifty"];
+        $this->statsCollector->addStat("heights", $heights);
+
+        $this->statsCollector->getStatAverage("heights");
+    }
+
+    public function testCanGetSumOfSingleValue()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("double", 0.5);
+
+        $double = $this->statsCollector->getStatSum("double");
+
+        $this->assertEquals(0.5, $double);
+    }
+
     public function testCanGetSumOfIndividualStat()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->addStat("counter", [1, 2, 3, 4, 5]);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counter", [1, 2, 3, 4, 5]);
 
-        $counterSum = $statsCollector->getStatSum("counter");
+        $counterSum = $this->statsCollector->getStatSum("counter");
 
         $this->assertEquals(15, $counterSum);
     }
 
     public function testCanGetSumOfMultipleStats()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->setNamespace("noahs.ark.passengers");
-        $statsCollector->addStat("humans", 2);
-        $statsCollector->addStat("aliens", 0);
-        $statsCollector->addStat("animals", 99);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->setNamespace("noahs.ark.passengers");
+        $this->statsCollector->addStat("humans", 2);
+        $this->statsCollector->addStat("aliens", 0);
+        $this->statsCollector->addStat("animals", 99);
 
-        $numberOfPassengers = $statsCollector->getStatsSum([
+        $numberOfPassengers = $this->statsCollector->getStatsSum([
           "humans",
           "aliens",
           "animals",
@@ -553,27 +710,41 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetSumOfMultipleStatsUsingWildcardOperator()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->setNamespace("noahs.ark.passengers");
-        $statsCollector->addStat("humans", 2);
-        $statsCollector->addStat("aliens", 0);
-        $statsCollector->addStat("animals", 99);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->setNamespace("noahs.ark.passengers");
+        $this->statsCollector->addStat("humans", 2);
+        $this->statsCollector->addStat("aliens", 0);
+        $this->statsCollector->addStat("animals", 99);
 
-        $numberOfPassengers = $statsCollector->getStatSum("noahs.ark.passengers.*");
+        $numberOfPassengers = $this->statsCollector->getStatSum("noahs.ark.passengers.*");
 
         $this->assertEquals(101, $numberOfPassengers);
     }
 
+    public function testTryingToSumANonNumberThrowsException()
+    {
+        $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
+        $this->expectExceptionMessage("Unable to return sum for this collection of values (are they all numbers?)");
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->setNamespace("noahs.ark.passengers");
+        $this->statsCollector->addStat("humans", "two");
+        $this->statsCollector->addStat("aliens", 0);
+        $this->statsCollector->addStat("animals", 99);
+
+        $this->statsCollector->getStatSum("noahs.ark.passengers.*");
+
+    }
 
     public function testCanGetAllAddedStats()
     {
-        $statsCollector = $this->getTestStatsCollectorInstance();
-        $statsCollector->setNamespace("noahs.ark.passengers");
-        $statsCollector->addStat("humans", 2);
-        $statsCollector->addStat("aliens", 0);
-        $statsCollector->addStat("animals", 99);
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->setNamespace("noahs.ark.passengers");
+        $this->statsCollector->addStat("humans", 2);
+        $this->statsCollector->addStat("aliens", 0);
+        $this->statsCollector->addStat("animals", 99);
 
-        $allStats = $statsCollector->getAllStats();
+        $allStats = $this->statsCollector->getAllStats();
 
         //stats are returned in alphabetical order
         $expectStats = [
@@ -585,17 +756,13 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectStats, $allStats);
     }
 
+    /**
+     * @covers \Statistics\Collector\Traits\SingletonInheritance::tearDown()
+     */
     public function tearDown()
     {
-        Statistics\Collector\Collector::tearDown(true);
+        Statistics\Collector\Collector::tearDown();
         parent::tearDown();
-    }
-
-    private function getTestStatsCollectorInstance()
-    {
-        $statsCollector = Statistics\Collector\Collector::getInstance();
-        $statsCollector->setNamespace("test_namespace");
-        return $statsCollector;
     }
 
 }

@@ -14,6 +14,12 @@
     <filter>
         <whitelist processUncoveredFilesFromWhitelist="true">
             <directory suffix=".php">src</directory>
+            <exclude>
+                <directory suffix=".php">samples</directory>
+                <directory suffix=".php">vendor</directory>
+                <directory suffix=".php">src/Exception</directory>
+                <directory suffix=".php">src/Collector/Helper</directory> <!-- need to write tests for these -->
+            </exclude>
         </whitelist>
     </filter>
 </phpunit>

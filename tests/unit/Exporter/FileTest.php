@@ -1,6 +1,10 @@
 <?php
 
-
+/**
+ * @covers \Statistics\Exporter\File<extended>
+ * @covers \Statistics\Collector\Collector<extended>
+ * @covers \Statistics\Collector\Traits\SingletonInheritance
+ */
 class FileTest extends \PHPUnit\Framework\TestCase
 {
 
@@ -12,7 +16,7 @@ class FileTest extends \PHPUnit\Framework\TestCase
 
     public function testExporterImplementsiExporterInterface()
     {
-        $exporter = new Statistics\Exporter\Prometheus();
+        $exporter = new Statistics\Exporter\File();
 
         $this->assertInstanceOf(Statistics\Exporter\iExporter::class, $exporter);
     }
@@ -68,6 +72,30 @@ class FileTest extends \PHPUnit\Framework\TestCase
         $this->removeTmpDir($this->filePath);
     }
 
+    public function testExportOutputsValidCompoundStats()
+    {
+        $this->setupTmpStatsFileProperties();
+        $fileLocation = $this->filePath . DIRECTORY_SEPARATOR . $this->filename . $this->fileExtension;
+
+        $statsCollector = Statistics\Collector\Collector::getInstance();
+        $statsCollector->setNamespace("observer");
+        $statsCollector->addStat("ages", [19,32,44,60,54,67]);
+
+        $exporter = new Statistics\Exporter\File($this->filename, $this->filePath);
+        $exporter->export($statsCollector);
+
+        $statsAssocArray = $this->buildArrayFromOutputFile($fileLocation);
+
+        $expectedStats = [
+          'observer.ages' => [19, 32, 44, 60, 54, 67],
+        ];
+
+        $this->assertEquals($expectedStats, $statsAssocArray);
+
+        //clean up
+        $this->removeTmpFile($fileLocation);
+        $this->removeTmpDir($this->filePath);
+    }
 
     public function tearDown()
     {
@@ -90,7 +118,15 @@ class FileTest extends \PHPUnit\Framework\TestCase
             $statsWrittenLinesArray = explode("\n", $statsWritten);
             foreach ($statsWrittenLinesArray as $statsLine) {
                 list($name, $value) = explode('=', $statsLine);
-                $statsWrittenAssocArray[$name] = $value;
+                if(array_key_exists($name, $statsWrittenAssocArray)) {
+                    if(is_array($statsWrittenAssocArray[$name])) {
+                        $statsWrittenAssocArray[$name][] = $value;
+                    } else {
+                        $statsWrittenAssocArray[$name] = [$statsWrittenAssocArray[$name], $value];
+                    }
+                } else {
+                    $statsWrittenAssocArray[$name] = $value;
+                }
             }
         } else {
             return "File does not exist";

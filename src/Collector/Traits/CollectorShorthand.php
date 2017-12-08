@@ -24,7 +24,7 @@ trait CollectorShorthand
      *
      * @return array|mixed
      */
-    public function get($namespace, $withKeys = false, $default = null)
+    public function get($namespace, $withKeys = null, $default = null)
     {
         if (is_array($namespace)) {
             return $this->getStats($namespace, $withKeys, $default);

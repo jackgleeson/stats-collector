@@ -1,6 +1,10 @@
 <?php
 
-
+/**
+ * @covers \Statistics\Exporter\Prometheus<extended>
+ * @covers \Statistics\Collector\Collector<extended>
+ * @covers \Statistics\Collector\Traits\SingletonInheritance
+ */
 class PrometheusTest extends \PHPUnit\Framework\TestCase
 {
 
@@ -90,6 +94,31 @@ class PrometheusTest extends \PHPUnit\Framework\TestCase
         $this->removeTmpDir($this->promFilePath);
     }
 
+    public function testExportOutputsValidCompoundStats()
+    {
+        $this->setupTmpStatsFileProperties();
+        $promFileLocation = $this->promFilePath . DIRECTORY_SEPARATOR . $this->promFilename . $this->promFileExtension;
+
+        $statsCollector = Statistics\Collector\Collector::getInstance();
+        $statsCollector->setNamespace("observer");
+        $statsCollector->addStat("ages", [19, 32, 44, 60, 54, 67]);
+
+        $prometheusExporter = new Statistics\Exporter\Prometheus($this->promFilename, $this->promFilePath);
+        $prometheusExporter->export($statsCollector);
+
+        $statsAssocArray = $this->buildArrayFromPrometheusOutputFile($promFileLocation);
+
+        $expectedStats = [
+          'observer_ages' => [19, 32, 44, 60, 54, 67],
+        ];
+
+        $this->assertEquals($expectedStats, $statsAssocArray);
+
+        //clean up
+        $this->removeTmpFile($promFileLocation);
+        $this->removeTmpDir($this->promFilePath);
+    }
+
 
     public function tearDown()
     {
@@ -112,7 +141,15 @@ class PrometheusTest extends \PHPUnit\Framework\TestCase
             $statsWrittenLinesArray = explode("\n", $statsWritten);
             foreach ($statsWrittenLinesArray as $statsLine) {
                 list($name, $value) = explode(' ', $statsLine);
-                $statsWrittenAssocArray[$name] = $value;
+                if (array_key_exists($name, $statsWrittenAssocArray)) {
+                    if (is_array($statsWrittenAssocArray[$name])) {
+                        $statsWrittenAssocArray[$name][] = $value;
+                    } else {
+                        $statsWrittenAssocArray[$name] = [$statsWrittenAssocArray[$name], $value];
+                    }
+                } else {
+                    $statsWrittenAssocArray[$name] = $value;
+                }
             }
         } else {
             return "Prometheus file does not exist";

@@ -114,7 +114,7 @@ class Prometheus implements iExporter
      *
      * @return bool
      */
-    protected function isMetricWithLabelAsKey($key)
+    private function isMetricWithLabelAsKey($key)
     {
         return (!is_numeric($key)) ? true : false;
     }

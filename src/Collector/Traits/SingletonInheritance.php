@@ -59,19 +59,31 @@ trait SingletonInheritance
      * Add some Singleton visibility restrictions to avoid inconsistencies.
      */
 
+    /**
+     * @codeCoverageIgnore
+     */
     private function __construct()
     {
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     private function __clone()
     {
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function __sleep()
     {
         return [];
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function __wakeup()
     {
         return [];

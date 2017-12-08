@@ -7,13 +7,13 @@ interface iCollector
 
     public static function getInstance();
 
-    public function addStat($name, $value, $options = []);
+    public function addStat($name, $value, $options);
 
     public function removeStat($namespace);
 
-    public function getStat($namespace, $withKeys = null, $default = null);
+    public function getStat($namespace, $withKeys, $default);
 
-    public function getStats(array $namespaces, $withKeys = null, $default = null);
+    public function getStats(array $namespaces, $withKeys, $default );
 
     public function getStatCount($namespace);
 

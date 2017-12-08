@@ -152,12 +152,12 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
      */
     public function getStat($namespace, $withKeys = false, $default = null)
     {
-        if ($this->isWildcardNamespace($namespace)) {
-            return $this->getStats([$namespace], $withKeys, $default);
-        }
-
         if (is_array($namespace)) {
             return $this->getStats($namespace, $withKeys, $default);
+        }
+
+        if ($this->isWildcardNamespace($namespace)) {
+            return $this->getStats([$namespace], $withKeys, $default);
         }
 
         if ($this->checkExists($namespace) === true) {
@@ -241,6 +241,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
      * @param $namespace
      *
      * @return float|int
+     * @throws \Statistics\Exception\StatisticsCollectorException
      */
     public function getStatAverage($namespace)
     {
@@ -252,6 +253,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
      * @param array $namespaces
      *
      * @return float|int
+     * @throws \Statistics\Exception\StatisticsCollectorException
      */
     public function getStatsAverage(array $namespaces)
     {
@@ -270,6 +272,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
      * @param $namespace
      *
      * @return float|int
+     * @throws \Statistics\Exception\StatisticsCollectorException
      */
     public function getStatSum($namespace)
     {
@@ -281,6 +284,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
      * @param array $namespaces
      *
      * @return float|int
+     * @throws \Statistics\Exception\StatisticsCollectorException
      */
     public function getStatsSum(array $namespaces)
     {
@@ -584,41 +588,22 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
      */
     protected function removePopulatedNamespace($namespace)
     {
-        if (($index = array_search($namespace, $this->populatedNamespaces)) !== false) {
-            unset($this->populatedNamespaces[$index]);
-            $this->sortPopulatedNamespaces();
-            return true;
-        } else {
-            return false;
-        }
+        unset($this->populatedNamespaces[$namespace]);
+        $this->sortPopulatedNamespaces();
+        return true;
     }
 
     /**
-     * Check that namespace element(s) exist
+     * Check that a namespace element exist
      *
-     * TODO: add better error reporting to write out non-existent namespaces for arrays of
-     * namespaces which are checked. It would be frustrating if 9/10 were valid
-     * but due to the 1 non-existent, the check fails and you don't know why.
-     *
-     * @param mixed $namespace
+     * @param string $namespace
      *
      * @return bool
      */
     protected function checkExists($namespace)
     {
         $resolvedNamespace = $this->getTargetNamespaces($namespace);
-        if (is_array($resolvedNamespace)) {
-            foreach ($resolvedNamespace as $ns) {
-                if (!$this->getStatsContainer()->has($ns)) {
-                    return false;
-                }
-            }
-        } else {
-            if (!$this->getStatsContainer()->has($resolvedNamespace)) {
-                return false;
-            }
-        }
-        return true;
+        return $this->getStatsContainer()->has($resolvedNamespace);
     }
 
     /**
@@ -637,13 +622,10 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
                     return $stats;
                 case "array":
                     return $mathHelper->sum($stats);
-                default:
-                    throw new StatisticsCollectorException("Unable to return sum for this collection of values (are they all numbers?)");
             }
         } else {
             throw new StatisticsCollectorException("Unable to return sum for this collection of values (are they all numbers?)");
         }
-
     }
 
     /**
@@ -662,8 +644,6 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
                     return $stats;
                 case "array":
                     return $mathHelper->average($stats);
-                default:
-                    throw new StatisticsCollectorException("Unable to return average for this collection of values (are they all numbers?)");
             }
         } else {
             throw new StatisticsCollectorException("Unable to return average for this collection of values (are they all numbers?)");

@@ -5,13 +5,13 @@ namespace Statistics\Collector;
 interface iCollectorShorthand
 {
 
-    public function get($namespace, $withKeys = null, $default = null);
+    public function get($namespace, $withKeys, $default);
 
-    public function getWithKey($namespace, $default = null);
+    public function getWithKey($namespace, $default);
 
-    public function add($name, $value, $options = []);
+    public function add($name, $value, $options);
 
-    public function clobber($name, $value, $options = []);
+    public function clobber($name, $value, $options);
 
     public function del($namespace);
 
