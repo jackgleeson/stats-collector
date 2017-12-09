@@ -52,9 +52,9 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $this->statsCollector->ns("test_namespace");
         $this->statsCollector->add("number_of_planets", 8);
 
-        $Stats = $this->statsCollector->all();
+        $stats = $this->statsCollector->all();
 
-        $this->assertEquals(8, $Stats["test_namespace.number_of_planets"]);
+        $this->assertEquals(8, $stats["test_namespace.number_of_planets"]);
     }
 
     /**
@@ -65,9 +65,9 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $this->statsCollector->ns("test_namespace");
         $this->statsCollector->add("days_per_year", 365);
 
-        $Stats = $this->statsCollector->all();
+        $stats = $this->statsCollector->all();
 
-        $this->assertInternalType(PHPUnit_IsType::TYPE_INT, $Stats["test_namespace.days_per_year"]);
+        $this->assertInternalType(PHPUnit_IsType::TYPE_INT, $stats["test_namespace.days_per_year"]);
     }
 
     /**
@@ -78,9 +78,9 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $this->statsCollector->ns("test_namespace");
         $this->statsCollector->add("pi", 3.14159265359);
 
-        $Stats = $this->statsCollector->all();
+        $stats = $this->statsCollector->all();
 
-        $this->assertInternalType(PHPUnit_IsType::TYPE_FLOAT, $Stats["test_namespace.pi"]);
+        $this->assertInternalType(PHPUnit_IsType::TYPE_FLOAT, $stats["test_namespace.pi"]);
     }
 
     /**
@@ -93,9 +93,9 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $fibonacciSequence = [0, 1, 1, 2, 3, 5, 8, 13, 21, 34];
         $this->statsCollector->add("fibonacci_sequence", $fibonacciSequence);
 
-        $Stats = $this->statsCollector->all();
+        $stats = $this->statsCollector->all();
 
-        $this->assertInternalType(PHPUnit_IsType::TYPE_ARRAY, $Stats["test_namespace.fibonacci_sequence"]);
+        $this->assertInternalType(PHPUnit_IsType::TYPE_ARRAY, $stats["test_namespace.fibonacci_sequence"]);
     }
 
     /**
@@ -110,15 +110,15 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
         $this->statsCollector->ns("test_namespace");
         $this->statsCollector->add("math_constants", $mathConstants);
-        $Stats = $this->statsCollector->all();
+        $stats = $this->statsCollector->all();
 
         $expected = [
           "pi" => 3.14159265359,
           'golden_ratio' => 1.61803398875,
         ];
 
-        $this->assertInternalType(PHPUnit_IsType::TYPE_ARRAY, $Stats["test_namespace.math_constants"]);
-        $this->assertEquals($expected, $Stats["test_namespace.math_constants"]);
+        $this->assertInternalType(PHPUnit_IsType::TYPE_ARRAY, $stats["test_namespace.math_constants"]);
+        $this->assertEquals($expected, $stats["test_namespace.math_constants"]);
     }
 
     public function testCanClobberStat()
@@ -127,9 +127,9 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $this->statsCollector->add("value_to_be_overwritten", 1);
         $this->statsCollector->clobber("value_to_be_overwritten", 2);
 
-        $Stats = $this->statsCollector->all();
+        $stats = $this->statsCollector->all();
 
-        $this->assertEquals(2, $Stats["test_namespace.value_to_be_overwritten"]);
+        $this->assertEquals(2, $stats["test_namespace.value_to_be_overwritten"]);
     }
 
 
@@ -140,10 +140,10 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $this->statsCollector->ns("test_namespace.math");
 
         $currentNamespace = $this->statsCollector->getCurrentNamespace();
-        $Stats = $this->statsCollector->all();
+        $stats = $this->statsCollector->all();
 
         $this->assertEquals("test_namespace.math", $currentNamespace);
-        $this->assertEquals(1.61803398875, $Stats["test_namespace.math.golden_ratio"]);
+        $this->assertEquals(1.61803398875, $stats["test_namespace.math.golden_ratio"]);
     }
 
     public function testCanGetIndividualStat()
