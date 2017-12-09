@@ -94,6 +94,7 @@ trait CollectorShorthand
      * @param $namespace
      *
      * @return \Statistics\Collector\AbstractCollector
+     * @throws \Statistics\Exception\StatisticsCollectorException
      */
     public function del($namespace)
     {
@@ -109,6 +110,7 @@ trait CollectorShorthand
      * @param int|float $increment
      *
      * @return \Statistics\Collector\AbstractCollector
+     * @throws \Statistics\Exception\StatisticsCollectorException
      */
     public function inc($namespace, $increment = 1)
     {
@@ -124,6 +126,7 @@ trait CollectorShorthand
      * @param int|float $decrement
      *
      * @return \Statistics\Collector\AbstractCollector
+     * @throws \Statistics\Exception\StatisticsCollectorException
      */
     public function dec($namespace, $decrement = -1)
     {
@@ -139,6 +142,7 @@ trait CollectorShorthand
      * @param $namespace
      *
      * @return float|int
+     * @throws \Statistics\Exception\StatisticsCollectorException
      */
     public function avg($namespace)
     {
@@ -158,6 +162,7 @@ trait CollectorShorthand
      * @param array $namespace
      *
      * @return float|int
+     * @throws \Statistics\Exception\StatisticsCollectorException
      */
     public function sum($namespace)
     {
