@@ -479,6 +479,9 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(1, $counter);
     }
 
+    /**
+     * @requires PHPUnit 5
+     */
     public function testIncrementStatWhichIsNotIncrementableThrowsException()
     {
         $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
@@ -521,6 +524,9 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(-1, $counter);
     }
 
+    /**
+     * @requires PHPUnit 5
+     */
     public function testDecrementStatWhichIsNotDecrementableThrowsException()
     {
         $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
@@ -544,6 +550,9 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(null, $numberOfPlanets);
     }
 
+    /**
+     * @requires PHPUnit 5
+     */
     public function testRemovingStatsWithWildcardThrowsException()
     {
         $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
@@ -554,6 +563,9 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->statsCollector->removeStat('test_namespace.*');
     }
 
+    /**
+     * @requires PHPUnit 5
+     */
     public function testRemovingNonExistentStatsThrowsException()
     {
         $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
@@ -659,6 +671,9 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedCombinedHeightsAverage, $averageHeightAcrossGondorAndTheShire);
     }
 
+    /**
+     * @requires PHPUnit 5
+     */
     public function testTryingToAverageANonNumberThrowsException()
     {
         $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
@@ -721,6 +736,9 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(101, $numberOfPassengers);
     }
 
+    /**
+     * @requires PHPUnit 5
+     */
     public function testTryingToSumANonNumberThrowsException()
     {
         $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
