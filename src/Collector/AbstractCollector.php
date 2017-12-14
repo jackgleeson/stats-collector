@@ -620,8 +620,13 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
                 case "integer":
                 case "double":
                     return $stats;
+                    break;
                 case "array":
                     return $mathHelper->sum($stats);
+                    break;
+                default:
+                    throw new StatisticsCollectorException("Unable to return sum for this collection of values (are they all numbers?)");
+                    break;
             }
         } else {
             throw new StatisticsCollectorException("Unable to return sum for this collection of values (are they all numbers?)");
@@ -642,8 +647,13 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand
                 case "integer":
                 case "double":
                     return $stats;
+                    break;
                 case "array":
                     return $mathHelper->average($stats);
+                    break;
+                default:
+                    throw new StatisticsCollectorException("Unable to return sum for this collection of values (are they all numbers?)");
+                    break;
             }
         } else {
             throw new StatisticsCollectorException("Unable to return average for this collection of values (are they all numbers?)");

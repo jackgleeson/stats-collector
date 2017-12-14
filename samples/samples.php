@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . DIRECTORY_SEPARATOR . '../vendor/autoload.php';
+require __DIR__ . DIRECTORY_SEPARATOR . 'CiviCRMCollector.php';
 
 /**
  * Get an instance of the Collector
@@ -268,7 +269,7 @@ $moonVisitorsSum = $statsCollector->getStatSum('winners'); // 34
  */
 
 // this instance of stats collector has a custom 'civi' root namespace
-$CiviCRMCollector = Samples\CiviCRMCollector::getInstance();
+$CiviCRMCollector = CiviCRMCollector::getInstance();
 
 $CiviCRMCollector->addStat("users.created", 500);
 $usersCreated = $CiviCRMCollector->getStat("users.created"); // 500

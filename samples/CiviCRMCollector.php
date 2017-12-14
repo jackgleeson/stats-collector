@@ -1,7 +1,5 @@
 <?php
 
-namespace Samples;
-
 use Statistics\Collector\AbstractCollector;
 
 class CiviCRMCollector extends AbstractCollector
