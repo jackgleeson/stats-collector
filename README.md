@@ -5,8 +5,10 @@ Record, combine, retrieve and export custom statistics and log data during the l
 Once you have recorded some stats, you can create new stats from your data using traditional aggregate functions like average, count and sum. You can export your stats to an output of your choice, e.g. file, log, db, queue or other custom formats. Finally, you can then display and query the exported stats in whatever frontend you wish, e.g. grafana. 
 
 ### Features
-  - Wildcard name expansion with regular expression support e.g. $stats->get("[a-z0-9]?.*");
-  - Create stats from stats. Get the data you need in one process e.g. $stats->add("overall_total", $stats->sum("separate.totals.*"));
+  - Wildcard name expansion with regular expression support e.g. 
+  ```$stats->get("[a-z0-9]?.*");```
+  - Create stats from stats. Get the data you need in one process e.g.
+   ```$stats->add("overall_total", $stats->sum("separate.totals.*"));```
   - Clear separation of responsibility across general log output and statistical log output to help you stop polluting your application logs with statistical data.
 
 ### To-do
