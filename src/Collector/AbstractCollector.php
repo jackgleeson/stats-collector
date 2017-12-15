@@ -11,7 +11,7 @@ use Statistics\Collector\Traits\CollectorShorthand;
 use Statistics\Collector\Traits\SingletonInheritance;
 use Statistics\Exception\StatisticsCollectorException;
 
-abstract class AbstractCollector implements iCollector, iCollectorShorthand
+abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSingleton
 {
 
     use CollectorShorthand, SingletonInheritance;

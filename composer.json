@@ -11,8 +11,7 @@
   ],
   "autoload": {
     "psr-4": {
-      "Statistics\\": "src/",
-      "Test\\": "tests/"
+      "Statistics\\": "src/"
     }
   },
   "require": {

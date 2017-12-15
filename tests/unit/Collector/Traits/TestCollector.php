@@ -1,7 +1,5 @@
 <?php
 
-namespace Test\unit\Collector\Traits;
-
 use Statistics\Collector\Collector;
 /**
  * Test Collector (extends Collector)

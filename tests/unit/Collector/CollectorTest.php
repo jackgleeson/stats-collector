@@ -20,14 +20,19 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         parent::setUp();
     }
 
-    public function testCollectorImplementAbstractCollector()
+    public function testCollectorImplementsAbstractCollector()
     {
         $this->assertInstanceOf(Statistics\Collector\AbstractCollector::class, $this->statsCollector);
     }
 
-    public function testCollectorImplementsiCollectorInterface()
+    public function testCollectorImplementsCollectorInterface()
     {
         $this->assertInstanceOf(Statistics\Collector\iCollector::class, $this->statsCollector);
+    }
+
+    public function testCollectorImplementsSingletonInterface()
+    {
+        $this->assertInstanceOf(Statistics\Collector\iSingleton::class, $this->statsCollector);
     }
 
     public function testDefaultRootNamespaceSetInCollectorClass()

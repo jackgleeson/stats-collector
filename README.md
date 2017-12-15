@@ -1,15 +1,21 @@
 # Stats Collector
 
-This utility allows you to record, retrieve and export custom statistics during the lifecycle of any PHP process. 
+Record, combine, retrieve and export custom statistics and log data during the lifecycle of any PHP process. 
 
-Once you have recorded some stats, you can create new stats from your data using aggregate analysis with traditional functions like average, count and sum. You can export your stats to an output of your choice, e.g. file, log, db, queue or other custom formats. Finally, you can then display and query the exported stats in whatever frontend you wish, e.g. grafana. 
+Once you have recorded some stats, you can create new stats from your data using traditional aggregate functions like average, count and sum. You can export your stats to an output of your choice, e.g. file, log, db, queue or other custom formats. Finally, you can then display and query the exported stats in whatever frontend you wish, e.g. grafana. 
+
+### Features
+  - Wildcard name expansion with regular expression support e.g. $stats->get("[a-z0-9]?.*")
+  - Create stats from stats. Get the data you need in one process e.g. $stats->add("overall_total", $stats->sum("separate.totals.*"));
+  - Clear separation of responsibility across general log output and statistical log output to help you stop polluting your application logs with statistical data.
 
 ### To-do
   - Import behaviour. Allow Stats Collector to import previously exported data and carry on where it left off. 
-  - Add tests for helpers and improve exporter tests by mocking Collector
+  - Add tests for helpers and improve tests by mocking collaborators
+  - Add listener behaviour so that stats can be updated by updates to other stats (e.g moving averages)
 ### Credits
 
-* [github.com/dflydev/dflydev-dot-access-data](https://github.com/dflydev/dflydev-dot-access-data)  - small but powerful dot namesapce utility
+* [github.com/dflydev/dflydev-dot-access-data](https://github.com/dflydev/dflydev-dot-access-data)  - dot namesapce utility
 
 ### Add Stats Collector to your project
 ```sh
@@ -42,10 +48,8 @@ $stats->ns("crons.payments")
   ->add("succeeded", 20)
   ->add("failed", 10);
 
-// get payment cron stats using wildcard options
+// get payment cron stats using wildcard path
 $paymentStats = $stats->getWithKey("crons.payments.*");
-$paymentStats = $stats->getWithKey("*.payments.*"); // same result as above
-$paymentStats = $stats->getWithKey("*payments*"); // same result as above
 
 // $paymentStats contents
 Array
@@ -61,13 +65,12 @@ Array
 $stats = Statistics\Collector\Collector::getInstance();
 
 $stats->ns("timer")->add("start", microtime(true));
-// some lengthy process
+// some lengthy process...
 $stats->ns("timer")->add("end", microtime(true));
-
-$execution_time = $stats->ns("timer")->get("end") - $stats->ns("timer")->get("start");
-
-// or if you wanted to export the execution time, you could do this:
+// work out execution time and add it as a new stat
 $stats->ns("timer")->add('execution_time', $stats->get("end") - $stats->get("start"));
+
+$execution_time = $stats->ns("timer")->get("execution_time");
 ```
 ### Basic Usage: Export stats to file
 ```php
@@ -101,11 +104,12 @@ $stats->ns("noahs.ark.passengers")
   ->add("aliens", 0)
   ->add("animal.cats", 3)
   ->add("animal.dogs", 6)
-  ->add("animal.chickens", 25);
+  ->add("animal.birds", 25);
   
 // total number of passengers on noahs ark
 $totalPassengers = $stats->sum("noahs.ark.passengers.*"); // 36
-$totalAnimalPassengers = $stats->sum("*.passengers.animal.*"); // 34
+$totalAnimals = $stats->sum("*passengers.animal*"); // 34
+$totalCatsAndDogs = $stats->sum("*passengers.animal.[c,d]*"); // 9
 ```
 
 ### Aggregate Usage: Create a compound stat and work out its average

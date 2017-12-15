@@ -14,7 +14,7 @@ class PrometheusTest extends \PHPUnit\Framework\TestCase
 
     protected $promFileExtension;
 
-    public function testPrometheusExporterImplementsiExporterInterface()
+    public function testPrometheusExporterImplementsExporterInterface()
     {
         $prometheusExporter = new Statistics\Exporter\Prometheus();
 

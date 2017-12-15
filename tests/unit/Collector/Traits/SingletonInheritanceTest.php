@@ -1,7 +1,6 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
-use Test\unit\Collector\Traits\TestCollector;
+require('TestCollector.php');
 
 /**
  * @covers \Statistics\Collector\Traits\SingletonInheritance

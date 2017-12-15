@@ -14,7 +14,7 @@ class FileTest extends \PHPUnit\Framework\TestCase
 
     protected $fileExtension;
 
-    public function testExporterImplementsiExporterInterface()
+    public function testExporterImplementsExporterInterface()
     {
         $exporter = new Statistics\Exporter\File();
 

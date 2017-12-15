@@ -6,7 +6,6 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'CiviCRMCollector.php';
  * Get an instance of the Collector
  */
 $stats = Statistics\Collector\Collector::getInstance();
-
 /**
  * Setting & Getting stats
  */

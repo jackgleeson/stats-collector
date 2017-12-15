@@ -21,21 +21,9 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         parent::setUp();
     }
 
-    public function testCollectorImplementAbstractCollector()
-    {
-        $this->assertInstanceOf(Statistics\Collector\AbstractCollector::class, $this->statsCollector);
-    }
-
-    public function testCollectorImplementsiCollectorShorthandInterface()
+    public function testCollectorImplementsCollectorShorthandInterface()
     {
         $this->assertInstanceOf(Statistics\Collector\iCollectorShorthand::class, $this->statsCollector);
-    }
-
-    public function testDefaultRootNamespaceSetInCollectorClass()
-    {
-        $currentNamespace = $this->statsCollector->getCurrentNamespace();
-
-        $this->assertEquals("root", $currentNamespace);
     }
 
     public function testCanChangeRootNamespace()
