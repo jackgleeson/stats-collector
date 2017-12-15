@@ -1,7 +1,7 @@
 {
   "name": "jackgleeson/stats-collector",
   "type": "library",
-  "description": "Utility to help record, analyse and export statistics across any PHP process",
+  "description": "Lightweight utility to record, combine, retrieve and export statistics and log data across any PHP process",
   "license": "MIT",
   "authors": [
     {
