@@ -198,10 +198,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals($expected, $planetStats);
     }
-
-    /**
-     * This test
-     */
+    
     public function testCallingGetStatMethodWithMultipleNamespacesReturnsMultipleStats()
     {
         $this->statsCollector->setNamespace("test_namespace");
