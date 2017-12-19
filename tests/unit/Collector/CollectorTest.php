@@ -202,7 +202,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
     /**
      * This test
      */
-    public function testCallToGetStatWithMultipleNamespacesReturnsMultipleStats()
+    public function testCallingGetStatMethodWithMultipleNamespacesReturnsMultipleStats()
     {
         $this->statsCollector->setNamespace("test_namespace");
         $this->statsCollector->addStat("planets", 8);
