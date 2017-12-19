@@ -138,7 +138,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expected, $stats["test_namespace.math_constants"]);
     }
 
-    public function testCanCreateCompoundStatIncremetally()
+    public function testCanCreateCompoundStatIncrementally()
     {
         $this->statsCollector->setNamespace("test_namespace");
         $this->statsCollector->addStat("compound_stat", 1);
