@@ -37,7 +37,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testDefaultRootNamespaceSetInCollectorClass()
     {
-        $currentNamespace = $this->statsCollector->getCurrentNamespace();
+        $currentNamespace = $this->statsCollector->getNamespace();
 
         $this->assertEquals("root", $currentNamespace);
     }
@@ -46,7 +46,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
     {
         $this->statsCollector->setNamespace("phpunit");
 
-        $currentNamespace = $this->statsCollector->getCurrentNamespace();
+        $currentNamespace = $this->statsCollector->getNamespace();
 
         $this->assertEquals("phpunit", $currentNamespace);
     }
@@ -56,9 +56,22 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->statsCollector->setNamespace("test_namespace");
         $this->statsCollector->addStat("number_of_planets", 8);
 
-        $Stats = $this->statsCollector->getAllStats();
+        $stats = $this->statsCollector->getAllStats();
 
-        $this->assertEquals(8, $Stats["test_namespace.number_of_planets"]);
+        $this->assertEquals(8, $stats["test_namespace.number_of_planets"]);
+    }
+
+    /**
+     * @requires PHPUnit 6
+     */
+    public function testCanAddStringAsStat()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("hello", "world");
+
+        $stats = $this->statsCollector->getAllStats();
+
+        $this->assertInternalType(PHPUnit_IsType::TYPE_STRING, $stats["test_namespace.hello"]);
     }
 
     /**
@@ -69,9 +82,9 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->statsCollector->setNamespace("test_namespace");
         $this->statsCollector->addStat("days_per_year", 365);
 
-        $Stats = $this->statsCollector->getAllStats();
+        $stats = $this->statsCollector->getAllStats();
 
-        $this->assertInternalType(PHPUnit_IsType::TYPE_INT, $Stats["test_namespace.days_per_year"]);
+        $this->assertInternalType(PHPUnit_IsType::TYPE_INT, $stats["test_namespace.days_per_year"]);
     }
 
     /**
@@ -82,9 +95,9 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->statsCollector->setNamespace("test_namespace");
         $this->statsCollector->addStat("pi", 3.14159265359);
 
-        $Stats = $this->statsCollector->getAllStats();
+        $stats = $this->statsCollector->getAllStats();
 
-        $this->assertInternalType(PHPUnit_IsType::TYPE_FLOAT, $Stats["test_namespace.pi"]);
+        $this->assertInternalType(PHPUnit_IsType::TYPE_FLOAT, $stats["test_namespace.pi"]);
     }
 
     /**
@@ -96,31 +109,9 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $fibonacciSequence = [0, 1, 1, 2, 3, 5, 8, 13, 21, 34];
         $this->statsCollector->addStat("fibonacci_sequence", $fibonacciSequence);
 
-        $Stats = $this->statsCollector->getAllStats();
+        $stats = $this->statsCollector->getAllStats();
 
-        $this->assertInternalType(PHPUnit_IsType::TYPE_ARRAY, $Stats["test_namespace.fibonacci_sequence"]);
-    }
-
-    public function testCanClobberStat()
-    {
-        $this->statsCollector->setNamespace("test_namespace");
-        $this->statsCollector->addStat("value_to_be_overwritten", 1);
-        $this->statsCollector->addStat("value_to_be_overwritten", 2, $options = ['clobber' => true]);
-
-        $Stats = $this->statsCollector->getAllStats();
-
-        $this->assertEquals(2, $Stats["test_namespace.value_to_be_overwritten"]);
-    }
-
-    public function testCanCreateCompoundStat()
-    {
-        $this->statsCollector->setNamespace("test_namespace");
-        $this->statsCollector->addStat("compound_stat", 1);
-        $this->statsCollector->addStat("compound_stat", 2);
-
-        $Stats = $this->statsCollector->getAllStats();
-
-        $this->assertEquals([1, 2], $Stats["test_namespace.compound_stat"]);
+        $this->assertInternalType(PHPUnit_IsType::TYPE_ARRAY, $stats["test_namespace.fibonacci_sequence"]);
     }
 
     /**
@@ -136,15 +127,47 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         ];
 
         $this->statsCollector->addStat("math_constants", $mathConstants);
-        $Stats = $this->statsCollector->getAllStats();
+        $stats = $this->statsCollector->getAllStats();
 
         $expected = [
           "pi" => 3.14159265359,
           'golden_ratio' => 1.61803398875,
         ];
 
-        $this->assertInternalType(PHPUnit_IsType::TYPE_ARRAY, $Stats["test_namespace.math_constants"]);
-        $this->assertEquals($expected, $Stats["test_namespace.math_constants"]);
+        $this->assertInternalType(PHPUnit_IsType::TYPE_ARRAY, $stats["test_namespace.math_constants"]);
+        $this->assertEquals($expected, $stats["test_namespace.math_constants"]);
+    }
+
+    public function testCanCreateCompoundStatIncremetally()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("compound_stat", 1);
+        $this->statsCollector->addStat("compound_stat", 2);
+
+        $stats = $this->statsCollector->getAllStats();
+
+        $this->assertEquals([1, 2], $stats["test_namespace.compound_stat"]);
+    }
+
+    public function testCanCreateCompoundStatWithArray()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("compound_stat", [1,2]);
+
+        $stats = $this->statsCollector->getAllStats();
+
+        $this->assertEquals([1, 2], $stats["test_namespace.compound_stat"]);
+    }
+
+    public function testCanClobberStat()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("value_to_be_overwritten", 1);
+        $this->statsCollector->addStat("value_to_be_overwritten", 2, $options = ['clobber' => true]);
+
+        $stats = $this->statsCollector->getAllStats();
+
+        $this->assertEquals(2, $stats["test_namespace.value_to_be_overwritten"]);
     }
 
     public function testCanAddStatToNewSubNamespace()
@@ -153,11 +176,11 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->statsCollector->addStat("math.golden_ratio", 1.61803398875);
         $this->statsCollector->setNamespace("test_namespace.math");
 
-        $currentNamespace = $this->statsCollector->getCurrentNamespace();
-        $Stats = $this->statsCollector->getAllStats();
+        $currentNamespace = $this->statsCollector->getNamespace();
+        $stats = $this->statsCollector->getAllStats();
 
         $this->assertEquals("test_namespace.math", $currentNamespace);
-        $this->assertEquals(1.61803398875, $Stats["test_namespace.math.golden_ratio"]);
+        $this->assertEquals(1.61803398875, $stats["test_namespace.math.golden_ratio"]);
     }
 
     public function testCanGetIndividualStat()
@@ -541,15 +564,26 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
     public function testCanRemoveStat()
     {
+        //open up access to $Statistics\Collector\Collector::populatedNamespaces[]
+        $reflectionProperty = new \ReflectionProperty(Statistics\Collector\Collector::class, "populatedNamespaces");
+        $reflectionProperty->setAccessible(true);
+
         $this->statsCollector->setNamespace("test_namespace");
         $this->statsCollector->addStat("planets", 8);
 
         $numberOfPlanets = $this->statsCollector->getStat("planets");
+        $populatedNamespaces = array_flip($reflectionProperty->getValue($this->statsCollector));
+        // stat is set and namespace is stored within $populatedNamespaces
         $this->assertEquals(8, $numberOfPlanets);
+        $this->assertArrayHasKey("test_namespace.planets", $populatedNamespaces);
 
         $this->statsCollector->removeStat('planets');
+
         $numberOfPlanets = $this->statsCollector->getStat("planets");
+        $populatedNamespaces = array_flip($reflectionProperty->getValue($this->statsCollector));
+        // stat is null and namespace is not stored within $populatedNamespaces
         $this->assertEquals(null, $numberOfPlanets);
+        $this->assertArrayNotHasKey("test_namespace.planets", $populatedNamespaces);
     }
 
     /**

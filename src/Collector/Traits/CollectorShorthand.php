@@ -216,7 +216,7 @@ trait CollectorShorthand
     public function ns($namespace=null)
     {
         if($namespace===null) {
-            return $this->getCurrentNamespace();
+            return $this->getNamespace();
         } else {
             return $this->setNamespace($namespace);
         }

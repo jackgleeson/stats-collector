@@ -314,14 +314,16 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     }
 
     /**
+     * TODO: validate namespace argument
+     *
      * @param $namespace
      *
      * @return \Statistics\Collector\AbstractCollector
      */
     public function setNamespace($namespace)
     {
-        return $this->setCurrentNamespace($namespace);
-
+        $this->namespace = $namespace;
+        return $this;
     }
 
     /**
@@ -329,7 +331,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      *
      * @return string
      */
-    public function getCurrentNamespace()
+    public function getNamespace()
     {
         return ($this->namespace === null) ? $this->getDefaultNamespace() : $this->namespace;
     }
@@ -397,19 +399,6 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     }
 
     /**
-     * TODO: validate namespace argument
-     *
-     * @param $namespace
-     *
-     * @return \Statistics\Collector\AbstractCollector
-     */
-    protected function setCurrentNamespace($namespace)
-    {
-        $this->namespace = $namespace;
-        return $this;
-    }
-
-    /**
      * @param string $namespace
      *
      * @return mixed
@@ -421,9 +410,9 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
             $namespace = $target = substr($namespace, 1);
         }
 
-        // add a additional namespace route by prepending the current parent ns to the wildcard query
+        // add a additional namespace route by prepending the current parent ns to the wildcard query to
         // handle relative and absolute wildcard searching
-        $additionalNamespace = $this->getCurrentNamespace() . "." . $namespace;
+        $additionalNamespace = $this->getNamespace() . "." . $namespace;
 
         $expandedPaths = [];
         foreach ($this->getPopulatedNamespaces() as $populatedNamespace) {
@@ -468,7 +457,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
                     break;
                 default:
                     // leaf-node of current namespace e.g. 'dates' or sub-namespace e.g 'sub.path.of.current.namespace'
-                    $expandedRelativeNodeNamespace = $this->getCurrentNamespace() . static::SEPARATOR . $namespace;
+                    $expandedRelativeNodeNamespace = $this->getNamespace() . static::SEPARATOR . $namespace;
                     $resolvedNamespaces[] = ($returnAbsolute === false) ? $expandedRelativeNodeNamespace :
                       static::SEPARATOR . $expandedRelativeNodeNamespace;
             }
@@ -579,8 +568,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     }
 
     /**
-     * Remove a namespace from the populated namespaces array (typically when
-     * it becomes empty)
+     * Remove a namespace from the populated namespaces array (typically when it becomes empty)
      *
      * @param $namespace
      *
@@ -588,7 +576,8 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     protected function removePopulatedNamespace($namespace)
     {
-        unset($this->populatedNamespaces[$namespace]);
+        $key = array_search($namespace, $this->populatedNamespaces);
+        unset($this->populatedNamespaces[$key]);
         $this->sortPopulatedNamespaces();
         return true;
     }

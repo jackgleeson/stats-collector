@@ -33,6 +33,6 @@ interface iCollector
 
     public function setNamespace($namespace);
 
-    public function getCurrentNamespace();
+    public function getNamespace();
 
 }
