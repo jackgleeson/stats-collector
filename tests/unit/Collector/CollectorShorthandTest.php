@@ -30,7 +30,7 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
     {
         $this->statsCollector->ns("phpunit");
 
-        $currentNamespace = $this->statsCollector->getCurrentNamespace();
+        $currentNamespace = $this->statsCollector->ns();
 
         $this->assertEquals("phpunit", $currentNamespace);
     }
@@ -127,7 +127,7 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $this->statsCollector->add("math.golden_ratio", 1.61803398875);
         $this->statsCollector->ns("test_namespace.math");
 
-        $currentNamespace = $this->statsCollector->getCurrentNamespace();
+        $currentNamespace = $this->statsCollector->ns();
         $stats = $this->statsCollector->all();
 
         $this->assertEquals("test_namespace.math", $currentNamespace);

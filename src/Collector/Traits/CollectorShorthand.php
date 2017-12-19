@@ -204,16 +204,21 @@ trait CollectorShorthand
     }
 
     /**
-     * Shorthand alias method for setting the current namespace
+     * Shorthand alias method for setting/getting the current namespace
      *
      * @see AbstractCollector::setNamespace()
+     * @see AbstractCollector::getCurrentNamespace()
      *
      * @param $namespace
      *
-     * @return \Statistics\Collector\AbstractCollector
+     * @return string|\Statistics\Collector\AbstractCollector
      */
-    public function ns($namespace)
+    public function ns($namespace=null)
     {
-        return $this->setNamespace($namespace);
+        if($namespace===null) {
+            return $this->getCurrentNamespace();
+        } else {
+            return $this->setNamespace($namespace);
+        }
     }
 }
