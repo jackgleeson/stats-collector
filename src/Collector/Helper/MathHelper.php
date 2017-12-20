@@ -2,6 +2,7 @@
 
 namespace Statistics\Collector\Helper;
 
+use Statistics\Exception\StatisticsCollectorHelperException;
 
 class MathHelper
 {
@@ -48,38 +49,69 @@ class MathHelper
 
 
     /**
-     * Get the average of an array of values
+     * Get the average(mean) of the supplied values
      *
-     * @param array $values
+     * @param mixed $values
      *
      * @return float|int
+     * @throws \Statistics\Exception\StatisticsCollectorHelperException
      */
-    public function average($values = [])
+    public function average($values)
     {
-        return (count($values) > 0) ? array_sum($values) / count($values) : 0;
+        switch (gettype($values)) {
+            case "integer":
+            case "double":
+                return $values;
+                break;
+            case "array":
+                return (count($values) > 0) ? array_sum($values) / count($values) : 0;
+                break;
+            default:
+                throw new StatisticsCollectorHelperException("Unable to return sum for supplied arguments (are the values numeric?)");
+                break;
+        }
     }
 
     /**
-     * Get the sum of an array of values
+     * Get the sum of supplied values
      *
-     * @param array $values
+     * @param mixed $values
      *
      * @return float|int
+     * @throws \Statistics\Exception\StatisticsCollectorException
      */
-    public function sum($values = [])
+    public function sum($values)
     {
-        return array_sum($values);
+        switch (gettype($values)) {
+            case "integer":
+            case "double":
+                return $values;
+                break;
+            case "array":
+                return array_sum($values);
+                break;
+            default:
+                throw new StatisticsCollectorHelperException("Unable to return sum for supplied arguments (are the values numeric?)");
+                break;
+        }
     }
 
     /**
-     * Get the count of items in an array
+     * Get the count of items supplied
      *
-     * @param $values
+     * @param mixed $values
      *
-     * @return int
+     * @return float|int
      */
     public function count($values)
     {
-        return count($values);
+        switch (gettype($values)) {
+            case "array":
+                return count($values);
+                break;
+            default:
+                return 1;
+                break;
+        }
     }
 }

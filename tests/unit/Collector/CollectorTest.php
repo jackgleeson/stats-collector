@@ -614,6 +614,16 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
     public function testCanGetCountOfIndividualStat()
     {
         $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("heights", 181.5);
+
+        $numberOfHeights = $this->statsCollector->getStatCount("heights");
+
+        $this->assertEquals(1, $numberOfHeights);
+    }
+
+    public function testCanGetCountOfIndividualCompoundStat()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
         $this->statsCollector->addStat("heights", [181, 222, 194, 143, 190]);
 
         $numberOfHeights = $this->statsCollector->getStatCount("heights");
@@ -621,7 +631,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(5, $numberOfHeights);
     }
 
-    public function testCanGetCountOfMultipleStats()
+    public function testCanGetCountOfMultipleCompoundStats()
     {
         $this->statsCollector->setNamespace("test_namespace");
         $this->statsCollector->addStat("heights", [181, 222, 194, 143, 190]);
@@ -635,7 +645,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(10, $combinedNumberOfHeightsAndWeights);
     }
 
-    public function testCanGetCountOfMultipleStatsUsingWildcardOperator()
+    public function testCanGetCountOfMultipleCompoundStatsUsingWildcardOperator()
     {
         $this->statsCollector->setNamespace("test_namespace");
         $this->statsCollector->addStat("measurements.heights", [181, 222, 194, 143, 190]);
@@ -650,6 +660,16 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
     public function testCanGetAverageValuesOfIndividualStat()
     {
         $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("heights", 181.5);
+
+        $averageHeight = $this->statsCollector->getStatAverage("heights");
+
+        $this->assertEquals(181.5, $averageHeight);
+    }
+
+    public function testCanGetAverageValuesOfIndividualCompoundStat()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
         $heights = [181, 222, 194, 143, 190];
         $this->statsCollector->addStat("heights", $heights);
 
@@ -657,16 +677,6 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $expectedAverage = array_sum($heights) / count($heights); // 186
 
         $this->assertEquals($expectedAverage, $averageHeight);
-    }
-
-    public function testCanGetAverageValuesOfIndividualStatWithSingleValue()
-    {
-        $this->statsCollector->setNamespace("test_namespace");
-        $this->statsCollector->addStat("height", 155.5);
-
-        $averageHeight = $this->statsCollector->getStatAverage("height");
-
-        $this->assertEquals(155.5, $averageHeight);
     }
 
     public function testCanGetAverageValuesOfMultipleStats()
@@ -713,7 +723,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
     public function testTryingToAverageANonNumberThrowsException()
     {
         $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
-        $this->expectExceptionMessage("Unable to return average for this collection of values (are they all numbers?)");
+        $this->expectExceptionMessage("Unable to return average for supplied arguments (are the values numeric?)");
 
         $this->statsCollector->setNamespace("test_namespace");
         $heights = [181, 222, 194, 143, 190, "one hundred and fifty"];
@@ -778,7 +788,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
     public function testTryingToSumANonNumberThrowsException()
     {
         $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
-        $this->expectExceptionMessage("Unable to return sum for this collection of values (are they all numbers?)");
+        $this->expectExceptionMessage("Unable to return sum for supplied arguments (are the values numeric?)");
 
         $this->statsCollector->setNamespace("test_namespace");
         $this->statsCollector->setNamespace("noahs.ark.passengers");

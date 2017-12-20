@@ -189,7 +189,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     public function getStats(array $namespaces, $withKeys = false, $default = null)
     {
-        $resolvedNamespaces = $this->getTargetNamespaces($namespaces, true);
+        $resolvedNamespaces = $this-> getTargetNamespaces($namespaces, true);
         if (!is_array($resolvedNamespaces)) {
             $resolvedNamespaces = [$resolvedNamespaces];
         }
@@ -541,8 +541,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     }
 
     /**
-     * Check to see if value can be decremented.
-     * Currently PHP allows numbers and strings to be incremented. We only want numbers
+     * Check to see if value can be negatively incremented. (forwards on to isIncrementable())
      *
      * @param mixed $value
      *
@@ -550,7 +549,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     protected function isDecrementable($value)
     {
-        return (new TypeHelper())->isIntOrFloat($value);
+        return $this->isIncrementable($value);
     }
 
     /**
@@ -604,21 +603,11 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     protected function calculateStatsSum($stats)
     {
         $mathHelper = new MathHelper();
+
         if ($mathHelper->isSummable($stats)) {
-            switch (gettype($stats)) {
-                case "integer":
-                case "double":
-                    return $stats;
-                    break;
-                case "array":
-                    return $mathHelper->sum($stats);
-                    break;
-                default:
-                    throw new StatisticsCollectorException("Unable to return sum for this collection of values (are they all numbers?)");
-                    break;
-            }
+            return $mathHelper->sum($stats);
         } else {
-            throw new StatisticsCollectorException("Unable to return sum for this collection of values (are they all numbers?)");
+            throw new StatisticsCollectorException("Unable to return sum for supplied arguments (are the values numeric?)");
         }
     }
 
@@ -631,21 +620,11 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     protected function calculateStatsAverage($stats)
     {
         $mathHelper = new MathHelper();
+
         if ($mathHelper->isAverageable($stats)) {
-            switch (gettype($stats)) {
-                case "integer":
-                case "double":
-                    return $stats;
-                    break;
-                case "array":
-                    return $mathHelper->average($stats);
-                    break;
-                default:
-                    throw new StatisticsCollectorException("Unable to return sum for this collection of values (are they all numbers?)");
-                    break;
-            }
+            return $mathHelper->average($stats);
         } else {
-            throw new StatisticsCollectorException("Unable to return average for this collection of values (are they all numbers?)");
+            throw new StatisticsCollectorException("Unable to return average for supplied arguments (are the values numeric?)");
         }
     }
 
