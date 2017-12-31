@@ -253,9 +253,9 @@ $totalResponses = $statsCollector->getStatsSum([
  */
 
 $winners = [
-  "<10s" => 5,
-  '10s-12s' => 9,
-  '12s+' => 20,
+  "sprint=8s" => 5,
+  'sprint=10s' => 9,
+  'sprint=12s' => 21,
 ];
 
 $statsCollector->setNamespace("olympics.100m")->addStat("winners", $winners);

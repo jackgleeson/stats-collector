@@ -337,7 +337,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     }
 
     /**
-     * Set the default root namespace for statistics to be stored within is a custom namespace is not set.
+     * Set the default root namespace for statistics to be stored within if a custom namespace is not set.
      *
      * @return string
      */

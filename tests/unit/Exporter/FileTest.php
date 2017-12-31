@@ -1,5 +1,7 @@
 <?php
 
+require_once('tests/unit/utils/FileReader.php');
+
 /**
  * @covers \Statistics\Exporter\File<extended>
  * @covers \Statistics\Collector\Collector<extended>
@@ -7,6 +9,8 @@
  */
 class FileTest extends \PHPUnit\Framework\TestCase
 {
+
+    const DELIMITER = "=";
 
     protected $filename;
 
@@ -57,7 +61,7 @@ class FileTest extends \PHPUnit\Framework\TestCase
         $exporter = new Statistics\Exporter\File($this->filename, $this->filePath);
         $exporter->export($statsCollector);
 
-        $statsAssocArray = $this->buildArrayFromOutputFile($fileLocation);
+        $statsAssocArray = FileReader::buildArrayFromOutputFile($fileLocation);
 
         $expectedStats = [
           'milky_way.planets' => 100000000000,
@@ -79,12 +83,12 @@ class FileTest extends \PHPUnit\Framework\TestCase
 
         $statsCollector = Statistics\Collector\Collector::getInstance();
         $statsCollector->setNamespace("observer");
-        $statsCollector->addStat("ages", [19,32,44,60,54,67]);
+        $statsCollector->addStat("ages", [19, 32, 44, 60, 54, 67]);
 
         $exporter = new Statistics\Exporter\File($this->filename, $this->filePath);
         $exporter->export($statsCollector);
 
-        $statsAssocArray = $this->buildArrayFromOutputFile($fileLocation);
+        $statsAssocArray = FileReader::buildArrayFromOutputFile($fileLocation);
 
         $expectedStats = [
           'observer.ages' => [19, 32, 44, 60, 54, 67],
@@ -109,31 +113,6 @@ class FileTest extends \PHPUnit\Framework\TestCase
         return $statsCollector;
     }
 
-    private function buildArrayFromOutputFile($fileLocation)
-    {
-        $statsWrittenAssocArray = [];
-        if (file_exists($fileLocation)) {
-            $statsFileFullPath = $fileLocation;
-            $statsWritten = rtrim(file_get_contents($statsFileFullPath)); // remove trailing \n
-            $statsWrittenLinesArray = explode("\n", $statsWritten);
-            foreach ($statsWrittenLinesArray as $statsLine) {
-                list($name, $value) = explode('=', $statsLine);
-                if(array_key_exists($name, $statsWrittenAssocArray)) {
-                    if(is_array($statsWrittenAssocArray[$name])) {
-                        $statsWrittenAssocArray[$name][] = $value;
-                    } else {
-                        $statsWrittenAssocArray[$name] = [$statsWrittenAssocArray[$name], $value];
-                    }
-                } else {
-                    $statsWrittenAssocArray[$name] = $value;
-                }
-            }
-        } else {
-            return "File does not exist";
-        }
-
-        return $statsWrittenAssocArray;
-    }
 
     private function setupTmpStatsFileProperties($filename = "test_stats")
     {

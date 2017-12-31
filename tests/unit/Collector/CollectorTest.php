@@ -152,7 +152,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
     public function testCanCreateCompoundStatWithArray()
     {
         $this->statsCollector->setNamespace("test_namespace");
-        $this->statsCollector->addStat("compound_stat", [1,2]);
+        $this->statsCollector->addStat("compound_stat", [1, 2]);
 
         $stats = $this->statsCollector->getAllStats();
 
@@ -168,6 +168,37 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $stats = $this->statsCollector->getAllStats();
 
         $this->assertEquals(2, $stats["test_namespace.value_to_be_overwritten"]);
+    }
+
+    public function testDefaultMultiDimensionalArrayAutoFlatteningNewStat()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("compound_stat", [1, [2, 3]]);
+
+        $stats = $this->statsCollector->getAllStats();
+
+        $this->assertEquals([1, 2, 3], $stats["test_namespace.compound_stat"]);
+    }
+
+    public function testCanDisableArrayFlattening()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("compound_stat", [1, [2, 3]], $options = ['flatten' => false]);
+
+        $stats = $this->statsCollector->getAllStats();
+
+        $this->assertEquals([1, [2, 3]], $stats["test_namespace.compound_stat"]);
+    }
+
+    public function testDefaultMultiDimensionalArrayAutoFlatteningToExistingStat()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("compound_stat", 1);
+        $this->statsCollector->addStat("compound_stat", [2, [3, 4]]);
+
+        $stats = $this->statsCollector->getAllStats();
+
+        $this->assertEquals([1, 2, 3, 4], $stats["test_namespace.compound_stat"]);
     }
 
     public function testCanAddStatToNewSubNamespace()

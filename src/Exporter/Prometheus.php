@@ -11,6 +11,13 @@ class Prometheus implements iExporter
 {
 
     /**
+     * Regular expression pattern to validate Prometheus labels.
+     *
+     * Taken from https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels
+     */
+    const LABEL_PATTERN = "/^([a-z_]+)=([a-z0-9_]+)$/i";
+
+    /**
      * Prometheus files extension
      *
      * @var string
@@ -105,24 +112,19 @@ class Prometheus implements iExporter
     /**
      * Check to see if a we should create a metric label based on the contents of the statistic array key
      *
-     * TODO:
-     * This crude check at the moment simply detects whether or not the key is non-numeric. If it's non-numeric
-     * we treat it as a label. This could be vastly improved by adding a metric label key convention such as
-     * "label:<label-name>" do move away form the current default label type of "filter"
-     *
      * @param $key
      *
      * @return bool
      */
     private function isMetricWithLabelAsKey($key)
     {
-        return (!is_numeric($key)) ? true : false;
+        return (preg_match(static::LABEL_PATTERN, $key) === 1);
     }
 
     /**
-     * Map non-numeric strings to a default label called "filter"
+     * Map non-numeric strings to a metric label
      *
-     * TODO: work out how to control label names and potentially add more than more label
+     * Currently only supports one label per metric.
      *
      * @param string $subject
      * @param string $key
@@ -132,7 +134,8 @@ class Prometheus implements iExporter
      */
     private function mapToMetricLabelLineOutput($subject, $key, $stat)
     {
-        return $subject . "{filter=\"" . $key . "\"} " . $stat . PHP_EOL;
+        preg_match(static::LABEL_PATTERN, $key, $matches);
+        return $subject . "{" . $matches[1] . "=\"" . $matches[2] . "\"} " . $stat . PHP_EOL;
     }
 
     /**

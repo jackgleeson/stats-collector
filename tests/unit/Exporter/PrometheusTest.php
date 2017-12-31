@@ -1,5 +1,7 @@
 <?php
 
+require_once('tests/unit/utils/FileReader.php');
+
 /**
  * @covers \Statistics\Exporter\Prometheus<extended>
  * @covers \Statistics\Collector\Collector<extended>
@@ -7,6 +9,8 @@
  */
 class PrometheusTest extends \PHPUnit\Framework\TestCase
 {
+
+    const DELIMITER = " ";
 
     protected $promFilename;
 
@@ -55,7 +59,7 @@ class PrometheusTest extends \PHPUnit\Framework\TestCase
         $prometheusExporter = new Statistics\Exporter\Prometheus($this->promFilename, $this->promFilePath);
         $prometheusExporter->export($statsCollector);
 
-        $statsAssocArray = $this->buildArrayFromPrometheusOutputFile($promFileLocation);
+        $statsAssocArray = FileReader::buildArrayFromPrometheusOutputFile($promFileLocation);
         $expectedStatName = 'this_is_a_really_long_namespace_pi';
 
         $this->assertArrayHasKey($expectedStatName, $statsAssocArray);
@@ -79,15 +83,15 @@ class PrometheusTest extends \PHPUnit\Framework\TestCase
         $prometheusExporter = new Statistics\Exporter\Prometheus($this->promFilename, $this->promFilePath);
         $prometheusExporter->export($statsCollector);
 
-        $statsAssocArray = $this->buildArrayFromPrometheusOutputFile($promFileLocation);
+        $statsAssocArray = FileReader::buildArrayFromPrometheusOutputFile($promFileLocation);
 
-        $expectedStats = [
+        $expectedOutput = [
           'milky_way_planets' => 100000000000,
           'milky_way_stars' => 400000000000,
           'milky_way_age_in_years' => 13800000000,
         ];
 
-        $this->assertEquals($expectedStats, $statsAssocArray);
+        $this->assertEquals($expectedOutput, $statsAssocArray);
 
         //clean up
         $this->removeTmpFile($promFileLocation);
@@ -106,19 +110,52 @@ class PrometheusTest extends \PHPUnit\Framework\TestCase
         $prometheusExporter = new Statistics\Exporter\Prometheus($this->promFilename, $this->promFilePath);
         $prometheusExporter->export($statsCollector);
 
-        $statsAssocArray = $this->buildArrayFromPrometheusOutputFile($promFileLocation);
+        $statsAssocArray = FileReader::buildArrayFromPrometheusOutputFile($promFileLocation);
 
-        $expectedStats = [
+        $expectedOutput = [
           'observer_ages' => [19, 32, 44, 60, 54, 67],
         ];
 
-        $this->assertEquals($expectedStats, $statsAssocArray);
+        $this->assertEquals($expectedOutput, $statsAssocArray);
 
         //clean up
         $this->removeTmpFile($promFileLocation);
         $this->removeTmpDir($this->promFilePath);
     }
 
+
+    public function testExportConvertsLabelFormatArrayKeyToValidPrometheusLabels()
+    {
+        $this->setupTmpStatsFileProperties();
+        $promFileLocation = $this->promFilePath . DIRECTORY_SEPARATOR . $this->promFilename . $this->promFileExtension;
+
+        $data = [
+          'type=mouse' => 'Mickey Mouse',
+          'type=_dog_' => 'Pluto',
+          'total' => 2,
+        ];
+
+        $statsCollector = Statistics\Collector\Collector::getInstance();
+        $statsCollector->setNamespace("labels_test");
+        $statsCollector->addStat("characters", $data);
+
+        $prometheusExporter = new Statistics\Exporter\Prometheus($this->promFilename, $this->promFilePath);
+        $prometheusExporter->export($statsCollector);
+
+        $statsAssocArray = FileReader::buildArrayFromPrometheusOutputFile($promFileLocation);
+
+        $expectedOutputWithLabels = [
+          'labels_test_characters{type="mouse"}' => 'Mickey',
+          'labels_test_characters{type="_dog_"}' => 'Pluto',
+          'labels_test_characters' => '2',
+        ];
+
+        $this->assertEquals($expectedOutputWithLabels, $statsAssocArray);
+
+        //clean up
+        $this->removeTmpFile($promFileLocation);
+        $this->removeTmpDir($this->promFilePath);
+    }
 
     public function tearDown()
     {
@@ -130,32 +167,6 @@ class PrometheusTest extends \PHPUnit\Framework\TestCase
         $statsCollector = Statistics\Collector\Collector::getInstance();
         $statsCollector->setNamespace("test_namespace");
         return $statsCollector;
-    }
-
-    private function buildArrayFromPrometheusOutputFile($prometheusFileLocation)
-    {
-        $statsWrittenAssocArray = [];
-        if (file_exists($prometheusFileLocation)) {
-            $statsFileFullPath = $prometheusFileLocation;
-            $statsWritten = rtrim(file_get_contents($statsFileFullPath)); // remove trailing \n
-            $statsWrittenLinesArray = explode("\n", $statsWritten);
-            foreach ($statsWrittenLinesArray as $statsLine) {
-                list($name, $value) = explode(' ', $statsLine);
-                if (array_key_exists($name, $statsWrittenAssocArray)) {
-                    if (is_array($statsWrittenAssocArray[$name])) {
-                        $statsWrittenAssocArray[$name][] = $value;
-                    } else {
-                        $statsWrittenAssocArray[$name] = [$statsWrittenAssocArray[$name], $value];
-                    }
-                } else {
-                    $statsWrittenAssocArray[$name] = $value;
-                }
-            }
-        } else {
-            return "Prometheus file does not exist";
-        }
-
-        return $statsWrittenAssocArray;
     }
 
     private function setupTmpStatsFileProperties($filename = "test_stats")
