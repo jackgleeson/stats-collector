@@ -17,7 +17,11 @@ interface iCollectorShorthand
 
     public function inc($namespace, $increment);
 
+    public function incCpd($namespace, $increment);
+
     public function dec($namespace, $decrement);
+
+    public function decCpd($namespace, $decrement);
 
     public function avg($namespace);
 
@@ -28,6 +32,5 @@ interface iCollectorShorthand
     public function all();
 
     public function ns($namespace);
-
 
 }

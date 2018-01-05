@@ -1,6 +1,6 @@
 <?php
 
-namespace Statistics\Collector\Helper;
+namespace Statistics\Helper;
 
 use Statistics\Exception\StatisticsCollectorHelperException;
 
@@ -8,7 +8,7 @@ class MathHelper
 {
 
     /**
-     * @var \Statistics\Collector\Helper\TypeHelper
+     * @var \Statistics\Helper\TypeHelper
      */
     protected $typeHelper;
 
@@ -19,7 +19,6 @@ class MathHelper
     {
         $this->typeHelper = new TypeHelper();
     }
-
 
     /**
      * Check if value is a number or a collection of numbers available to
@@ -46,7 +45,6 @@ class MathHelper
     {
         return $this->typeHelper->isIntOrFloatRecursive($value);
     }
-
 
     /**
      * Get the average(mean) of the supplied values

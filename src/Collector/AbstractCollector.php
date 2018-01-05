@@ -1,12 +1,11 @@
 <?php
 
-
 namespace Statistics\Collector;
 
 use Dflydev\DotAccessData\Data as Container;
-use Statistics\Collector\Helper\ArrayHelper;
-use Statistics\Collector\Helper\MathHelper;
-use Statistics\Collector\Helper\TypeHelper;
+use Statistics\Helper\ArrayHelper;
+use Statistics\Helper\MathHelper;
+use Statistics\Helper\TypeHelper;
 use Statistics\Collector\Traits\CollectorShorthand;
 use Statistics\Collector\Traits\SingletonInheritance;
 use Statistics\Exception\StatisticsCollectorException;
@@ -110,6 +109,74 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
         }
     }
 
+    /**
+     * Increment the values of a compound stat either by supplying:
+     * 1) a single int or float to be incremented across all stat values
+     * 2) key=>value array to be used to increment specific compound stat values with a specific increment
+     *
+     * @param string $namespace
+     * @param int|float|array $increment default 1
+     *
+     * @return \Statistics\Collector\AbstractCollector
+     * @throws StatisticsCollectorException
+     */
+    public function incrementCompoundStat($namespace, $increment = 1)
+    {
+        $typeHelper = new TypeHelper();
+
+        //if the namespace doesn't exist we create the correct compound stat with values of '0'
+        if ($this->checkExists($namespace) !== true) {
+            if ($typeHelper->isArray($increment)) {
+                // if array of increments is supplied we create a default compound stat using array keys with value of '0'
+                $default = array_fill_keys(array_keys($increment), 0);
+            } else {
+                //if float|int is supplied we create default compound stat with value of '0'
+                $default = [0];
+            }
+            $this->addStat($namespace, $default);
+        }
+
+        // get current compound stat values to check it is compound and if so begin incrementing
+        $currentValues = $this->getStat($namespace);
+        if (!$typeHelper->isArray($currentValues)) {
+            throw new StatisticsCollectorException("The stat you are trying to increment is not a compound stat, instead use incrementStat(). $namespace=$currentValues(" . gettype($currentValues) . ")");
+        }
+
+        // check we have either an int|float or an array of int|floats.
+        if ($typeHelper->isIntOrFloatRecursive($increment)) {
+            if ($typeHelper->isArray($increment)) {
+                // if $increment is an array, we match (or add) the keys in $increment to the keys in $currentValues and
+                // increment $currentValues[$increment_key] with the corresponding $increment value.
+                $keys = array_keys($increment);
+            } else {
+                // if $increment is an int|float, we loop through the $currentValues and increment all values
+                // with the value of $increment
+                $keys = array_keys($currentValues);
+            }
+
+            for ($i = 0; $i < count($keys); $i++) {
+                // if key is not set, we add it with a default of '0'
+                if (!array_key_exists($keys[$i], $currentValues)) {
+                    $currentValues[$keys[$i]] = 0;
+                }
+
+                if ($this->isIncrementable($currentValues[$keys[$i]])) {
+                    $incrementer = ($typeHelper->isArray($increment)) ? $increment[$keys[$i]] : $increment;
+                    $currentValues[$keys[$i]] += $incrementer;
+                } else {
+                    throw new StatisticsCollectorException("Attempting to increment a compound value which cannot be incremented! (" . $namespace . "[" . $keys[$i] . "]=\"" . $currentValues[$keys[$i]] . "\":" . gettype($currentValues[$keys[$i]]) . ")");
+                }
+            }
+        } else {
+            throw new StatisticsCollectorException("Attempting to increment a compound stat with a value which is not a float or integer!");
+        }
+
+        // finally assign the new compound stat values to the stat namespace
+        $updatedCompoundStat = $currentValues;
+        $options['clobber'] = true;
+        $this->addStat($namespace, $updatedCompoundStat, $options);
+        return $this;
+    }
 
     /**
      * Decrement a statistic
@@ -137,6 +204,74 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
         }
     }
 
+    /**
+     * Decrement the values of a compound stat either by supplying:
+     * 1) a single int or float to be decremented across all stat values
+     * 2) key=>value array to be used to decrement specific compound stat values with a specific decrement
+     *
+     * @param string $namespace
+     * @param int|float|array $decrement default 1
+     *
+     * @return \Statistics\Collector\AbstractCollector
+     * @throws StatisticsCollectorException
+     */
+    public function decrementCompoundStat($namespace, $decrement = 1)
+    {
+        $typeHelper = new TypeHelper();
+
+        //if the namespace doesn't exist we create the correct compound stat with values of '0'
+        if ($this->checkExists($namespace) !== true) {
+            if ($typeHelper->isArray($decrement)) {
+                // if array of decrements is supplied we create a default compound stat using array keys with value of '0'
+                $default = array_fill_keys(array_keys($decrement), 0);
+            } else {
+                //if float|int is supplied we create default compound stat with value of '0'
+                $default = [0];
+            }
+            $this->addStat($namespace, $default);
+        }
+
+        // get current compound stat values to check it is compound and if so begin decrementing
+        $currentValues = $this->getStat($namespace);
+        if (!$typeHelper->isArray($currentValues)) {
+            throw new StatisticsCollectorException("The stat you are trying to decrement is not a compound stat, instead use decrementStat(). $namespace=$currentValues(" . gettype($currentValues) . ")");
+        }
+
+        // check we have either an int|float or an array of int|floats.
+        if ($typeHelper->isIntOrFloatRecursive($decrement)) {
+            if ($typeHelper->isArray($decrement)) {
+                // if $decrement is an array, we match (or add) the keys in $decrement to the keys in $currentValues and
+                // decrement $currentValues[$decrement_key] with the corresponding $decrement value.
+                $keys = array_keys($decrement);
+            } else {
+                // if $decrement is an int|float, we loop through the $currentValues and decrement all values
+                // with the value of $decrement
+                $keys = array_keys($currentValues);
+            }
+
+            for ($i = 0; $i < count($keys); $i++) {
+                // if key is not set, we add it with a default of '0'
+                if (!array_key_exists($keys[$i], $currentValues)) {
+                    $currentValues[$keys[$i]] = 0;
+                }
+
+                if ($this->isdecrementable($currentValues[$keys[$i]])) {
+                    $decrementer = ($typeHelper->isArray($decrement)) ? $decrement[$keys[$i]] : $decrement;
+                    $currentValues[$keys[$i]] -= abs($decrementer);
+                } else {
+                    throw new StatisticsCollectorException("Attempting to decrement a compound value which cannot be decremented! (" . $namespace . "[" . $keys[$i] . "]=\"" . $currentValues[$keys[$i]] . "\":" . gettype($currentValues[$keys[$i]]) . ")");
+                }
+            }
+        } else {
+            throw new StatisticsCollectorException("Attempting to decrement a compound stat with a value which is not a float or integer!");
+        }
+
+        // finally assign the new compound stat values to the stat namespace
+        $updatedCompoundStat = $currentValues;
+        $options['clobber'] = true;
+        $this->addStat($namespace, $updatedCompoundStat, $options);
+        return $this;
+    }
 
     /**
      * Retrieve the statistic value for a given namespace.
@@ -175,7 +310,6 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
             }
         }
         return $value;
-
     }
 
     /**
@@ -189,7 +323,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     public function getStats(array $namespaces, $withKeys = false, $default = null)
     {
-        $resolvedNamespaces = $this-> getTargetNamespaces($namespaces, true);
+        $resolvedNamespaces = $this->getTargetNamespaces($namespaces, true);
         if (!is_array($resolvedNamespaces)) {
             $resolvedNamespaces = [$resolvedNamespaces];
         }

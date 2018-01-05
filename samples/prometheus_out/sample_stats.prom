@@ -16,6 +16,9 @@ users_heights 143
 users_heights 123
 users_heights 161
 users_heights 184
+users_points 10
+users_points 15
+users_points 20
 api_response_error 23
 api_response_error 12
 api_response_error 74
@@ -26,11 +29,11 @@ api_response_success 1322
 api_response_success 7324
 api_response_success 24922
 api_response_success 94234
-batch_jobs_last_run 1513958392
-general_stats_days_on_the_earth 12050
-olympics_100m_winners{sprint="8s"} 5
-olympics_100m_winners{sprint="10s"} 9
-olympics_100m_winners{sprint="12s"} 21
+batch_jobs_last_run 1515163831
+general_stats_days_on_the_earth 12046
+olympics_100m_winners 5
+olympics_100m_winners 9
+olympics_100m_winners 20
 visits_month_apr 731
 visits_month_aug 353
 visits_month_dec 2346

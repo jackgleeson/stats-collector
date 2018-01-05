@@ -27,7 +27,11 @@ interface iCollector
 
     public function incrementStat($namespace, $increment);
 
+    public function incrementCompoundStat($namespace, $increment);
+
     public function decrementStat($namespace, $decrement);
+
+    public function decrementCompoundStat($namespace, $increment);
 
     public function getAllStats();
 

@@ -59,10 +59,10 @@ class PrometheusTest extends \PHPUnit\Framework\TestCase
         $prometheusExporter = new Statistics\Exporter\Prometheus($this->promFilename, $this->promFilePath);
         $prometheusExporter->export($statsCollector);
 
-        $statsAssocArray = FileReader::buildArrayFromPrometheusOutputFile($promFileLocation);
+        $statsOutputToAssocArray = FileReader::buildArrayFromPrometheusOutputFile($promFileLocation);
         $expectedStatName = 'this_is_a_really_long_namespace_pi';
 
-        $this->assertArrayHasKey($expectedStatName, $statsAssocArray);
+        $this->assertArrayHasKey($expectedStatName, $statsOutputToAssocArray);
 
         //clean up
         $this->removeTmpFile($promFileLocation);
@@ -83,7 +83,7 @@ class PrometheusTest extends \PHPUnit\Framework\TestCase
         $prometheusExporter = new Statistics\Exporter\Prometheus($this->promFilename, $this->promFilePath);
         $prometheusExporter->export($statsCollector);
 
-        $statsAssocArray = FileReader::buildArrayFromPrometheusOutputFile($promFileLocation);
+        $statsOutputToAssocArray = FileReader::buildArrayFromPrometheusOutputFile($promFileLocation);
 
         $expectedOutput = [
           'milky_way_planets' => 100000000000,
@@ -91,13 +91,19 @@ class PrometheusTest extends \PHPUnit\Framework\TestCase
           'milky_way_age_in_years' => 13800000000,
         ];
 
-        $this->assertEquals($expectedOutput, $statsAssocArray);
+        $this->assertEquals($expectedOutput, $statsOutputToAssocArray);
 
         //clean up
         $this->removeTmpFile($promFileLocation);
         $this->removeTmpDir($this->promFilePath);
     }
 
+    /*
+     * TODO:
+     * This test highlights that we are allowing *broken* output. Prometheus does not allow non-unique metric keys
+     * in the output. To fix this, the actual output needs validating in the exporter and then this test can instead
+     * check that we only output unique metric keys when a compound stat is encountered during the export.
+     */
     public function testExportOutputsValidCompoundStats()
     {
         $this->setupTmpStatsFileProperties();
@@ -110,19 +116,18 @@ class PrometheusTest extends \PHPUnit\Framework\TestCase
         $prometheusExporter = new Statistics\Exporter\Prometheus($this->promFilename, $this->promFilePath);
         $prometheusExporter->export($statsCollector);
 
-        $statsAssocArray = FileReader::buildArrayFromPrometheusOutputFile($promFileLocation);
+        $statsOutputToAssocArray = FileReader::buildArrayFromPrometheusOutputFile($promFileLocation);
 
         $expectedOutput = [
           'observer_ages' => [19, 32, 44, 60, 54, 67],
         ];
 
-        $this->assertEquals($expectedOutput, $statsAssocArray);
+        $this->assertEquals($expectedOutput, $statsOutputToAssocArray);
 
         //clean up
         $this->removeTmpFile($promFileLocation);
         $this->removeTmpDir($this->promFilePath);
     }
-
 
     public function testExportConvertsLabelFormatArrayKeyToValidPrometheusLabels()
     {
@@ -142,7 +147,7 @@ class PrometheusTest extends \PHPUnit\Framework\TestCase
         $prometheusExporter = new Statistics\Exporter\Prometheus($this->promFilename, $this->promFilePath);
         $prometheusExporter->export($statsCollector);
 
-        $statsAssocArray = FileReader::buildArrayFromPrometheusOutputFile($promFileLocation);
+        $statsOutputToAssocArray = FileReader::buildArrayFromPrometheusOutputFile($promFileLocation);
 
         $expectedOutputWithLabels = [
           'labels_test_characters{type="mouse"}' => 'Mickey',
@@ -150,7 +155,7 @@ class PrometheusTest extends \PHPUnit\Framework\TestCase
           'labels_test_characters' => '2',
         ];
 
-        $this->assertEquals($expectedOutputWithLabels, $statsAssocArray);
+        $this->assertEquals($expectedOutputWithLabels, $statsOutputToAssocArray);
 
         //clean up
         $this->removeTmpFile($promFileLocation);
@@ -173,7 +178,7 @@ class PrometheusTest extends \PHPUnit\Framework\TestCase
     {
         $this->promFilename = $filename;
         $this->promFilePath = $this->createTmpDir();
-        $this->promFileExtension = Statistics\Exporter\Prometheus::$extension;
+        $this->promFileExtension = '.prom';
     }
 
     private function createTmpDir()

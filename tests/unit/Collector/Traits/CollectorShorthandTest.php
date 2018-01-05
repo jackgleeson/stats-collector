@@ -120,7 +120,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(2, $stats["test_namespace.value_to_be_overwritten"]);
     }
 
-
     public function testCanAddStatToNewSubNamespace()
     {
         $this->statsCollector->ns("test_namespace");
@@ -136,7 +135,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetIndividualStat()
     {
-
         $this->statsCollector->add("planets", 8);
 
         $numberOfPlanets = $this->statsCollector->get("planets");
@@ -172,7 +170,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals($expected, $planetStats);
     }
-
 
     public function testCanGetMultipleStatsWithKeys()
     {
@@ -216,7 +213,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expected, $numberOfPlanets);
     }
 
-
     public function testCanGetMultipleStatsUsingAbsoluteNamespace()
     {
         $this->statsCollector->ns("test_namespace");
@@ -232,7 +228,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals($expected, $planetStats);
     }
-
 
     public function testCanGetMultipleStatsWithKeysUsingAbsoluteNamespace()
     {
@@ -264,10 +259,8 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(3.14159265359, $piStat);
     }
 
-
     public function testCanGetIndividualStatWithKeyUsingWildcardOperator()
     {
-
         $this->statsCollector->ns("this.is.a.really.long.namespace.path");
         $this->statsCollector->add("pi", 3.14159265359);
 
@@ -282,7 +275,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetMultipleStatsUsingWildcardOperatorTargetingLeafNodes()
     {
-
         $this->statsCollector->ns("this.is.a.really.long.namespace.path.with.math.constants");
         $this->statsCollector->add("pi", 3.14159265359);
         $this->statsCollector->add("golden_ratio", 1.61803398875);
@@ -302,7 +294,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetMultipleStatsUsingWildcardOperatorTargetingCommonParentNode()
     {
-
         $this->statsCollector->ns("this.is.a.really.long.namespace.path.with.math.constants");
         $this->statsCollector->add("pi", 3.14159265359);
         $this->statsCollector->add("golden_ratio", 1.61803398875);
@@ -321,7 +312,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetMultipleStatsWithKeysUsingWildcardOperatorTargetingLeafNodes()
     {
-
         $this->statsCollector->ns("this.is.a.really.long.namespace.path.with.math.constants");
         $this->statsCollector->add("pi", 3.14159265359);
         $this->statsCollector->add("golden_ratio", 1.61803398875);
@@ -341,13 +331,11 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetMultipleStatsWithKeysUsingWildcardOperatorTargetingCommonParentNode()
     {
-
         $this->statsCollector->ns("this.is.a.really.long.namespace.path.with.math.constants");
         $this->statsCollector->add("pi", 3.14159265359);
         $this->statsCollector->add("golden_ratio", 1.61803398875);
 
         $wildcardConstantCommonParentChildNodes = $this->statsCollector->getWithKey("this.*.math.constants.*");
-
 
         $expected = [
           'this.is.a.really.long.namespace.path.with.math.constants.golden_ratio' => 1.61803398875,
@@ -359,8 +347,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
     public function testCanSetDefaultResultIfStatDoesNotExist()
     {
-
-
         $nonExistentStat = $this->statsCollector->get("i_dont_exist", $withKeys = false, $default = false);
 
         $this->assertFalse($nonExistentStat);
@@ -368,8 +354,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
     public function testCanSetDefaultResultForMultipleResultsIfStatsDoesNotExist()
     {
-
-
         $nonExistentStats = $this->statsCollector->get([
           "i_dont_exist",
           "i_dont_exist_either",
@@ -385,7 +369,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
     public function testCanIncrementStat()
     {
-
         $this->statsCollector->add("counter", 1);
         $this->statsCollector->inc("counter");
 
@@ -396,7 +379,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
     public function testCanIncrementStatWithCustomIncrementer()
     {
-
         $this->statsCollector->add("counter", 1);
         $this->statsCollector->inc("counter", $increment = 2);
 
@@ -405,9 +387,18 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(3, $counter);
     }
 
+    public function testCanIncrementCompoundStat()
+    {
+        $this->statsCollector->add("counter", [1, 2, 3]);
+        $this->statsCollector->incCpd("counter", 5);
+
+        $counter = $this->statsCollector->get("counter");
+
+        $this->assertEquals([6, 7, 8], $counter);
+    }
+
     public function testCanDecrementStat()
     {
-
         $this->statsCollector->add("counter", 10);
         $this->statsCollector->dec("counter");
 
@@ -418,7 +409,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
     public function testCanDecrementStatWithCustomDecrementer()
     {
-
         $this->statsCollector->add("counter", 10);
         $this->statsCollector->dec("counter", $decrement = 5);
 
@@ -427,9 +417,18 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(5, $counter);
     }
 
+    public function testCanDecrementCompoundStat()
+    {
+        $this->statsCollector->add("counter", [6, 7, 8]);
+        $this->statsCollector->decCpd("counter", 5);
+
+        $counter = $this->statsCollector->get("counter");
+
+        $this->assertEquals([1, 2, 3], $counter);
+    }
+
     public function testCanRemoveStat()
     {
-
         $this->statsCollector->add("planets", 8);
 
         $numberOfPlanets = $this->statsCollector->get("planets");
@@ -442,7 +441,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetCountOfIndividualStat()
     {
-
         $this->statsCollector->add("heights", [181, 222, 194, 143, 190]);
 
         $numberOfHeights = $this->statsCollector->count("heights");
@@ -452,7 +450,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetCountOfMultipleStats()
     {
-
         $this->statsCollector->add("heights", [181, 222, 194, 143, 190]);
         $this->statsCollector->add("weights", [200, 211, 173, 130, 187]);
 
@@ -466,7 +463,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetCountOfMultipleStatsUsingWildcardOperator()
     {
-
         $this->statsCollector->add("measurements.heights", [181, 222, 194, 143, 190]);
         $this->statsCollector->add("measurements.weights", [200, 211, 173, 130, 187]);
 
@@ -475,10 +471,8 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(10, $combinedNumberOfHeightsAndWeights);
     }
 
-
     public function testCanGetAverageValuesOfIndividualStat()
     {
-
         $heights = [181, 222, 194, 143, 190];
         $this->statsCollector->add("heights", $heights);
 
@@ -490,7 +484,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetAverageValuesOfMultipleStats()
     {
-
         $gondorHeights = [181, 222, 194, 143, 190];
         $shireHeights = [96, 110, 85, 120, 111];
         $this->statsCollector->add("gondor_heights", $gondorHeights);
@@ -509,7 +502,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetAverageValuesOfMultipleStatsUsingWildcardOperator()
     {
-
         $gondorHeights = [181, 222, 194, 143, 190];
         $shireHeights = [96, 110, 85, 120, 111];
         $this->statsCollector->add("middle_earth.gondor_heights", $gondorHeights);
@@ -525,7 +517,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetSumOfIndividualStat()
     {
-
         $this->statsCollector->add("counter", [1, 2, 3, 4, 5]);
 
         $counterSum = $this->statsCollector->sum("counter");
@@ -535,7 +526,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetSumOfMultipleStats()
     {
-
         $this->statsCollector->ns("noahs.ark.passengers");
         $this->statsCollector->add("humans", 2);
         $this->statsCollector->add("aliens", 0);
@@ -552,7 +542,6 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
 
     public function testCanGetSumOfMultipleStatsUsingWildcardOperator()
     {
-
         $this->statsCollector->ns("noahs.ark.passengers");
         $this->statsCollector->add("humans", 2);
         $this->statsCollector->add("aliens", 0);
@@ -563,10 +552,8 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(101, $numberOfPassengers);
     }
 
-
     public function testCanGetAllAddedStats()
     {
-
         $this->statsCollector->ns("noahs.ark.passengers");
         $this->statsCollector->add("humans", 2);
         $this->statsCollector->add("aliens", 0);

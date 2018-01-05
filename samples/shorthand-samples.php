@@ -230,6 +230,23 @@ $stats->setNamespace("olympics.100m")->add("winners", $winners);
 $olympic100mWinners = $stats->get('winners'); // Array ( [<10s] => 5 [10s-12s] => 9 [12s+] => 20 )
 $totalOlympic100mWinners = $stats->sum('winners'); // 34
 
+/**
+ * Advanced usage. Lets increment/decrement some compound stats
+ */
+
+$stats->ns("users")
+  ->add("points", [10, 15, 20]);
+
+//lets increment all compound stat values
+$stats->incCpd("points", $increment = 5);
+
+$pointsIncrementedByFive = $stats->get("points"); // Array ( [0] => 15 [1] => 20 [2] => 25 )
+
+//lets reset the compound stat values back to down their original values by decrementing them by 5
+$stats->decCpd("points", $decrement = 5);
+
+$pointsDecrementedByFive = $stats->get("points"); // Array ( [0] => 10 [1] => 15 [2] => 20 )
+
 
 /**
  * Extending the Stats Collector with your own subject specific instance is

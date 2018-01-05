@@ -98,7 +98,6 @@ $statsCollector->setNamespace("general.other.stats")
   ->decrementStat("days_until_christmas"); // skip 24 hours
 $daysUntilChristmas = $statsCollector->getStat("days_until_christmas"); // 52
 
-
 /**
  * Working with basic stats, aggregate functions (sum/average)
  */
@@ -249,7 +248,7 @@ $totalResponses = $statsCollector->getStatsSum([
 
 
 /**
- * Advanced usage. Associative arrays as values (mapped to metric labels in Prometheus)
+ * Advanced usage. Associative arrays as stats (mapped to array-key-like output in file and metric labels in Prometheus)
  */
 
 $winners = [
@@ -262,6 +261,26 @@ $statsCollector->setNamespace("olympics.100m")->addStat("winners", $winners);
 
 $moonVisitors = $statsCollector->getStat('winners'); // Array ( [<10s] => 5 [10s-12s] => 9 [12s+] => 20 )
 $moonVisitorsSum = $statsCollector->getStatSum('winners'); // 34
+
+
+/**
+ * Advanced usage. Lets increment/decrement some compound stats
+ */
+
+$statsCollector->setNamespace("users")
+  ->addStat("points", [10, 15, 20]);
+
+//lets increment all compound stat values
+$statsCollector->incrementCompoundStat("points", $increment = 5);
+
+$pointsIncrementedByFive = $statsCollector->getStat("points"); // Array ( [0] => 15 [1] => 20 [2] => 25 )
+
+//lets reset the compound stat values back to down their original values by decrementing them by 5
+$statsCollector->decrementCompoundStat("points", $decrement = 5);
+
+$pointsDecrementedByFive = $statsCollector->getStat("points"); // Array ( [0] => 10 [1] => 15 [2] => 20 )
+
+
 
 /**
  * Extending the Stats Collector with your own subject specific instance is

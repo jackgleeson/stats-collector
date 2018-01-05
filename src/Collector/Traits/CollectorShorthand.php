@@ -2,6 +2,9 @@
 
 namespace Statistics\Collector\Traits;
 
+use Prophecy\Doubler\ClassPatch\HhvmExceptionPatch;
+use Statistics\Collector\Helper\TypeHelper;
+
 /**
  * Trait CollectorShorthand
  *
@@ -9,16 +12,16 @@ namespace Statistics\Collector\Traits;
  *
  * @package Statistics\Collector\Traits
  */
-
 trait CollectorShorthand
 {
+
     /**
      * Shorthand alias method for getting stats
      *
      * @see AbstractCollector::getStat()
      * @see AbstractCollector::getStats()
      *
-     * @param $namespace
+     * @param string $namespace
      * @param bool $withKeys
      * @param null $default
      *
@@ -39,7 +42,7 @@ trait CollectorShorthand
      * @see AbstractCollector::getStat()
      * @see AbstractCollector::getStats()
      *
-     * @param $namespace
+     * @param string|array $namespace
      * @param null $default
      *
      * @return array|mixed
@@ -91,7 +94,7 @@ trait CollectorShorthand
      *
      * @see AbstractCollector::removeStat()
      *
-     * @param $namespace
+     * @param string $namespace
      *
      * @return \Statistics\Collector\AbstractCollector
      * @throws \Statistics\Exception\StatisticsCollectorException
@@ -102,11 +105,11 @@ trait CollectorShorthand
     }
 
     /**
-     * Shorthand alias method for incrementing stats
+     * Shorthand alias method for incrementing a stat
      *
      * @see AbstractCollector::incrementStat()
      *
-     * @param $namespace
+     * @param string $namespace
      * @param int|float $increment
      *
      * @return \Statistics\Collector\AbstractCollector
@@ -118,11 +121,27 @@ trait CollectorShorthand
     }
 
     /**
+     * Shorthand alias method for incrementing a compound stat
+     *
+     * @see AbstractCollector::incrementCompoundStat()
+     *
+     * @param string $namespace
+     * @param int|float|array $increment
+     *
+     * @return \Statistics\Collector\AbstractCollector
+     * @throws \Statistics\Exception\StatisticsCollectorException
+     */
+    public function incCpd($namespace, $increment = 1)
+    {
+        return $this->incrementCompoundStat($namespace, $increment);
+    }
+
+    /**
      * Shorthand alias method for decrementing stats
      *
      * @see AbstractCollector::decrementStat()
      *
-     * @param $namespace
+     * @param string $namespace
      * @param int|float $decrement
      *
      * @return \Statistics\Collector\AbstractCollector
@@ -134,12 +153,28 @@ trait CollectorShorthand
     }
 
     /**
+     * Shorthand alias method for decrementing a compound stat
+     *
+     * @see AbstractCollector::decrementCompoundStat()
+     *
+     * @param string $namespace
+     * @param int|float|array $decrement
+     *
+     * @return \Statistics\Collector\AbstractCollector
+     * @throws \Statistics\Exception\StatisticsCollectorException
+     */
+    public function decCpd($namespace, $decrement = 1)
+    {
+        return $this->decrementCompoundStat($namespace, $decrement);
+    }
+
+    /**
      * Shorthand alias method for averaging stats
      *
      * @see AbstractCollector::getStatsAverage()
      * @see AbstractCollector::getStatAverage()
      *
-     * @param $namespace
+     * @param string|array $namespace
      *
      * @return float|int
      * @throws \Statistics\Exception\StatisticsCollectorException
@@ -159,7 +194,7 @@ trait CollectorShorthand
      * @see AbstractCollector::getStatsSum()
      * @see AbstractCollector::getStatSum()
      *
-     * @param array $namespace
+     * @param string|array $namespace
      *
      * @return float|int
      * @throws \Statistics\Exception\StatisticsCollectorException
@@ -179,7 +214,7 @@ trait CollectorShorthand
      * @see AbstractCollector::getStatsCount()
      * @see AbstractCollector::getStatCount()
      *
-     * @param $namespace
+     * @param string|array $namespace
      *
      * @return int
      */
@@ -209,13 +244,13 @@ trait CollectorShorthand
      * @see AbstractCollector::setNamespace()
      * @see AbstractCollector::getCurrentNamespace()
      *
-     * @param $namespace
+     * @param mixed $namespace optional
      *
      * @return string|\Statistics\Collector\AbstractCollector
      */
-    public function ns($namespace=null)
+    public function ns($namespace = null)
     {
-        if($namespace===null) {
+        if ($namespace === null) {
             return $this->getNamespace();
         } else {
             return $this->setNamespace($namespace);

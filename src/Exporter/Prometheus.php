@@ -3,9 +3,19 @@
 namespace Statistics\Exporter;
 
 use Statistics\Collector\iCollector;
+use Statistics\Helper\TypeHelper;
 
 /**
- * Write out metrics in a Prometheus-readable format.
+ * Export stat data to match Prometheus file format.
+ *
+ * e.g.
+ *
+ * transactions_mobile 10
+ * transactions_other 40
+ * transactions_tablet 30
+ * transactions_website 20
+ *
+ * @package Statistics\Exporter
  */
 class Prometheus implements iExporter
 {
@@ -22,7 +32,7 @@ class Prometheus implements iExporter
      *
      * @var string
      */
-    public static $extension = '.prom';
+    public $extension = '.prom';
 
     /**
      * Directory where we should write Prometheus files
@@ -39,6 +49,11 @@ class Prometheus implements iExporter
     public $filename;
 
     /**
+     * @var \Statistics\Helper\TypeHelper
+     */
+    protected $typeHelper;
+
+    /**
      * @param string $path
      * @param string $filename
      */
@@ -46,8 +61,8 @@ class Prometheus implements iExporter
     {
         $this->filename = $filename;
         $this->path = $path;
+        $this->typeHelper = new TypeHelper();
     }
-
 
     /**
      * Transform array of statistical data into Prometheus metrics output and
@@ -80,7 +95,7 @@ class Prometheus implements iExporter
         $contents = [];
         foreach ($statistics as $subject => $stats) {
             $subject = $this->mapDotsToUnderscore($subject);
-            if (is_array($stats)) {
+            if ($this->typeHelper->isCompoundStat($stats)) {
                 foreach ($stats as $key => $stat) {
                     if ($this->isMetricWithLabelAsKey($key)) {
                         $contents[] = $this->mapToMetricLabelLineOutput($subject, $key, $stat);
@@ -105,7 +120,7 @@ class Prometheus implements iExporter
      */
     protected function writeStatisticsToPrometheusFile($output)
     {
-        $outputPath = $this->path . DIRECTORY_SEPARATOR . $this->filename . self::$extension;
+        $outputPath = $this->path . DIRECTORY_SEPARATOR . $this->filename . $this->extension;
         file_put_contents($outputPath, $output);
     }
 
@@ -158,6 +173,5 @@ class Prometheus implements iExporter
     {
         return str_replace(".", "_", $input);
     }
-
 
 }

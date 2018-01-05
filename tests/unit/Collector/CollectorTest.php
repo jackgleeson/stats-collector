@@ -503,7 +503,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expected, $nonExistentStats);
     }
 
-    public function testCanIncrementStat()
+    public function testCanIncrementStatWithDefaultIncrement()
     {
         $this->statsCollector->setNamespace("test_namespace");
         $this->statsCollector->addStat("counter", 1);
@@ -525,7 +525,68 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(3, $counter);
     }
 
-    public function testIncrementingEmptyStatCreatesNewStatAndIncrementsIt()
+    public function testCanIncrementCompoundStatValuesWithDefaultIncrement()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counters", [1, 2, 3]);
+        $this->statsCollector->incrementCompoundStat("counters");
+
+        $counters = $this->statsCollector->getStat("counters");
+
+        $this->assertEquals([2, 3, 4], $counters);
+    }
+
+    public function testCanIncrementCompoundStatValuesWithCustomIncrement()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counters", [1, 2, 3]);
+        $this->statsCollector->incrementCompoundStat("counters", 5);
+
+        $counters = $this->statsCollector->getStat("counters");
+
+        $this->assertEquals([6, 7, 8], $counters);
+    }
+
+    public function testCanIncrementCompoundStatValuesWithArrayOfIncrements()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counters", [1, 2, 3]);
+        $this->statsCollector->incrementCompoundStat("counters", [9, 8, 7]);
+
+        $counters = $this->statsCollector->getStat("counters");
+
+        $this->assertEquals([10, 10, 10], $counters);
+    }
+
+    public function testCanIncrementCompoundStatValuesWithAssociativeArrayOfIncrements()
+    {
+        $compoundStatValues = [
+          'one' => 1,
+          'two' => 2,
+          'three' => 3,
+        ];
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counters", $compoundStatValues);
+
+        $compoundStatIncrements = [
+          'one' => 5,
+          'two' => 5,
+          'three' => 5,
+        ];
+        $this->statsCollector->incrementCompoundStat("counters", $compoundStatIncrements);
+
+        $expected = [
+          'one' => 6,
+          'two' => 7,
+          'three' => 8,
+        ];
+        $counters = $this->statsCollector->getStat("counters");
+
+        $this->assertEquals($expected, $counters);
+    }
+
+    public function testIncrementingEmptyStatCreatesNewStatAndIncrementsValue()
     {
         $this->statsCollector->setNamespace("test_namespace");
         $this->statsCollector->incrementStat("counter");
@@ -533,6 +594,57 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $counter = $this->statsCollector->getStat("counter");
 
         $this->assertEquals(1, $counter);
+    }
+
+    public function testIncrementingEmptyCompoundStatCreatesNewCompoundStatAndIncrementsValue()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->incrementCompoundStat("counters");
+
+        $counters = $this->statsCollector->getStat("counters");
+
+        $this->assertEquals([1], $counters);
+    }
+
+    public function testIncrementingEmptyCompoundStatWithArrayOfIncrementsCreatesNewCompoundStatAndIncrementsValues()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->incrementCompoundStat("counters", [1, 2, 1]);
+
+        $counters = $this->statsCollector->getStat("counters");
+
+        $this->assertEquals([1, 2, 1], $counters);
+    }
+
+    public function testIncrementingCompoundStatWithUnsetArrayKeyCreatesNewCompoundStatKeyAndIncrementsValue()
+    {
+        $compoundStatValues = [
+          'one' => 1,
+          'two' => 2,
+          'three' => 3,
+        ];
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counters", $compoundStatValues);
+
+        $compoundStatIncrements = [
+          'one' => 5,
+          'two' => 5,
+          'three' => 5,
+          'four' => 5, // I don't exist
+        ];
+
+        $this->statsCollector->incrementCompoundStat("counters", $compoundStatIncrements);
+
+        $expected = [
+          'one' => 6,
+          'two' => 7,
+          'three' => 8,
+          'four' => 5,
+        ];
+        $counters = $this->statsCollector->getStat("counters");
+
+        $this->assertEquals($expected, $counters);
     }
 
     /**
@@ -546,6 +658,58 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->statsCollector->setNamespace("test_namespace");
         $this->statsCollector->addStat("text", "dummy text");
         $this->statsCollector->incrementStat("text");
+    }
+
+    /**
+     * @requires PHPUnit 5
+     */
+    public function testIncrementCompoundStatWhichIsNotIncrementableThrowsException()
+    {
+        $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
+        $this->expectExceptionMessage("Attempting to increment a compound value which cannot be incremented! (counters[2]=\"three\":string)");
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counters", [1, 2, "three"]);
+        $this->statsCollector->incrementCompoundStat("counters");
+    }
+
+    /**
+     * @requires PHPUnit 5
+     */
+    public function testCallingIncrementCompoundStatOnNonCompoundStatThrowsException()
+    {
+        $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
+        $this->expectExceptionMessage("The stat you are trying to increment is not a compound stat, instead use incrementStat(). counters=1(integer)");
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counters", 1);
+        $this->statsCollector->incrementCompoundStat("counters");
+    }
+
+    /**
+     * @requires PHPUnit 5
+     */
+    public function testIncrementCompoundStatWithANonNumberThrowsException()
+    {
+        $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
+        $this->expectExceptionMessage("Attempting to increment a compound stat with a value which is not a float or integer!");
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counters", [1, 2, 3]);
+        $this->statsCollector->incrementCompoundStat("counters", "five");
+    }
+
+    /**
+     * @requires PHPUnit 5
+     */
+    public function testIncrementCompoundStatWithANonNumberInArrayOfIncrementValuesThrowsException()
+    {
+        $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
+        $this->expectExceptionMessage("Attempting to increment a compound stat with a value which is not a float or integer!");
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counters", [1, 2, 3]);
+        $this->statsCollector->incrementCompoundStat("counters", [5, 5, "five"]);
     }
 
     public function testCanDecrementStat()
@@ -570,6 +734,69 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(5, $counter);
     }
 
+
+
+    public function testCanDecrementCompoundStatValuesWithDefaultDecrement()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counters", [1, 2, 3]);
+        $this->statsCollector->decrementCompoundStat("counters");
+
+        $counters = $this->statsCollector->getStat("counters");
+
+        $this->assertEquals([0, 1, 2], $counters);
+    }
+
+    public function testCanDecrementCompoundStatValuesWithCustomDecrement()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counters", [10, 15, 20]);
+        $this->statsCollector->decrementCompoundStat("counters", 5);
+
+        $counters = $this->statsCollector->getStat("counters");
+
+        $this->assertEquals([5, 10, 15], $counters);
+    }
+
+    public function testCanDecrementCompoundStatValuesWithArrayOfDecrements()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counters", [10, 10, 10]);
+        $this->statsCollector->decrementCompoundStat("counters", [5, 5, 5]);
+
+        $counters = $this->statsCollector->getStat("counters");
+
+        $this->assertEquals([5, 5, 5], $counters);
+    }
+
+    public function testCanDecrementCompoundStatValuesWithAssociativeArrayOfDecrements()
+    {
+        $compoundStatValues = [
+          'one' => 10,
+          'two' => 15,
+          'three' => 20,
+        ];
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counters", $compoundStatValues);
+
+        $compoundStatDecrements = [
+          'one' => 5,
+          'two' => 5,
+          'three' => 5,
+        ];
+        $this->statsCollector->decrementCompoundStat("counters", $compoundStatDecrements);
+
+        $expected = [
+          'one' => 5,
+          'two' => 10,
+          'three' => 15,
+        ];
+        $counters = $this->statsCollector->getStat("counters");
+
+        $this->assertEquals($expected, $counters);
+    }
+
     public function testDecrementingEmptyStatCreatesNewStatAndDecrementsIt()
     {
         $this->statsCollector->setNamespace("test_namespace");
@@ -578,6 +805,58 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $counter = $this->statsCollector->getStat("counter");
 
         $this->assertEquals(-1, $counter);
+    }
+
+    public function testDecrementingEmptyCompoundStatCreatesNewCompoundStatAndDecrementsValue()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->decrementCompoundStat("counters");
+
+        $counters = $this->statsCollector->getStat("counters");
+
+        $this->assertEquals([-1], $counters);
+    }
+
+    public function testDecrementingEmptyCompoundStatWithArrayOfDecrementsCreatesNewCompoundStatAndDecrementsValues()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->decrementCompoundStat("counters", [1, 2, 1]);
+
+        $counters = $this->statsCollector->getStat("counters");
+
+        $this->assertEquals([-1, -2, -1], $counters);
+    }
+
+    public function testDecrementingCompoundStatWithUnsetArrayKeyCreatesNewCompoundStatKeyAndDecrementsValue()
+    {
+        $compoundStatValues = [
+          'one' => 10,
+          'two' => 20,
+          'three' => 30,
+        ];
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counters", $compoundStatValues);
+
+        $compoundStatDecrements = [
+          'one' => 5,
+          'two' => 5,
+          'three' => 5,
+          'four' => 5, // I don't exist
+        ];
+
+        $this->statsCollector->decrementCompoundStat("counters", $compoundStatDecrements);
+
+        $expected = [
+          'one' => 5,
+          'two' => 15,
+          'three' => 25,
+          'four' => -5,
+        ];
+        
+        $counters = $this->statsCollector->getStat("counters");
+
+        $this->assertEquals($expected, $counters);
     }
 
     /**
@@ -592,6 +871,59 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->statsCollector->addStat("text", "dummy text");
         $this->statsCollector->decrementStat("text");
     }
+
+    /**
+     * @requires PHPUnit 5
+     */
+    public function testDecrementCompoundStatWhichIsNotDecrementableThrowsException()
+    {
+        $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
+        $this->expectExceptionMessage("Attempting to decrement a compound value which cannot be decremented! (counters[2]=\"three\":string)");
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counters", [1, 2, "three"]);
+        $this->statsCollector->decrementCompoundStat("counters");
+    }
+
+    /**
+     * @requires PHPUnit 5
+     */
+    public function testCallingDecrementCompoundStatOnNonCompoundStatThrowsException()
+    {
+        $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
+        $this->expectExceptionMessage("The stat you are trying to decrement is not a compound stat, instead use decrementStat(). counters=1(integer)");
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counters", 1);
+        $this->statsCollector->decrementCompoundStat("counters");
+    }
+
+    /**
+     * @requires PHPUnit 5
+     */
+    public function testDecrementCompoundStatWithANonNumberThrowsException()
+    {
+        $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
+        $this->expectExceptionMessage("Attempting to decrement a compound stat with a value which is not a float or integer!");
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counters", [1, 2, 3]);
+        $this->statsCollector->decrementCompoundStat("counters", "five");
+    }
+
+    /**
+     * @requires PHPUnit 5
+     */
+    public function testDecrementCompoundStatWithANonNumberInArrayOfDecrementValuesThrowsException()
+    {
+        $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
+        $this->expectExceptionMessage("Attempting to decrement a compound stat with a value which is not a float or integer!");
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("counters", [1, 2, 3]);
+        $this->statsCollector->decrementCompoundStat("counters", [5, 5, "five"]);
+    }
+
 
     public function testCanRemoveStat()
     {

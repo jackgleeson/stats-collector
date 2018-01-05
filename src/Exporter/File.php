@@ -2,20 +2,37 @@
 
 namespace Statistics\Exporter;
 
+use Statistics\Helper\TypeHelper;
 use Statistics\Collector\iCollector;
 
 /**
- * Write out stats to a file
+ * Export stat data to text file output.
+ *
+ * e.g.
+ *
+ * transactions.mobile=10
+ * transactions.other=40
+ * transactions.tablet=30
+ * transactions.website=20
+ *
+ * @package Statistics\Exporter
  */
 class File implements iExporter
 {
+
+    /**
+     * Flag to include/exclude compound stat keys along with exported output.
+     *
+     * @var bool
+     */
+    public $outputCompoundStatKeys = false;
 
     /**
      * File extension
      *
      * @var string
      */
-    public static $extension = '.stats';
+    public $extension = '.stats';
 
     /**
      * Directory where we should write file
@@ -39,6 +56,11 @@ class File implements iExporter
     public $separator = "=";
 
     /**
+     * @var \Statistics\Helper\TypeHelper
+     */
+    protected $typeHelper;
+
+    /**
      * @param string $path
      * @param string $filename
      */
@@ -46,7 +68,42 @@ class File implements iExporter
     {
         $this->filename = $filename;
         $this->path = $path;
+        $this->typeHelper = new TypeHelper();
     }
+
+    /**
+     *
+     * Enable Compound stat keys output.
+     *
+     * Compound stat keys output is disabled by default.
+     *
+     * (Disabled)
+     * users.age=23
+     * users.age=12
+     * users.age=74
+     * users.age=49
+     * users.age=9
+     *
+     * (Enabled)
+     * users.age[0]=23
+     * users.age[1]=12
+     * users.age[2]=74
+     * users.age[3]=49
+     * users.age[4]=9
+     */
+    public function enableCompoundStatKeysInOutput()
+    {
+        $this->outputCompoundStatKeys = true;
+    }
+
+    /**
+     * Disable Compound stat keys output.
+     */
+    public function disableCompoundStatKeysInOutput()
+    {
+        $this->outputCompoundStatKeys = false;
+    }
+
 
     /**
      * Transform array of statistical data into output data and write to file.
@@ -77,9 +134,13 @@ class File implements iExporter
     {
         $contents = [];
         foreach ($statistics as $namespace => $stats) {
-            if (is_array($stats)) {
+            if ($this->typeHelper->isCompoundStat($stats)) {
                 foreach ($stats as $key => $stat) {
-                    $contents[] = $this->mapStatToLine($namespace, $stat);
+                    if ($this->outputCompoundStatKeys === false) {
+                        $contents[] = $this->mapStatToLine($namespace, $stat);
+                    } else {
+                        $contents[] = $this->mapStatToLine($namespace . "[" . $key . "]", $stat);
+                    }
                 }
             } else {
                 $contents[] = $this->mapStatToLine($namespace, $stats);
@@ -98,7 +159,7 @@ class File implements iExporter
      */
     protected function writeStatisticsToFile($output)
     {
-        $outputPath = $this->path . DIRECTORY_SEPARATOR . $this->filename . self::$extension;
+        $outputPath = $this->path . DIRECTORY_SEPARATOR . $this->filename . $this->extension;
         file_put_contents($outputPath, $output);
     }
 

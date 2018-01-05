@@ -1,8 +1,6 @@
 <?php
 
-
-namespace Statistics\Collector\Helper;
-
+namespace Statistics\Helper;
 
 class TypeHelper
 {
@@ -48,4 +46,29 @@ class TypeHelper
                 return false;
         }
     }
+
+    /**
+     * Check to see if stat is compound type.
+     *
+     * @param $stat
+     *
+     * @return bool
+     */
+    public function isCompoundStat($stat)
+    {
+        return (is_array($stat) || is_object($stat));
+    }
+
+    /**
+     * Duplicate of native is_array method.
+     *
+     * @param $value
+     *
+     * @return bool
+     */
+    public function isArray($value)
+    {
+        return is_array($value);
+    }
+
 }

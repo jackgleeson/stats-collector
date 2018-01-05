@@ -1,8 +1,6 @@
 <?php
 
-
-namespace Statistics\Collector\Helper;
-
+namespace Statistics\Helper;
 
 class ArrayHelper
 {

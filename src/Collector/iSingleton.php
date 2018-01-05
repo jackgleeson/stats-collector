@@ -2,7 +2,6 @@
 
 namespace Statistics\Collector;
 
-
 interface iSingleton
 {
 
