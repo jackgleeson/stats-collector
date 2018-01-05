@@ -825,14 +825,41 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      *
      * @see AbstractCollector::addValueToNamespace()
      *
+     * TODO:
+     * Work out a better way to handle clobbering of compound stats. We can't just preserve unaffected data as it may
+     * no longer be relevant.
+     *
      * @param $namespace
      * @param $value
      * @param $flatten
      */
     private function overwriteExistingNamespace($namespace, $value, $flatten)
     {
-        // overwrite behaviour is identical to addValueToNewNamespace() so call is forwarded on.
-        $this->addValueToNewNamespace($namespace, $value, $flatten);
+        $typeHelper = new TypeHelper();
+        if ($typeHelper->isCompoundStat($value)) {
+            // FIXME:
+            // when clobbering compound stats we *may* need to preserve other compound stat values which are not clobbered
+            // so in this instance we just update the existing and overwrite the current values with the values
+            // supplied in the $value argument.
+
+            if ($flatten === true) {
+                $newData = (new ArrayHelper())->flatten($value);
+            } else {
+                $newData = $value;
+            }
+
+            $current = $this->getStatsContainer()->get($namespace);
+            if ($typeHelper->isCompoundStat($current)) {
+                $updatedCompoundStat = array_replace($current, $newData);
+            } else {
+                $updatedCompoundStat = array_replace([$current], $newData);
+            }
+
+            $this->getStatsContainer()->set($namespace, $updatedCompoundStat);
+        } else {
+            // overwriting scalar stats requires the same behaviour as when adding a new value
+            $this->addValueToNewNamespace($namespace, $value, $flatten);
+        }
     }
 
     /**

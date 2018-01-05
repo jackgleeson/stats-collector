@@ -170,7 +170,40 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(2, $stats["test_namespace.value_to_be_overwritten"]);
     }
 
-    public function testDefaultMultiDimensionalArrayAutoFlatteningNewStat()
+    public function testCanClobberCompoundStat()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("value_to_be_overwritten", [1]);
+        $this->statsCollector->addStat("value_to_be_overwritten", [2], $options = ['clobber' => true]);
+
+        $stats = $this->statsCollector->getAllStats();
+
+        $this->assertEquals([2], $stats["test_namespace.value_to_be_overwritten"]);
+    }
+
+    public function testCanClobberCompoundStatIndividualKeysAndPreserveOthers()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("value_to_be_overwritten", [
+          'name' => 'jack',
+          'age' => 33,
+        ]);
+
+        $this->statsCollector->addStat("value_to_be_overwritten", [
+          'age' => 34,
+        ], $options = ['clobber' => true]);
+
+        $stats = $this->statsCollector->getAllStats();
+
+        $expected = [
+          'name' => 'jack',
+          'age' => 34,
+        ];
+
+        $this->assertEquals($expected, $stats["test_namespace.value_to_be_overwritten"]);
+    }
+
+    public function testDefaultArrayAutoFlatteningNewStat()
     {
         $this->statsCollector->setNamespace("test_namespace");
         $this->statsCollector->addStat("compound_stat", [1, [2, 3]]);
@@ -190,7 +223,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([1, [2, 3]], $stats["test_namespace.compound_stat"]);
     }
 
-    public function testDefaultMultiDimensionalArrayAutoFlatteningToExistingStat()
+    public function testDefaultArrayAutoFlatteningToExistingStat()
     {
         $this->statsCollector->setNamespace("test_namespace");
         $this->statsCollector->addStat("compound_stat", 1);
@@ -199,6 +232,19 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $stats = $this->statsCollector->getAllStats();
 
         $this->assertEquals([1, 2, 3, 4], $stats["test_namespace.compound_stat"]);
+    }
+
+    public function testCanDisableArrayAutoFlatteningToExistingStatWhenClobbering()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("compound_stat", 1);
+
+        $options = ['flatten' => false, 'clobber'=> true];
+        $this->statsCollector->addStat("compound_stat", [2, [3, 4]], $options);
+
+        $stats = $this->statsCollector->getAllStats();
+
+        $this->assertEquals([2, [3, 4]], $stats["test_namespace.compound_stat"]);
     }
 
     public function testCanAddStatToNewSubNamespace()
@@ -269,7 +315,6 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expected, $planetStats);
     }
 
-
     public function testCanGetMultipleStatsWithKeys()
     {
         $this->statsCollector->setNamespace("test_namespace");
@@ -312,7 +357,6 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expected, $numberOfPlanets);
     }
 
-
     public function testCanGetMultipleStatsUsingAbsoluteNamespace()
     {
         $this->statsCollector->setNamespace("test_namespace");
@@ -328,7 +372,6 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals($expected, $planetStats);
     }
-
 
     public function testCanGetMultipleStatsWithKeysUsingAbsoluteNamespace()
     {
@@ -370,7 +413,6 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals(3.14159265359, $piStat);
     }
-
 
     public function testCanGetIndividualStatWithKeyUsingWildcardOperator()
     {
@@ -454,7 +496,6 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $wildcardConstantCommonParentChildNodes = $this->statsCollector->getStats([
           "this.*.math.constants.*",
         ], $withKeys = true);
-
 
         $expected = [
           'this.is.a.really.long.namespace.path.with.math.constants.golden_ratio' => 1.61803398875,
@@ -734,8 +775,6 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(5, $counter);
     }
 
-
-
     public function testCanDecrementCompoundStatValuesWithDefaultDecrement()
     {
         $this->statsCollector->setNamespace("test_namespace");
@@ -853,7 +892,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
           'three' => 25,
           'four' => -5,
         ];
-        
+
         $counters = $this->statsCollector->getStat("counters");
 
         $this->assertEquals($expected, $counters);
@@ -923,7 +962,6 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->statsCollector->addStat("counters", [1, 2, 3]);
         $this->statsCollector->decrementCompoundStat("counters", [5, 5, "five"]);
     }
-
 
     public function testCanRemoveStat()
     {
@@ -1018,7 +1056,6 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals(10, $combinedNumberOfHeightsAndWeights);
     }
-
 
     public function testCanGetAverageValuesOfIndividualStat()
     {
@@ -1160,7 +1197,6 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->statsCollector->addStat("animals", 99);
 
         $this->statsCollector->getStatSum("noahs.ark.passengers.*");
-
     }
 
     public function testCanGetAllAddedStats()
