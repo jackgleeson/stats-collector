@@ -327,8 +327,8 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         ], $withKeys = true);
 
         $expected = [
-          'test_namespace.planets' => 8,
-          'test_namespace.dwarf_planets' => 1,
+          '.test_namespace.planets' => 8,
+          '.test_namespace.dwarf_planets' => 1,
         ];
 
         $this->assertEquals($expected, $planetStats);
@@ -385,8 +385,8 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         ], $withKeys = true);
 
         $expected = [
-          'test_namespace.planets' => 8,
-          'test_namespace.dwarf_planets' => 1,
+          '.test_namespace.planets' => 8,
+          '.test_namespace.dwarf_planets' => 1,
         ];
 
         $this->assertEquals($expected, $planetStats);
@@ -423,7 +423,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $piStat = $this->statsCollector->getStat("this.*.pi", $withKeys = true);
 
         $expected = [
-          'this.is.a.really.long.namespace.path.pi' => 3.14159265359,
+          '.this.is.a.really.long.namespace.path.pi' => 3.14159265359,
         ];
 
         $this->assertEquals($expected, $piStat);
@@ -479,8 +479,8 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         ], $withKeys = true);
 
         $expected = [
-          'this.is.a.really.long.namespace.path.with.math.constants.pi' => 3.14159265359,
-          'this.is.a.really.long.namespace.path.with.math.constants.golden_ratio' => 1.61803398875,
+          '.this.is.a.really.long.namespace.path.with.math.constants.pi' => 3.14159265359,
+          '.this.is.a.really.long.namespace.path.with.math.constants.golden_ratio' => 1.61803398875,
         ];
 
         $this->assertEquals($expected, $wildcardLeafNodes);
@@ -498,8 +498,8 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         ], $withKeys = true);
 
         $expected = [
-          'this.is.a.really.long.namespace.path.with.math.constants.golden_ratio' => 1.61803398875,
-          'this.is.a.really.long.namespace.path.with.math.constants.pi' => 3.14159265359,
+          '.this.is.a.really.long.namespace.path.with.math.constants.golden_ratio' => 1.61803398875,
+          '.this.is.a.really.long.namespace.path.with.math.constants.pi' => 3.14159265359,
         ];
 
         $this->assertEquals($expected, $wildcardConstantCommonParentChildNodes);
@@ -984,6 +984,44 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $populatedNamespaces = array_flip($reflectionProperty->getValue($this->statsCollector));
         // stat is null and namespace is not stored within $populatedNamespaces
         $this->assertEquals(null, $numberOfPlanets);
+        $this->assertArrayNotHasKey("test_namespace.planets", $populatedNamespaces);
+    }
+
+    /**
+     * Why are we prohibiting wildcards as arguments but then allowing removal of parent nodes...
+     */
+    public function testCanRemoveStatByRemovingParentNSNode()
+    {
+        //open up access to $Statistics\Collector\Collector::populatedNamespaces[]
+        $reflectionProperty = new \ReflectionProperty(Statistics\Collector\Collector::class, "populatedNamespaces");
+        $reflectionProperty->setAccessible(true);
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("planets.earth", ['radius'=>'6371km']);
+        $this->statsCollector->addStat("planets.mars", ['radius'=>'3390km']);
+
+        //pre-removal checks
+        $planetSizes = $this->statsCollector->getStat("planets*", $withKeys=true);
+        $currentPopulatedNamespaces = array_flip($reflectionProperty->getValue($this->statsCollector));
+
+         $expected = [
+           '.test_namespace.planets.earth' => ['radius'=>'6371km'],
+           '.test_namespace.planets.mars' => ['radius'=>'3390km']
+         ];
+        //// assert that stat is set and namespace is stored within $populatedNamespaces
+        $this->assertEquals($expected, $planetSizes);
+        $this->assertArrayHasKey("test_namespace.planets.earth", $currentPopulatedNamespaces);
+        $this->assertArrayHasKey("test_namespace.planets.mars", $currentPopulatedNamespaces);
+
+        // removal checks
+        $this->statsCollector->removeStat('planets');
+
+        $planetSizes = $this->statsCollector->getStat("test_namespace.planets*");
+        $populatedNamespaces = array_flip($reflectionProperty->getValue($this->statsCollector));
+        //// assert that stat is null and namespace is not stored within $populatedNamespaces
+        $this->assertEquals(null, $planetSizes);
+        $this->assertArrayNotHasKey("test_namespace.planets.earth", $populatedNamespaces);
+        $this->assertArrayNotHasKey("test_namespace.planets.mars", $populatedNamespaces);
         $this->assertArrayNotHasKey("test_namespace.planets", $populatedNamespaces);
     }
 

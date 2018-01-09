@@ -66,7 +66,7 @@ $transactions = $stats->get("transactions.*");
 
 // lets get all transaction stats using the wildcard operator including their full namespace as the key
 $transactionsWithKeys = $stats->getWithKey("transactions.*");
-// $transactions = Array ( [transactions.mobile] => 10 [transactions.website] => 20 [transactions.tablet] => 30 [transactions.other] => 40 )
+// $transactions = Array ( [.transactions.mobile] => 10 [.transactions.website] => 20 [.transactions.tablet] => 30 [.transactions.other] => 40 )
 
 
 // get() will auto-deduplicate results if you accidentally include the same stat twice using wildcards
@@ -196,7 +196,7 @@ $totalReferralEntries = $stats->count([
   ".website.referrals.google",
   ".website.referrals.yahoo",
   ".website.referrals.bing",
-]); //15
+]); //10
 
 // lets get the sum of a compound stat
 $stats->ns("api.response")

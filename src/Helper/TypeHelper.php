@@ -71,4 +71,16 @@ class TypeHelper
         return is_array($value);
     }
 
+    /**
+     * Duplicate of native is_array method.
+     *
+     * @param $value
+     *
+     * @return bool
+     */
+    public function isNotArray($value)
+    {
+        return !is_array($value);
+    }
+
 }

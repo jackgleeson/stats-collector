@@ -323,22 +323,39 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     public function getStats(array $namespaces, $withKeys = false, $default = null)
     {
+        $typeHelper = new TypeHelper();
         $resolvedNamespaces = $this->getTargetNamespaces($namespaces, true);
-        if (!is_array($resolvedNamespaces)) {
+        if ($typeHelper->isNotArray($resolvedNamespaces)) {
             $resolvedNamespaces = [$resolvedNamespaces];
         }
 
         $stats = [];
         foreach ($resolvedNamespaces as $namespace) {
             $stat = $this->getStat($namespace, $withKeys, $default);
-            $stats = array_merge($stats, (is_array($stat) ? $stat : [$stat]));
+            if ($withKeys === true) {
+                $stats[$namespace] = array_values($stat)[0];
+            } else {
+                $stats[] = $stat;
+            }
         }
 
-        if (count($stats) === 1 && ($withKeys == false)) {
-            return $stats[0];
-        } else {
-            return $stats;
+        if (count($stats) === 0) {
+            if (count($namespaces) > 1) {
+                if ($withKeys === false) {
+                    return array_fill(0, count($namespaces), $default);
+                } else {
+                    array_fill_keys(array_keys($namespaces), $default);
+                }
+            } else {
+                return $default;
+            }
         }
+
+        if (count($stats) === 1 && $withKeys === false) {
+            return array_values($stats)[0];
+        }
+
+        return $stats;
     }
 
     /**
@@ -351,6 +368,9 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     public function getStatCount($namespace)
     {
         $value = $this->getStat($namespace);
+        if((new TypeHelper())->isArray($value)) {
+            $value = (new ArrayHelper())->flatten($value);
+        }
         return (new MathHelper)->count($value);
     }
 
@@ -380,6 +400,9 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     public function getStatAverage($namespace)
     {
         $value = $this->getStat($namespace);
+        if((new TypeHelper())->isArray($value)) {
+            $value = (new ArrayHelper())->flatten($value);
+        }
         return $this->calculateStatsAverage($value);
     }
 
@@ -411,6 +434,9 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     public function getStatSum($namespace)
     {
         $value = $this->getStat($namespace);
+        if((new TypeHelper())->isArray($value)) {
+            $value = (new ArrayHelper())->flatten($value);
+        }
         return $this->calculateStatsSum($value);
     }
 
@@ -644,7 +670,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     {
         $targetNS = $this->getTargetNamespaces($name);
         $this->getStatsContainer()->remove($targetNS);
-        $this->removePopulatedNamespace($targetNS);
+        $this->removePopulatedNamespaces($targetNS);
         return $this;
     }
 
@@ -701,16 +727,26 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     }
 
     /**
-     * Remove a namespace from the populated namespaces array (typically when it becomes empty)
+     * Remove matching namespaces from the populated-namespaces array (typically when it becomes empty)
      *
      * @param $namespace
      *
      * @return bool
      */
-    protected function removePopulatedNamespace($namespace)
+    protected function removePopulatedNamespaces($namespace)
     {
-        $key = array_search($namespace, $this->populatedNamespaces);
-        unset($this->populatedNamespaces[$key]);
+        $targetNamespace = $namespace;
+        $matches = array_filter($this->populatedNamespaces, function ($populatedNamespace) use ($targetNamespace) {
+            if (preg_match("/^$targetNamespace(.*)/i", $populatedNamespace) === 1) {
+                return true;
+            }
+            return false;
+        });
+
+        foreach (array_keys($matches) as $key) {
+            unset($this->populatedNamespaces[$key]);
+        }
+
         $this->sortPopulatedNamespaces();
         return true;
     }

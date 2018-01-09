@@ -66,11 +66,11 @@ $statsCollector->setNamespace("transactions")
 
 // lets get all transaction stats using the wildcard operator
 $transactions = $statsCollector->getStat("transactions.*");
-// $transactions = Array ( [0] => 10 [1] => 20 [2] => 30 [3] => 40 )
+// $transactions = Array ( [0] => 10 [1] => 40 [2] => 30 [3] => 20 )
 
 // lets get all transaction stats using the wildcard operator including their full namespace as the key
 $transactionsWithKeys = $statsCollector->getStat("transactions.*", true);
-// $transactions = Array ( [transactions.mobile] => 10 [transactions.website] => 20 [transactions.tablet] => 30 [transactions.other] => 40 )
+// $transactions = Array ( [.transactions.mobile] => 10 [.transactions.other] => 40 [.transactions.tablet] => 30 [.transactions.website] => 20 )
 
 
 // getStat() and getStats() will auto-deduplicate results if you accidentally include the same stat twice using wildcards
@@ -78,7 +78,7 @@ $transactionsWithUniqueStats = $statsCollector->getStats([
   "transactions.*",
   ".transactions.mobile",
 ]);
-// only one mobile stat of '10' is present in the result $transactionsWithUniqueStats = Array ( [0] => 10 [1] => 20 [2] => 30 [3] => 40 )
+// only one mobile stat of '10' is present in the result $transactionsWithUniqueStats = Array ( [0] => 10 [1] => 40 [2] => 30 [3] => 20 )
 
 
 /**
@@ -88,7 +88,7 @@ $transactionsWithUniqueStats = $statsCollector->getStats([
 // lets increment some stats
 $statsCollector->setNamespace("general.stats")
   ->addStat("days_on_the_earth", (33 * 365))// 12045 added to 'general.stats.days_on_the_earth'
-  ->incrementStat("days_on_the_earth", 5); // we time travel forward 24 hours.
+  ->incrementStat("days_on_the_earth", 1); // we time travel forward 24 hours.
 $daysOnEarth = $statsCollector->getStat("days_on_the_earth"); // 12046
 $daysOnEarthAbsolute = $statsCollector->getStat(".general.stats.days_on_the_earth"); // same as above 12046
 
@@ -220,7 +220,7 @@ $totalReferralEntries = $statsCollector->getStatsCount([
   ".website.referrals.google",
   ".website.referrals.yahoo",
   ".website.referrals.bing",
-]); //15
+]); //10
 
 // lets get the sum of a compound stat
 $statsCollector->setNamespace("api.response")
@@ -259,8 +259,8 @@ $winners = [
 
 $statsCollector->setNamespace("olympics.100m")->addStat("winners", $winners);
 
-$moonVisitors = $statsCollector->getStat('winners'); // Array ( [<10s] => 5 [10s-12s] => 9 [12s+] => 20 )
-$moonVisitorsSum = $statsCollector->getStatSum('winners'); // 34
+$olympics100mWinnersByTime = $statsCollector->getStat('winners'); // Array ( [<10s] => 5 [10s-12s] => 9 [12s] => 20 )
+$olympics100mTotalWinners = $statsCollector->getStatSum('winners'); // 35
 
 
 /**
