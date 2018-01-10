@@ -159,6 +159,87 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([1, 2], $stats["test_namespace.compound_stat"]);
     }
 
+    public function testCanRemoveStat()
+    {
+        //open up access to $Statistics\Collector\Collector::populatedNamespaces[]
+        $reflectionProperty = new \ReflectionProperty(Statistics\Collector\Collector::class, "populatedNamespaces");
+        $reflectionProperty->setAccessible(true);
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("planets", 8);
+
+        $numberOfPlanets = $this->statsCollector->getStat("planets");
+        $populatedNamespaces = array_flip($reflectionProperty->getValue($this->statsCollector));
+        // stat is set and namespace is stored within $populatedNamespaces
+        $this->assertEquals(8, $numberOfPlanets);
+        $this->assertArrayHasKey("test_namespace.planets", $populatedNamespaces);
+
+        $this->statsCollector->removeStat('planets');
+
+        $numberOfPlanets = $this->statsCollector->getStat("planets");
+        $populatedNamespaces = array_flip($reflectionProperty->getValue($this->statsCollector));
+        // stat is null and namespace is not stored within $populatedNamespaces
+        $this->assertEquals(null, $numberOfPlanets);
+        $this->assertArrayNotHasKey("test_namespace.planets", $populatedNamespaces);
+    }
+
+    /**
+     * Why are we prohibiting wildcards as arguments but then allowing removal of parent nodes...
+     */
+    public function testCanRemoveStatByRemovingParentNSNode()
+    {
+        //open up access to $Statistics\Collector\Collector::populatedNamespaces[]
+        $reflectionProperty = new \ReflectionProperty(Statistics\Collector\Collector::class, "populatedNamespaces");
+        $reflectionProperty->setAccessible(true);
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("planets.earth", ['radius' => '6371km']);
+        $this->statsCollector->addStat("planets.mars", ['radius' => '3390km']);
+
+        //pre-removal checks
+        $planetSizes = $this->statsCollector->getStat("planets*", $withKeys = true);
+        $currentPopulatedNamespaces = array_flip($reflectionProperty->getValue($this->statsCollector));
+
+        $expected = [
+          '.test_namespace.planets.earth' => ['radius' => '6371km'],
+          '.test_namespace.planets.mars' => ['radius' => '3390km'],
+        ];
+        //// assert that stat is set and namespace is stored within $populatedNamespaces
+        $this->assertEquals($expected, $planetSizes);
+        $this->assertArrayHasKey("test_namespace.planets.earth", $currentPopulatedNamespaces);
+        $this->assertArrayHasKey("test_namespace.planets.mars", $currentPopulatedNamespaces);
+
+        // removal checks
+        $this->statsCollector->removeStat('planets');
+
+        $planetSizes = $this->statsCollector->getStat("test_namespace.planets*");
+        $populatedNamespaces = array_flip($reflectionProperty->getValue($this->statsCollector));
+        //// assert that stat is null and namespace is not stored within $populatedNamespaces
+        $this->assertEquals(null, $planetSizes);
+        $this->assertArrayNotHasKey("test_namespace.planets.earth", $populatedNamespaces);
+        $this->assertArrayNotHasKey("test_namespace.planets.mars", $populatedNamespaces);
+        $this->assertArrayNotHasKey("test_namespace.planets", $populatedNamespaces);
+    }
+
+    public function testCanCheckIfStatExists()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->assertFalse($this->statsCollector->exists("value"));
+
+        $this->statsCollector->addStat("value", 1);
+        $this->assertTrue($this->statsCollector->exists("value"));
+    }
+
+    public function testCanCheckIfStatExistsUsingWildcard()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->assertFalse($this->statsCollector->exists("users*"));
+
+        $this->statsCollector->addStat("users.jack.age", 33);
+        $this->statsCollector->addStat("users.joe.age", 29);
+        $this->assertTrue($this->statsCollector->exists("users*"));
+    }
+
     public function testCanClobberStat()
     {
         $this->statsCollector->setNamespace("test_namespace");
@@ -239,7 +320,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->statsCollector->setNamespace("test_namespace");
         $this->statsCollector->addStat("compound_stat", 1);
 
-        $options = ['flatten' => false, 'clobber'=> true];
+        $options = ['flatten' => false, 'clobber' => true];
         $this->statsCollector->addStat("compound_stat", [2, [3, 4]], $options);
 
         $stats = $this->statsCollector->getAllStats();
@@ -527,7 +608,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expected, $nonExistentStat);
     }
 
-    public function testCanSetDefaultResultForMultipleResultsIfStatsDoesNotExist()
+    public function testCanSetDefaultResultForMultipleResultsIfStatsDoNotExist()
     {
         $this->statsCollector->setNamespace("test_namespace");
 
@@ -539,6 +620,23 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $expected = [
           false,
           false,
+        ];
+
+        $this->assertEquals($expected, $nonExistentStats);
+    }
+
+    public function testCanSetDefaultResultForMultipleResultsWithKeysIfStatsDoNotExist()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+
+        $nonExistentStats = $this->statsCollector->getStats([
+          "i_dont_exist",
+          "i_dont_exist_either",
+        ], $withKeys = true, $default = false);
+
+        $expected = [
+          '.test_namespace.i_dont_exist' => false,
+          '.test_namespace.i_dont_exist_either' => false,
         ];
 
         $this->assertEquals($expected, $nonExistentStats);
@@ -961,68 +1059,6 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->statsCollector->setNamespace("test_namespace");
         $this->statsCollector->addStat("counters", [1, 2, 3]);
         $this->statsCollector->decrementCompoundStat("counters", [5, 5, "five"]);
-    }
-
-    public function testCanRemoveStat()
-    {
-        //open up access to $Statistics\Collector\Collector::populatedNamespaces[]
-        $reflectionProperty = new \ReflectionProperty(Statistics\Collector\Collector::class, "populatedNamespaces");
-        $reflectionProperty->setAccessible(true);
-
-        $this->statsCollector->setNamespace("test_namespace");
-        $this->statsCollector->addStat("planets", 8);
-
-        $numberOfPlanets = $this->statsCollector->getStat("planets");
-        $populatedNamespaces = array_flip($reflectionProperty->getValue($this->statsCollector));
-        // stat is set and namespace is stored within $populatedNamespaces
-        $this->assertEquals(8, $numberOfPlanets);
-        $this->assertArrayHasKey("test_namespace.planets", $populatedNamespaces);
-
-        $this->statsCollector->removeStat('planets');
-
-        $numberOfPlanets = $this->statsCollector->getStat("planets");
-        $populatedNamespaces = array_flip($reflectionProperty->getValue($this->statsCollector));
-        // stat is null and namespace is not stored within $populatedNamespaces
-        $this->assertEquals(null, $numberOfPlanets);
-        $this->assertArrayNotHasKey("test_namespace.planets", $populatedNamespaces);
-    }
-
-    /**
-     * Why are we prohibiting wildcards as arguments but then allowing removal of parent nodes...
-     */
-    public function testCanRemoveStatByRemovingParentNSNode()
-    {
-        //open up access to $Statistics\Collector\Collector::populatedNamespaces[]
-        $reflectionProperty = new \ReflectionProperty(Statistics\Collector\Collector::class, "populatedNamespaces");
-        $reflectionProperty->setAccessible(true);
-
-        $this->statsCollector->setNamespace("test_namespace");
-        $this->statsCollector->addStat("planets.earth", ['radius'=>'6371km']);
-        $this->statsCollector->addStat("planets.mars", ['radius'=>'3390km']);
-
-        //pre-removal checks
-        $planetSizes = $this->statsCollector->getStat("planets*", $withKeys=true);
-        $currentPopulatedNamespaces = array_flip($reflectionProperty->getValue($this->statsCollector));
-
-         $expected = [
-           '.test_namespace.planets.earth' => ['radius'=>'6371km'],
-           '.test_namespace.planets.mars' => ['radius'=>'3390km']
-         ];
-        //// assert that stat is set and namespace is stored within $populatedNamespaces
-        $this->assertEquals($expected, $planetSizes);
-        $this->assertArrayHasKey("test_namespace.planets.earth", $currentPopulatedNamespaces);
-        $this->assertArrayHasKey("test_namespace.planets.mars", $currentPopulatedNamespaces);
-
-        // removal checks
-        $this->statsCollector->removeStat('planets');
-
-        $planetSizes = $this->statsCollector->getStat("test_namespace.planets*");
-        $populatedNamespaces = array_flip($reflectionProperty->getValue($this->statsCollector));
-        //// assert that stat is null and namespace is not stored within $populatedNamespaces
-        $this->assertEquals(null, $planetSizes);
-        $this->assertArrayNotHasKey("test_namespace.planets.earth", $populatedNamespaces);
-        $this->assertArrayNotHasKey("test_namespace.planets.mars", $populatedNamespaces);
-        $this->assertArrayNotHasKey("test_namespace.planets", $populatedNamespaces);
     }
 
     /**

@@ -45,10 +45,10 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     protected $populatedNamespaces = [];
 
     /**
-     * Record a statistic for a subject
+     * Record a statistic to a namespace
      *
      *
-     * @param string $name name of statistic to be added to namespace
+     * @param string $name name of statistic namespace
      * @param mixed $value
      * @param array $options
      *
@@ -62,7 +62,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     }
 
     /**
-     * Remove a statistic
+     * Remove a statistic namespace
      *
      * @param string $namespace
      *
@@ -75,12 +75,38 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
             throw new StatisticsCollectorException("Wildcard usage forbidden when removing stats (to protect you from yourself!)");
         }
 
-        if ($this->checkExists($namespace) === true) {
+        if ($this->exists($namespace) === true) {
             $this->removeValueFromNamespace($namespace);
         } else {
             throw new StatisticsCollectorException("Attempting to remove a statistic that does not exist: " . $namespace);
         }
         return $this;
+    }
+
+    /**
+     * Check that a stats namespace exists
+     *
+     * @param string $namespace
+     *
+     * @return bool
+     */
+    public function exists($namespace)
+    {
+        $resolvedNamespaces = $this->getTargetNamespaces($namespace, false);
+        if ((new TypeHelper())->isArray($resolvedNamespaces)) {
+            if(count($resolvedNamespaces)>0) {
+                foreach ($resolvedNamespaces as $namespace) {
+                    if ($this->getStatsContainer()->has($namespace) === false) {
+                        return false;
+                    }
+                }
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return $this->getStatsContainer()->has($resolvedNamespaces);
+        }
     }
 
     /**
@@ -94,7 +120,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     public function incrementStat($namespace, $increment = 1)
     {
-        if ($this->checkExists($namespace) !== true) {
+        if ($this->exists($namespace) !== true) {
             $this->addStat($namespace, 0);
         }
 
@@ -125,7 +151,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
         $typeHelper = new TypeHelper();
 
         //if the namespace doesn't exist we create the correct compound stat with values of '0'
-        if ($this->checkExists($namespace) !== true) {
+        if ($this->exists($namespace) !== true) {
             if ($typeHelper->isArray($increment)) {
                 // if array of increments is supplied we create a default compound stat using array keys with value of '0'
                 $default = array_fill_keys(array_keys($increment), 0);
@@ -189,7 +215,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     public function decrementStat($namespace, $decrement = -1)
     {
-        if ($this->checkExists($namespace) !== true) {
+        if ($this->exists($namespace) !== true) {
             $this->addStat($namespace, 0);
         }
 
@@ -220,7 +246,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
         $typeHelper = new TypeHelper();
 
         //if the namespace doesn't exist we create the correct compound stat with values of '0'
-        if ($this->checkExists($namespace) !== true) {
+        if ($this->exists($namespace) !== true) {
             if ($typeHelper->isArray($decrement)) {
                 // if array of decrements is supplied we create a default compound stat using array keys with value of '0'
                 $default = array_fill_keys(array_keys($decrement), 0);
@@ -295,7 +321,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
             return $this->getStats([$namespace], $withKeys, $default);
         }
 
-        if ($this->checkExists($namespace) === true) {
+        if ($this->exists($namespace) === true) {
             if ($withKeys === true) {
                 $resolvedNamespace = $this->getTargetNamespaces($namespace);
                 $value[$resolvedNamespace] = $this->getValueFromNamespace($namespace);
@@ -323,9 +349,8 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     public function getStats(array $namespaces, $withKeys = false, $default = null)
     {
-        $typeHelper = new TypeHelper();
         $resolvedNamespaces = $this->getTargetNamespaces($namespaces, true);
-        if ($typeHelper->isNotArray($resolvedNamespaces)) {
+        if ((new TypeHelper())->isNotArray($resolvedNamespaces)) {
             $resolvedNamespaces = [$resolvedNamespaces];
         }
 
@@ -368,7 +393,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     public function getStatCount($namespace)
     {
         $value = $this->getStat($namespace);
-        if((new TypeHelper())->isArray($value)) {
+        if ((new TypeHelper())->isArray($value)) {
             $value = (new ArrayHelper())->flatten($value);
         }
         return (new MathHelper)->count($value);
@@ -400,7 +425,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     public function getStatAverage($namespace)
     {
         $value = $this->getStat($namespace);
-        if((new TypeHelper())->isArray($value)) {
+        if ((new TypeHelper())->isArray($value)) {
             $value = (new ArrayHelper())->flatten($value);
         }
         return $this->calculateStatsAverage($value);
@@ -434,7 +459,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     public function getStatSum($namespace)
     {
         $value = $this->getStat($namespace);
-        if((new TypeHelper())->isArray($value)) {
+        if ((new TypeHelper())->isArray($value)) {
             $value = (new ArrayHelper())->flatten($value);
         }
         return $this->calculateStatsSum($value);
@@ -578,7 +603,6 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
         foreach ($this->getPopulatedNamespaces() as $populatedNamespace) {
             if (fnmatch($namespace, $populatedNamespace) || fnmatch($additionalNamespace, $populatedNamespace)) {
                 // we convert the expanded wildcard paths to absolute paths by prepending '.'
-                // this prevents the getTargetNamespaces() from treating the namespace as a sub namespace
                 $expandedPaths[] = static::SEPARATOR . $populatedNamespace;
             }
         }
@@ -610,6 +634,11 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
             switch (true) {
                 case $this->isWildcardNamespace($namespace):
                     $expandedWildcardPaths = $this->resolveWildcardNamespace($namespace);
+                    if (count($expandedWildcardPaths) > 0) {
+                        $expandedWildcardPaths = array_map(function ($path) use ($returnAbsolute) {
+                            return ($returnAbsolute === false) ? substr($path, 1) : $path;
+                        }, $expandedWildcardPaths);
+                    }
                     $resolvedNamespaces = array_merge($resolvedNamespaces, $expandedWildcardPaths);
                     break;
                 case $this->isAbsolutePathNamespace($namespace):
@@ -749,19 +778,6 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
 
         $this->sortPopulatedNamespaces();
         return true;
-    }
-
-    /**
-     * Check that a namespace element exist
-     *
-     * @param string $namespace
-     *
-     * @return bool
-     */
-    protected function checkExists($namespace)
-    {
-        $resolvedNamespace = $this->getTargetNamespaces($namespace);
-        return $this->getStatsContainer()->has($resolvedNamespace);
     }
 
     /**
