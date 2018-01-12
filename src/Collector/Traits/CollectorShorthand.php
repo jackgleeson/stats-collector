@@ -171,12 +171,13 @@ trait CollectorShorthand
      * @see AbstractCollector::startTimer()
      *
      * @param string $namespace
+     * @param mixed $customTimestamp
      * @param bool $useTimerNamespacePrefix
      *
      */
-    public function start($namespace, $useTimerNamespacePrefix = true)
+    public function start($namespace, $customTimestamp=null, $useTimerNamespacePrefix = true)
     {
-        return $this->startTimer($namespace, $useTimerNamespacePrefix);
+        return $this->startTimer($namespace, $customTimestamp, $useTimerNamespacePrefix);
     }
 
     /**
@@ -186,17 +187,19 @@ trait CollectorShorthand
      * @see AbstractCollector::endTimer()
      *
      * @param string $namespace
+     * @param mixed $customTimestamp
      * @param bool $useTimerNamespacePrefix
      *
      * @throws \Statistics\Exception\StatisticsCollectorException
      */
-    public function end($namespace, $useTimerNamespacePrefix = true)
+    public function end($namespace,  $customTimestamp=null, $useTimerNamespacePrefix = true)
     {
-        return $this->endTimer($namespace, $useTimerNamespacePrefix);
+        return $this->endTimer($namespace, $customTimestamp, $useTimerNamespacePrefix);
     }
 
     /**
-     * Shorthand alias method for returning the difference of a recorded start and end timestamp (including microseconds)
+     * Shorthand alias method for returning the difference of a recorded start and end timestamp (including
+     * microseconds)
      *
      * @see AbstractCollector::getTimerDiff()
      *

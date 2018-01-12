@@ -308,12 +308,18 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      * Record a timestamp to serve as the start of a time period to be timed
      *
      * @param $namespace
+     * @param mixed $customTimestamp
      * @param bool $useTimerNamespacePrefix
      */
-    public function startTimer($namespace, $useTimerNamespacePrefix = true)
+    public function startTimer($namespace, $customTimestamp = null, $useTimerNamespacePrefix = true)
     {
+        if ($customTimestamp === null) {
+            $start = microtime(true);
+        } else {
+            $start = $customTimestamp;
+        }
         $namespace = ($useTimerNamespacePrefix === true) ? static::TIMERS_NS . static::SEPARATOR . $namespace : $namespace;
-        $this->addStat($namespace, ['start' => microtime(true)]);
+        $this->addStat($namespace, ['start' => $start]);
     }
 
     /**
@@ -321,13 +327,19 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      * the two timestamps recorded
      *
      * @param $namespace
+     * @param mixed $customTimestamp
      * @param bool $useTimerNamespacePrefix
      *
      * @throws \Statistics\Exception\StatisticsCollectorException
      */
-    public function endTimer($namespace, $useTimerNamespacePrefix = true)
+    public function endTimer($namespace, $customTimestamp = null, $useTimerNamespacePrefix = true)
     {
-        $end = microtime(true);
+        if ($customTimestamp === null) {
+            $end = microtime(true);
+        } else {
+            $end = $customTimestamp;
+        }
+
         $namespace = ($useTimerNamespacePrefix === true) ? static::TIMERS_NS . static::SEPARATOR . $namespace : $namespace;
         if ($this->exists($namespace) && is_array($this->getStat($namespace)) && isset($this->getStat($namespace)['start'])) {
             $this->addStat($namespace, [

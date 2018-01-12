@@ -424,6 +424,21 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($diff, $this->statsCollector->getTimerDiff("test"));
     }
 
+    public function testCanGetCorrectTimerDiffValueWithCustomTimestampsSupplied()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+
+        $start=microtime(true);
+        $end=microtime(true);
+
+        $this->statsCollector->startTimer("test", $start);
+        $this->statsCollector->endTimer("test", $end);
+
+        $diff = $end - $start;
+
+        $this->assertEquals($diff, $this->statsCollector->getTimerDiff("test"));
+    }
+
     public function testCanGetIndividualStat()
     {
         $this->statsCollector->setNamespace("test_namespace");

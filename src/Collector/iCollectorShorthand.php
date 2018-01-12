@@ -23,9 +23,9 @@ interface iCollectorShorthand
 
     public function decCpd($namespace, $decrement);
 
-    public function start($namespace, $useTimerNamespacePrefix);
+    public function start($namespace, $customTimestamp, $useTimerNamespacePrefix);
 
-    public function end($namespace, $useTimerNamespacePrefix);
+    public function end($namespace, $customTimestamp, $useTimerNamespacePrefix);
 
     public function diff($namespace, $useTimerNamespacePrefix);
 
