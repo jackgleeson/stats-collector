@@ -94,7 +94,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     {
         $resolvedNamespaces = $this->getTargetNamespaces($namespace, false);
         if ((new TypeHelper())->isArray($resolvedNamespaces)) {
-            if(count($resolvedNamespaces)>0) {
+            if (count($resolvedNamespaces) > 0) {
                 foreach ($resolvedNamespaces as $namespace) {
                     if ($this->getStatsContainer()->has($namespace) === false) {
                         return false;
@@ -424,11 +424,19 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     public function getStatAverage($namespace)
     {
-        $value = $this->getStat($namespace);
-        if ((new TypeHelper())->isArray($value)) {
-            $value = (new ArrayHelper())->flatten($value);
+        try {
+            $value = $this->getStat($namespace);
+            if ((new TypeHelper())->isArray($value)) {
+                $value = (new ArrayHelper())->flatten($value);
+            }
+            return $this->calculateStatsAverage($value);
+        } catch (StatisticsCollectorException $e) {
+            throw new StatisticsCollectorException(
+              "An error occurred with \"" . $namespace . "\" - " . ($e->getMessage()),
+              $e->getCode(),
+              $e
+            );
         }
-        return $this->calculateStatsAverage($value);
     }
 
     /**
@@ -439,15 +447,27 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     public function getStatsAverage(array $namespaces)
     {
-        $allStats = [];
-        foreach ($namespaces as $namespace) {
-            $value = $this->getStat($namespace);
-            if (!is_array($value)) {
-                $value = [$value];
+        try {
+            $allStats = [];
+            foreach ($namespaces as $namespace) {
+                $value = $this->getStat($namespace);
+                if (!is_array($value)) {
+                    $value = [$value];
+                }
+                $allStats = array_merge($allStats, $value);
             }
-            $allStats = array_merge($allStats, $value);
+            return $this->calculateStatsAverage($allStats);
+        } catch (StatisticsCollectorException $e) {
+            $namespaceString = '';
+            foreach ($namespaces as $namespace) {
+                $namespaceString .= "\"" . $namespace . "\",";
+            }
+            throw new StatisticsCollectorException(
+              "An error occurred with " . substr($namespaceString, 0, -1) ." - ". $e->getMessage(),
+              $e->getCode(),
+              $e
+            );
         }
-        return $this->calculateStatsAverage($allStats);
     }
 
     /**
@@ -458,11 +478,19 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     public function getStatSum($namespace)
     {
-        $value = $this->getStat($namespace);
-        if ((new TypeHelper())->isArray($value)) {
-            $value = (new ArrayHelper())->flatten($value);
+        try {
+            $value = $this->getStat($namespace);
+            if ((new TypeHelper())->isArray($value)) {
+                $value = (new ArrayHelper())->flatten($value);
+            }
+            return $this->calculateStatsSum($value);
+        } catch (StatisticsCollectorException $e) {
+            throw new StatisticsCollectorException(
+              "An error occurred with \"" . $namespace . "\" - ". $e->getMessage(),
+              $e->getCode(),
+              $e
+            );
         }
-        return $this->calculateStatsSum($value);
     }
 
     /**
@@ -473,15 +501,27 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     public function getStatsSum(array $namespaces)
     {
-        $totalSum = [];
-        foreach ($namespaces as $namespace) {
-            $values = $this->getStat($namespace);
-            if (!is_array($values)) {
-                $values = [$values];
+        try {
+            $totalSum = [];
+            foreach ($namespaces as $namespace) {
+                $values = $this->getStat($namespace);
+                if (!is_array($values)) {
+                    $values = [$values];
+                }
+                $totalSum = array_merge($totalSum, $values);
             }
-            $totalSum = array_merge($totalSum, $values);
+            return $this->calculateStatsSum($totalSum);
+        } catch (StatisticsCollectorException $e) {
+            $namespaceString = '';
+            foreach ($namespaces as $namespace) {
+                $namespaceString .= "\"" . $namespace . "\",";
+            }
+            throw new StatisticsCollectorException(
+              "An error occurred with " . substr($namespaceString, 0, -1) ." - ".$e->getMessage(),
+              $e->getCode(),
+              $e
+            );
         }
-        return $this->calculateStatsSum($totalSum);
     }
 
     /**

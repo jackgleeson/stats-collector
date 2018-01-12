@@ -1218,13 +1218,30 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
     public function testTryingToAverageANonNumberThrowsException()
     {
         $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
-        $this->expectExceptionMessage("Unable to return average for supplied arguments (are the values numeric?)");
+        $this->expectExceptionMessage("An error occurred with \"heights\" - Unable to return average for supplied arguments (are the values numeric?)");
 
         $this->statsCollector->setNamespace("test_namespace");
         $heights = [181, 222, 194, 143, 190, "one hundred and fifty"];
         $this->statsCollector->addStat("heights", $heights);
 
         $this->statsCollector->getStatAverage("heights");
+    }
+
+    /**
+     * @requires PHPUnit 5
+     */
+    public function testTryingToAverageMultipleNonNumbersThrowsException()
+    {
+        $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
+        $this->expectExceptionMessage("An error occurred with \"heights.height1\",\"heights.height2\" - Unable to return average for supplied arguments (are the values numeric?)");
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $height1 = ["one hundred and fifty"];
+        $height2 = ["one hundred and sixty"];
+        $this->statsCollector->addStat("heights.height1", $height1);
+        $this->statsCollector->addStat("heights.height2", $height2);
+
+        $this->statsCollector->getStatsAverage(['heights.height1', 'heights.height2']);
     }
 
     public function testCanGetSumOfSingleValue()
@@ -1283,7 +1300,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
     public function testTryingToSumANonNumberThrowsException()
     {
         $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
-        $this->expectExceptionMessage("Unable to return sum for supplied arguments (are the values numeric?)");
+        $this->expectExceptionMessage("An error occurred with \"noahs.ark.passengers.*\" - Unable to return sum for supplied arguments (are the values numeric?)");
 
         $this->statsCollector->setNamespace("test_namespace");
         $this->statsCollector->setNamespace("noahs.ark.passengers");
@@ -1292,6 +1309,22 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->statsCollector->addStat("animals", 99);
 
         $this->statsCollector->getStatSum("noahs.ark.passengers.*");
+    }
+
+    /**
+     * @requires PHPUnit 5
+     */
+    public function testTryingToSumMultipleNonNumbersThrowsException()
+    {
+        $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
+        $this->expectExceptionMessage("An error occurred with \"passengers.humans\",\"passengers.aliens\" - Unable to return sum for supplied arguments (are the values numeric?)");
+
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->setNamespace("passengers");
+        $this->statsCollector->addStat("humans", "two");
+        $this->statsCollector->addStat("aliens", "zero");
+
+        $this->statsCollector->getStatsSum(["passengers.humans", "passengers.aliens"]);
     }
 
     public function testCanGetAllAddedStats()
