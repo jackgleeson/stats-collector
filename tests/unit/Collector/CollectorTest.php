@@ -159,6 +159,27 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([1, 2], $stats["test_namespace.compound_stat"]);
     }
 
+    public function testCanCreateCompoundStatWithArrayAsValue()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("compound_stat", [1 => [2, 3], 2], $options = ['flatten' => false]);
+
+        $stats = $this->statsCollector->getAllStats();
+
+        $this->assertEquals([1 => [2, 3], 2], $stats["test_namespace.compound_stat"]);
+    }
+
+    public function testCanConveryCompoundStatValueIntoCompoundValue()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+        $this->statsCollector->addStat("compound_stat", ["planets" => "Earth"]);
+        $this->statsCollector->addStat("compound_stat", ["planets" => "Mars"]);
+
+        $stats = $this->statsCollector->getAllStats();
+
+        $this->assertEquals(["planets" => ["Earth", "Mars"]], $stats["test_namespace.compound_stat"]);
+    }
+
     public function testCanRemoveStat()
     {
         //open up access to $Statistics\Collector\Collector::populatedNamespaces[]

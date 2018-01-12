@@ -861,11 +861,11 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     private function addValueToExistingNamespace($namespace, $value, $flatten)
     {
-        if ($flatten === true && is_array($value)) {
-            $flattenedValue = (new ArrayHelper())->flatten($value);
+        if (is_array($value)) {
+            $value = ($flatten === true) ? (new ArrayHelper())->flatten($value) : $value;
             $current = $this->getStatsContainer()->get($namespace);
-            $new = (is_array($current)) ? array_merge($current, $flattenedValue) : array_merge([$current],
-              $flattenedValue);
+            $new = (is_array($current)) ? array_merge_recursive($current, $value) : array_merge_recursive([$current],
+              $value);
             $this->getStatsContainer()->set($namespace, $new);
         } else {
             $this->getStatsContainer()->append($namespace, $value);
