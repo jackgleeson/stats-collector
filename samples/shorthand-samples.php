@@ -220,15 +220,15 @@ $totalResponses = $stats->sum([
  */
 
 $winners = [
-  "<10s" => 5,
-  '10s-12s' => 9,
-  '12s+' => 20,
+  "sprint=8s" => 5,
+  'sprint=10s' => 9,
+  'sprint=12s' => 21
 ];
 
 $stats->setNamespace("olympics.100m")->add("winners", $winners);
 
-$olympic100mWinners = $stats->get('winners'); // Array ( [<10s] => 5 [10s-12s] => 9 [12s+] => 20 )
-$totalOlympic100mWinners = $stats->sum('winners'); // 34
+$olympic100mWinners = $stats->get('winners'); // Array ( [<10s] => 5 [10s-12s] => 9 [12s+] => 21 )
+$totalOlympic100mWinners = $stats->sum('winners'); // 35
 
 /**
  * Advanced usage. Lets increment/decrement some compound stats

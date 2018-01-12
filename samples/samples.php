@@ -259,7 +259,7 @@ $winners = [
 
 $statsCollector->setNamespace("olympics.100m")->addStat("winners", $winners);
 
-$olympics100mWinnersByTime = $statsCollector->getStat('winners'); // Array ( [<10s] => 5 [10s-12s] => 9 [12s] => 20 )
+$olympics100mWinnersByTime = $statsCollector->getStat('winners'); // Array ( [<10s] => 5 [10s-12s] => 9 [12s] => 21 )
 $olympics100mTotalWinners = $statsCollector->getStatSum('winners'); // 35
 
 

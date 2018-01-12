@@ -427,6 +427,70 @@ class CollectorShorthandTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([1, 2, 3], $counter);
     }
 
+
+
+    /**
+     * @requires PHPUnit 6
+     */
+    public function testStartTimerRecordsTimestampValue()
+    {
+        $this->statsCollector->ns("test_namespace");
+
+        $this->statsCollector->start("test");
+        $stats = $this->statsCollector->all();
+
+        $this->assertInternalType(PHPUnit_IsType::TYPE_FLOAT, $stats['test_namespace.timer.test']['start']);
+    }
+
+    /**
+     * @requires PHPUnit 6
+     */
+    public function testEndTimerRecordsTimestampValue()
+    {
+        $this->statsCollector->ns("test_namespace");
+
+        $this->statsCollector->start("test");
+        $this->statsCollector->end("test");
+
+        $stats = $this->statsCollector->all();
+
+        $this->assertInternalType(PHPUnit_IsType::TYPE_FLOAT, $stats['test_namespace.timer.test']['end']);
+    }
+
+    /**
+     * @requires PHPUnit 6
+     */
+    public function testEndTimerRecordsCorrectTimestampsDiffValue()
+    {
+        $this->statsCollector->ns("test_namespace");
+
+        $this->statsCollector->start("test");
+        $this->statsCollector->end("test");
+
+        $stats = $this->statsCollector->all();
+        $start = $stats['test_namespace.timer.test']['start'];
+        $end = $stats['test_namespace.timer.test']['end'];
+        $diff = $end - $start;
+
+        $this->assertInternalType(PHPUnit_IsType::TYPE_FLOAT, $stats['test_namespace.timer.test']['diff']);
+        $this->assertEquals($diff, $stats['test_namespace.timer.test']['diff']);
+    }
+
+    public function testCanGetCorrectTimerDiffValue()
+    {
+        $this->statsCollector->ns("test_namespace");
+
+        $this->statsCollector->start("test");
+        $this->statsCollector->end("test");
+
+        $stats = $this->statsCollector->all();
+        $start = $stats['test_namespace.timer.test']['start'];
+        $end = $stats['test_namespace.timer.test']['end'];
+        $diff = $end - $start;
+
+        $this->assertEquals($diff, $this->statsCollector->diff("test"));
+    }
+
     public function testCanRemoveStat()
     {
         $this->statsCollector->add("planets", 8);

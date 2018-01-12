@@ -26,6 +26,11 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     const WILDCARD = '*';
 
     /**
+     * Wildcard operator
+     */
+    const TIMERS_NS = 'timer';
+
+    /**
      * @var null|string
      */
     protected $namespace = null;
@@ -300,6 +305,60 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     }
 
     /**
+     * Record a timestamp to serve as the start of a time period to be timed
+     *
+     * @param $namespace
+     * @param bool $useTimerNamespacePrefix
+     */
+    public function startTimer($namespace, $useTimerNamespacePrefix = true)
+    {
+        $namespace = ($useTimerNamespacePrefix === true) ? static::TIMERS_NS . static::SEPARATOR . $namespace : $namespace;
+        $this->addStat($namespace, ['start' => microtime(true)]);
+    }
+
+    /**
+     * Record a timestamp to serve as the end of a pre-existing time-period and then calculate the difference between
+     * the two timestamps recorded
+     *
+     * @param $namespace
+     * @param bool $useTimerNamespacePrefix
+     *
+     * @throws \Statistics\Exception\StatisticsCollectorException
+     */
+    public function endTimer($namespace, $useTimerNamespacePrefix = true)
+    {
+        $end = microtime(true);
+        $namespace = ($useTimerNamespacePrefix === true) ? static::TIMERS_NS . static::SEPARATOR . $namespace : $namespace;
+        if ($this->exists($namespace) && is_array($this->getStat($namespace)) && isset($this->getStat($namespace)['start'])) {
+            $this->addStat($namespace, [
+              'end' => $end,
+              'diff' => $end - $this->getStat($namespace)['start'],
+            ]);
+        } else {
+            throw new StatisticsCollectorException("Unable to find start timestamp for \"$namespace\"");
+        }
+    }
+
+    /**
+     * Return the difference of a recorded start and end timestamp (including microseconds)
+     *
+     * @param $namespace
+     * @param bool $useTimerNamespacePrefix
+     *
+     * @return float time difference
+     * @throws \Statistics\Exception\StatisticsCollectorException
+     */
+    public function getTimerDiff($namespace, $useTimerNamespacePrefix = true)
+    {
+        $namespace = ($useTimerNamespacePrefix === true) ? static::TIMERS_NS . static::SEPARATOR . $namespace : $namespace;
+        if ($this->exists($namespace) && is_array($this->getStat($namespace)) && isset($this->getStat($namespace)['diff'])) {
+            return $this->getStat($namespace)['diff'];
+        } else {
+            throw new StatisticsCollectorException("Unable to find start timestamp for \"$namespace\"");
+        }
+    }
+
+    /**
      * Retrieve the statistic value for a given namespace.
      *
      * Wildcard searches and arrays of namespace targets will be forwarded to getStats()
@@ -463,7 +522,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
                 $namespaceString .= "\"" . $namespace . "\",";
             }
             throw new StatisticsCollectorException(
-              "An error occurred with " . substr($namespaceString, 0, -1) ." - ". $e->getMessage(),
+              "An error occurred with " . substr($namespaceString, 0, -1) . " - " . $e->getMessage(),
               $e->getCode(),
               $e
             );
@@ -486,7 +545,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
             return $this->calculateStatsSum($value);
         } catch (StatisticsCollectorException $e) {
             throw new StatisticsCollectorException(
-              "An error occurred with \"" . $namespace . "\" - ". $e->getMessage(),
+              "An error occurred with \"" . $namespace . "\" - " . $e->getMessage(),
               $e->getCode(),
               $e
             );
@@ -517,7 +576,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
                 $namespaceString .= "\"" . $namespace . "\",";
             }
             throw new StatisticsCollectorException(
-              "An error occurred with " . substr($namespaceString, 0, -1) ." - ".$e->getMessage(),
+              "An error occurred with " . substr($namespaceString, 0, -1) . " - " . $e->getMessage(),
               $e->getCode(),
               $e
             );

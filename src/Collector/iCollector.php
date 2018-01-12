@@ -33,6 +33,12 @@ interface iCollector
 
     public function decrementCompoundStat($namespace, $increment);
 
+    public function startTimer($namespace, $useTimerNamespacePrefix);
+
+    public function endTimer($namespace, $useTimerNamespacePrefix);
+
+    public function getTimerDiff($namespace, $useTimerNamespacePrefix);
+
     public function getAllStats();
 
     public function setNamespace($namespace);

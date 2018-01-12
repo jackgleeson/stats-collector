@@ -362,6 +362,68 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(1.61803398875, $stats["test_namespace.math.golden_ratio"]);
     }
 
+    /**
+     * @requires PHPUnit 6
+     */
+    public function testStartTimerRecordsTimestampValue()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+
+        $this->statsCollector->startTimer("test");
+        $stats = $this->statsCollector->getAllStats();
+
+        $this->assertInternalType(PHPUnit_IsType::TYPE_FLOAT, $stats['test_namespace.timer.test']['start']);
+    }
+
+    /**
+     * @requires PHPUnit 6
+     */
+    public function testEndTimerRecordsTimestampValue()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+
+        $this->statsCollector->startTimer("test");
+        $this->statsCollector->endTimer("test");
+
+        $stats = $this->statsCollector->getAllStats();
+
+        $this->assertInternalType(PHPUnit_IsType::TYPE_FLOAT, $stats['test_namespace.timer.test']['end']);
+    }
+
+    /**
+     * @requires PHPUnit 6
+     */
+    public function testEndTimerRecordsCorrectTimestampsDiffValue()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+
+        $this->statsCollector->startTimer("test");
+        $this->statsCollector->endTimer("test");
+
+        $stats = $this->statsCollector->getAllStats();
+        $start = $stats['test_namespace.timer.test']['start'];
+        $end = $stats['test_namespace.timer.test']['end'];
+        $diff = $end - $start;
+
+        $this->assertInternalType(PHPUnit_IsType::TYPE_FLOAT, $stats['test_namespace.timer.test']['diff']);
+        $this->assertEquals($diff, $stats['test_namespace.timer.test']['diff']);
+    }
+
+    public function testCanGetCorrectTimerDiffValue()
+    {
+        $this->statsCollector->setNamespace("test_namespace");
+
+        $this->statsCollector->startTimer("test");
+        $this->statsCollector->endTimer("test");
+
+        $stats = $this->statsCollector->getAllStats();
+        $start = $stats['test_namespace.timer.test']['start'];
+        $end = $stats['test_namespace.timer.test']['end'];
+        $diff = $end - $start;
+
+        $this->assertEquals($diff, $this->statsCollector->getTimerDiff("test"));
+    }
+
     public function testCanGetIndividualStat()
     {
         $this->statsCollector->setNamespace("test_namespace");

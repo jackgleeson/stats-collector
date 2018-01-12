@@ -2,9 +2,6 @@
 
 namespace Statistics\Collector\Traits;
 
-use Prophecy\Doubler\ClassPatch\HhvmExceptionPatch;
-use Statistics\Collector\Helper\TypeHelper;
-
 /**
  * Trait CollectorShorthand
  *
@@ -166,6 +163,52 @@ trait CollectorShorthand
     public function decCpd($namespace, $decrement = 1)
     {
         return $this->decrementCompoundStat($namespace, $decrement);
+    }
+
+    /**
+     * Shorthand alias method for recording a timestamp to serve as the start of a time period
+     *
+     * @see AbstractCollector::startTimer()
+     *
+     * @param string $namespace
+     * @param bool $useTimerNamespacePrefix
+     *
+     */
+    public function start($namespace, $useTimerNamespacePrefix = true)
+    {
+        return $this->startTimer($namespace, $useTimerNamespacePrefix);
+    }
+
+    /**
+     * Shorthand alias method for recording a timestamp to serve as the end of a time period and then c
+     * calculate the difference between the two timestamps recorded
+     *
+     * @see AbstractCollector::endTimer()
+     *
+     * @param string $namespace
+     * @param bool $useTimerNamespacePrefix
+     *
+     * @throws \Statistics\Exception\StatisticsCollectorException
+     */
+    public function end($namespace, $useTimerNamespacePrefix = true)
+    {
+        return $this->endTimer($namespace, $useTimerNamespacePrefix);
+    }
+
+    /**
+     * Shorthand alias method for returning the difference of a recorded start and end timestamp (including microseconds)
+     *
+     * @see AbstractCollector::getTimerDiff()
+     *
+     * @param string $namespace
+     * @param bool $useTimerNamespacePrefix
+     *
+     * @return float
+     * @throws \Statistics\Exception\StatisticsCollectorException
+     */
+    public function diff($namespace, $useTimerNamespacePrefix = true)
+    {
+        return $this->getTimerDiff($namespace, $useTimerNamespacePrefix);
     }
 
     /**

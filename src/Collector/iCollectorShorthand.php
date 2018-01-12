@@ -23,6 +23,12 @@ interface iCollectorShorthand
 
     public function decCpd($namespace, $decrement);
 
+    public function start($namespace, $useTimerNamespacePrefix);
+
+    public function end($namespace, $useTimerNamespacePrefix);
+
+    public function diff($namespace, $useTimerNamespacePrefix);
+
     public function avg($namespace);
 
     public function sum($namespace);
