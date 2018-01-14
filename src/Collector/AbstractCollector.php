@@ -26,7 +26,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     const WILDCARD = '*';
 
     /**
-     * Wildcard operator
+     * default group namespace for timers
      */
     const TIMERS_NS = 'timer';
 
@@ -305,7 +305,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     }
 
     /**
-     * Record a timestamp to serve as the start of a time period to be timed
+     * Record a timestamp to serve as the start of a time period to be measured
      *
      * @param $namespace
      * @param mixed $customTimestamp

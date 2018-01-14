@@ -169,7 +169,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([1 => [2, 3], 2], $stats["test_namespace.compound_stat"]);
     }
 
-    public function testCanConveryCompoundStatValueIntoCompoundValue()
+    public function testCanConvertCompoundStatValueIntoCompoundValue()
     {
         $this->statsCollector->setNamespace("test_namespace");
         $this->statsCollector->addStat("compound_stat", ["planets" => "Earth"]);

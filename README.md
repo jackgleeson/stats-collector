@@ -66,13 +66,12 @@ Array
 ```php
 $stats = Statistics\Collector\Collector::getInstance();
 
-$stats->ns("timer")->add("start", microtime(true));
+$stats->start("timer");
 // some lengthy process...
-$stats->ns("timer")->add("end", microtime(true));
+$stats->end("timer");
 // work out execution time and add it as a new stat
-$stats->ns("timer")->add('execution_time', $stats->get("end") - $stats->get("start"));
+$execution_time = $stats->diff('timer'); 
 
-$execution_time = $stats->ns("timer")->get("execution_time");
 ```
 ### Basic Usage: Export stats to file
 ```php
