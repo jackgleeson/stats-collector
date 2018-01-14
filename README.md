@@ -69,7 +69,7 @@ $stats = Statistics\Collector\Collector::getInstance();
 $stats->start("timer");
 // some lengthy process...
 $stats->end("timer");
-// work out execution time and add it as a new stat
+// get the exectuion time
 $execution_time = $stats->diff('timer'); 
 
 ```
