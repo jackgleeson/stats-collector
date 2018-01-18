@@ -12,7 +12,7 @@ Once you have recorded some stats, you can create new stats from your data using
   - Clear separation of responsibility across general log output and statistical log output to help you stop polluting your application logs with statistical data.
 
 ### To-do
-  - Filter behaviour. ```$stats->filter($result, $this->lessThan(50), $this->equalTo(50)) and $this->greaterThan(50, $result); ```
+  - Filter behaviour. ```$filteredStatsCollecter = $stats->filter($this->lessThan(50), $this->equalTo(50),...); ```
   - Import behaviour. Allow Stats Collector to import previously exported data and carry on where it left off. 
   - Add tests for helpers and improve tests by mocking collaborators
   - Add listener behaviour so that stats can be updated by updates to other stats e.g. moving averages
