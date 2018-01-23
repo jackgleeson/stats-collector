@@ -341,7 +341,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
         }
 
         $namespace = ($useTimerNamespacePrefix === true) ? static::TIMERS_NS . static::SEPARATOR . $namespace : $namespace;
-        if ($this->exists($namespace) && is_array($this->getStat($namespace)) && isset($this->getStat($namespace)['start'])) {
+        if ($this->hasStartTimer($namespace)) {
             $this->addStat($namespace, [
               'end' => $end,
               'diff' => $end - $this->getStat($namespace)['start'],
@@ -363,10 +363,10 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     public function getTimerDiff($namespace, $useTimerNamespacePrefix = true)
     {
         $namespace = ($useTimerNamespacePrefix === true) ? static::TIMERS_NS . static::SEPARATOR . $namespace : $namespace;
-        if ($this->exists($namespace) && is_array($this->getStat($namespace)) && isset($this->getStat($namespace)['diff'])) {
+        if ($this->hasTimerDiff($namespace)) {
             return $this->getStat($namespace)['diff'];
         } else {
-            throw new StatisticsCollectorException("Unable to find start timestamp for \"$namespace\"");
+            throw new StatisticsCollectorException("Unable to find timer difference for \"$namespace\". Has have recorded a start timer and end timer for this stat?");
         }
     }
 
@@ -850,6 +850,47 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     protected function isDecrementable($value)
     {
         return $this->isIncrementable($value);
+    }
+
+    /**
+     * Check to see if stat namespace has start timer value
+     *
+     * @param $namespace
+     *
+     * @return bool
+     */
+    protected function hasStartTimer($namespace)
+    {
+        return ($this->exists($namespace) &&
+          is_array($this->getStat($namespace)) &&
+          isset($this->getStat($namespace)['start']));
+    }
+
+    /**
+     * Check to see if stat namespace is a timer stat and has end timer value
+     *
+     * @param $namespace
+     *
+     * @return bool
+     */
+    protected function hasEndTimer($namespace)
+    {
+        return ($this->hasStartTimer($namespace) &&
+          isset($this->getStat($namespace)['end']));
+    }
+
+    /**
+     * Check to see if stat namespace is a timer stat and has timer diff value
+     *
+     * @param $namespace
+     *
+     * @return bool
+     */
+    protected function hasTimerDiff($namespace)
+    {
+        return ($this->hasStartTimer($namespace) &&
+          $this->hasEndTimer($namespace) &&
+          isset($this->getStat($namespace)['diff']));
     }
 
     /**
