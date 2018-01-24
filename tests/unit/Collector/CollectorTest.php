@@ -438,7 +438,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
     public function testThrowsExceptionIfGetTimerDiffIsCalledOnNonTimerStat()
     {
         $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
-        $this->expectExceptionMessage("Unable to find timer difference for \"timer.test\". Has have recorded a start timer and end timer for this stat?");
+        $this->expectExceptionMessage("Unable to find timer difference for \"timer.test\". Have you recorded a start timer and end timer for this stat?");
 
         $this->statsCollector->setNamespace("test_namespace");
 
