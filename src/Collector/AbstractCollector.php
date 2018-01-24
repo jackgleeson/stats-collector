@@ -366,7 +366,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
         if ($this->hasTimerDiff($namespace)) {
             return $this->getStat($namespace)['diff'];
         } else {
-            throw new StatisticsCollectorException("Unable to find timer difference for \"$namespace\". Has have recorded a start timer and end timer for this stat?");
+            throw new StatisticsCollectorException("Unable to find timer difference for \"$namespace\". Have you recorded a start timer and end timer for this stat?");
         }
     }
 

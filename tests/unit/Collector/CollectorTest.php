@@ -410,6 +410,9 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($diff, $stats['test_namespace.timer.test']['diff']);
     }
 
+    /**
+     * @requires PHPUnit 5
+     */
     public function testThrowsExceptionIfEndTimerIsCalledOnNonTimerStat()
     {
         $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
@@ -435,10 +438,13 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($diff, $this->statsCollector->getTimerDiff("test"));
     }
 
+    /**
+     * @requires PHPUnit 5
+     */
     public function testThrowsExceptionIfGetTimerDiffIsCalledOnNonTimerStat()
     {
         $this->expectException(Statistics\Exception\StatisticsCollectorException::class);
-        $this->expectExceptionMessage("Unable to find timer difference for \"timer.test\". Has have recorded a start timer and end timer for this stat?");
+        $this->expectExceptionMessage("Unable to find timer difference for \"timer.test\". Have you recorded a start timer and end timer for this stat?");
 
         $this->statsCollector->setNamespace("test_namespace");
 
