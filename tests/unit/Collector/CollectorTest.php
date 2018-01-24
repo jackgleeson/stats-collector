@@ -223,8 +223,8 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $currentPopulatedNamespaces = array_flip($reflectionProperty->getValue($this->statsCollector));
 
         $expected = [
-          '.test_namespace.planets.earth' => ['radius' => '6371km'],
-          '.test_namespace.planets.mars' => ['radius' => '3390km'],
+          'test_namespace.planets.earth' => ['radius' => '6371km'],
+          'test_namespace.planets.mars' => ['radius' => '3390km'],
         ];
         //// assert that stat is set and namespace is stored within $populatedNamespaces
         $this->assertEquals($expected, $planetSizes);
@@ -527,8 +527,8 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         ], $withKeys = true);
 
         $expected = [
-          '.test_namespace.planets' => 8,
-          '.test_namespace.dwarf_planets' => 1,
+          'test_namespace.planets' => 8,
+          'test_namespace.dwarf_planets' => 1,
         ];
 
         $this->assertEquals($expected, $planetStats);
@@ -585,8 +585,8 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         ], $withKeys = true);
 
         $expected = [
-          '.test_namespace.planets' => 8,
-          '.test_namespace.dwarf_planets' => 1,
+          'test_namespace.planets' => 8,
+          'test_namespace.dwarf_planets' => 1,
         ];
 
         $this->assertEquals($expected, $planetStats);
@@ -623,7 +623,7 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         $piStat = $this->statsCollector->getStat("this.*.pi", $withKeys = true);
 
         $expected = [
-          '.this.is.a.really.long.namespace.path.pi' => 3.14159265359,
+          'this.is.a.really.long.namespace.path.pi' => 3.14159265359,
         ];
 
         $this->assertEquals($expected, $piStat);
@@ -679,8 +679,8 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         ], $withKeys = true);
 
         $expected = [
-          '.this.is.a.really.long.namespace.path.with.math.constants.pi' => 3.14159265359,
-          '.this.is.a.really.long.namespace.path.with.math.constants.golden_ratio' => 1.61803398875,
+          'this.is.a.really.long.namespace.path.with.math.constants.pi' => 3.14159265359,
+          'this.is.a.really.long.namespace.path.with.math.constants.golden_ratio' => 1.61803398875,
         ];
 
         $this->assertEquals($expected, $wildcardLeafNodes);
@@ -698,8 +698,8 @@ class CollectorTest extends \PHPUnit\Framework\TestCase
         ], $withKeys = true);
 
         $expected = [
-          '.this.is.a.really.long.namespace.path.with.math.constants.golden_ratio' => 1.61803398875,
-          '.this.is.a.really.long.namespace.path.with.math.constants.pi' => 3.14159265359,
+          'this.is.a.really.long.namespace.path.with.math.constants.golden_ratio' => 1.61803398875,
+          'this.is.a.really.long.namespace.path.with.math.constants.pi' => 3.14159265359,
         ];
 
         $this->assertEquals($expected, $wildcardConstantCommonParentChildNodes);
