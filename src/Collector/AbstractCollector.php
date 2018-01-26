@@ -366,7 +366,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
         if ($this->hasTimerDiff($namespace)) {
             return $this->getStat($namespace)['diff'];
         } else {
-            throw new StatisticsCollectorException("Unable to find timer difference for \"$namespace\". Has have recorded a start timer and end timer for this stat?");
+            throw new StatisticsCollectorException("Unable to find timer difference for \"$namespace\". Have you recorded a start timer and end timer for this stat?");
         }
     }
 
@@ -395,6 +395,10 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
         if ($this->exists($namespace) === true) {
             if ($withKeys === true) {
                 $resolvedNamespace = $this->getTargetNamespaces($namespace);
+                //clear the prepended '.' on any absolute paths for keys readability
+                if (strpos($resolvedNamespace, static::SEPARATOR) === 0) {
+                    $resolvedNamespace = substr($resolvedNamespace, 1);
+                }
                 $value[$resolvedNamespace] = $this->getValueFromNamespace($namespace);
             } else {
                 $value = $this->getValueFromNamespace($namespace);
@@ -429,7 +433,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
         foreach ($resolvedNamespaces as $namespace) {
             $stat = $this->getStat($namespace, $withKeys, $default);
             if ($withKeys === true) {
-                $stats[$namespace] = array_values($stat)[0];
+                $stats = array_merge_recursive($stats,$stat);
             } else {
                 $stats[] = $stat;
             }
