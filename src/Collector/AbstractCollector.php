@@ -8,12 +8,13 @@ use Statistics\Helper\MathHelper;
 use Statistics\Helper\TypeHelper;
 use Statistics\Collector\Traits\CollectorShorthand;
 use Statistics\Collector\Traits\SingletonInheritance;
+use Statistics\Collector\Traits\CollectorFilters;
 use Statistics\Exception\StatisticsCollectorException;
 
 abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSingleton
 {
 
-    use CollectorShorthand, SingletonInheritance;
+    use CollectorShorthand, SingletonInheritance, CollectorFilters;
 
     /**
      * Namespace separator

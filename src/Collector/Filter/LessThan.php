@@ -2,31 +2,16 @@
 
 namespace Statistics\Collector\Filter;
 
-use Statistics\Collector\AbstractCollector;
-
-class LessThan
+class LessThan extends AbstractFilter
 {
-
-    protected $statsCollector;
-
-    protected $value;
-
     /**
-     * LessThan constructor.
+     * @param $value
      *
-     * @param \Statistics\Collector\AbstractCollector $StatsCollector
-     * @param mixed $value
+     * @return bool
      */
-    public function __construct(AbstractCollector $StatsCollector, $value)
+    protected function condition($value)
     {
-    }
-
-    public function filter()
-    {
-        $values = $this->statsCollector->getAll();
-        foreach($values as $value) {
-            //this isn't going to work due to the bug with get all root namespaces being prefixed by the dot
-        }
+        return $value < $this->filterValue;
     }
 
 }
