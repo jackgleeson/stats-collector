@@ -2,21 +2,20 @@
 
 namespace Statistics\Collector\Filter;
 
-use Statistics\Collector\AbstractCollector;
 use Statistics\Helper\TypeHelper;
 
 abstract class AbstractFilter implements iFilter
 {
 
     /**
-     * @var AbstractCollector
+     * @var array
      */
-    protected $collector;
+    protected $originalStats;
 
     /**
      * @var mixed
      */
-    protected $filterValue;
+    protected $filterParams;
 
     /**
      * @var array of results after applying filter
@@ -26,13 +25,13 @@ abstract class AbstractFilter implements iFilter
     /**
      * LessThan constructor.
      *
-     * @param \Statistics\Collector\AbstractCollector $StatsCollector
-     * @param string $filterValue value to filter stat values against
+     * @param array $stats stats to be filtered
+     * @param $filterParams
      */
-    public function __construct(AbstractCollector $StatsCollector, $filterValue)
+    public function __construct(array $stats, ...$filterParams)
     {
-        $this->collector = $StatsCollector;
-        $this->filterValue = $filterValue;
+        $this->originalStats = $stats;
+        $this->filterParams = $filterParams;
     }
 
     /**
@@ -41,7 +40,7 @@ abstract class AbstractFilter implements iFilter
     public function filter()
     {
         $typeHelper = new TypeHelper();
-        foreach ($this->collector->getAllStats() as $namespace => $value) {
+        foreach ($this->originalStats as $namespace => $value) {
             if ($typeHelper->isCompoundStat($value)) {
                 $this->filterCompoundStat($namespace, $value);
             } else {
@@ -62,17 +61,19 @@ abstract class AbstractFilter implements iFilter
     {
         $compoundValues = $value;
         foreach ($compoundValues as $key => $value) {
-            if ($this->condition($value) === true) {
+            if ($this->condition($value) === false) {
                 unset($compoundValues[$key]);
             }
         }
-        $this->results[$namespace] = $compoundValues;
+        if (count($compoundValues) > 0) {
+            $this->results[$namespace] = $compoundValues;
+        }
     }
 
     /**
      * Perform filter condition check
      *
-     * @param $value
+     * @param mixed $value
      *
      * @return mixed
      */

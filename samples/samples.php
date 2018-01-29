@@ -337,8 +337,12 @@ $exporter->export($noahsArkStats);
 $exporter->filename = "civicrm_stats";
 $exporter->export($CiviCRMCollector);
 
-$filteredStatsCollector = $statsCollector->lessThan(50);
 
+//$filteredStatsCollectorlt = $statsCollector->lessThan(10);
+//print_r($filteredStatsCollectorlt);
+//$filteredStatsCollectorgt = $statsCollector->greaterThan(100);
+//print_r($filteredStatsCollectorgt);
+$filteredStatsCollectoret = $statsCollector->equalTo(9);
+print_r($filteredStatsCollectoret);
 
-// checkout the resulting output for the above export code here: https://github.com/jackgleeson/stats-collector/tree/master/samples/prometheus_out
 ?>

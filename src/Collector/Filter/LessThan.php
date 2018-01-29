@@ -2,16 +2,24 @@
 
 namespace Statistics\Collector\Filter;
 
+use Statistics\Exception\StatisticsCollectorFilterException;
+
 class LessThan extends AbstractFilter
 {
+
     /**
-     * @param $value
+     * @param array $params
      *
      * @return bool
+     * @throws \Statistics\Exception\StatisticsCollectorFilterException
      */
-    protected function condition($value)
+    protected function condition()
     {
-        return $value < $this->filterValue;
+        if(count($params)===1) {
+            return ($params[0] < $this->filterValue);
+        } else {
+            throw new StatisticsCollectorFilterException("LessThan filter only requires one argument which should be the value for stats values to be less than");
+        }
     }
 
 }
