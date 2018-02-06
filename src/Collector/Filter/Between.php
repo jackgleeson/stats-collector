@@ -9,9 +9,14 @@ class Between extends AbstractFilter
      *
      * @return bool
      */
-    protected function condition($lowerRangeValue, $upperRangeValue)
+    protected function condition($value)
     {
-        return ($value == $this->filterValue);
+        if(count($this->filterParams)===2) {
+            return  ($value >= $this->filterParams[0] && $value <= $this->filterParams[1]);
+        } else {
+            throw new StatisticsCollectorFilterException("GreaterThan filter only requires one argument which should be the value for stats values to be less than");
+        }
+        return ($value >= $this->filterValue[0] && $value <= $this->filterValue[1]);
     }
 
 }

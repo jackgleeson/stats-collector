@@ -60,12 +60,12 @@ abstract class AbstractFilter implements iFilter
     protected function filterCompoundStat($namespace, $value)
     {
         $compoundValues = $value;
-        foreach ($compoundValues as $key => $value) {
-            if ($this->condition($value) === false) {
-                unset($compoundValues[$key]);
-            }
-        }
         if (count($compoundValues) > 0) {
+            foreach ($compoundValues as $key => $value) {
+                if ($this->condition($value) === false) {
+                    unset($compoundValues[$key]);
+                }
+            }
             $this->results[$namespace] = $compoundValues;
         }
     }

@@ -10,9 +10,9 @@ class EqualTo extends AbstractFilter
      *
      * @return bool
      */
-    protected function condition(...$params)
+    protected function condition($value)
     {
-        return ($value == $this->filterValue);
+        return ($value == $this->filterValue[0]);
     }
 
 }
