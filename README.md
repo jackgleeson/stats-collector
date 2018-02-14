@@ -1,4 +1,6 @@
 # Stats Collector
+[![Build Status](https://travis-ci.org/jackgleeson/stats-collector.svg?branch=master)](https://travis-ci.org/jackgleeson/stats-collector)
+[![Coverage Status](https://coveralls.io/repos/github/jackgleeson/stats-collector/badge.svg?branch=master)](https://coveralls.io/github/jackgleeson/stats-collector?branch=master)
 
 Record, combine, retrieve and export custom statistics and log data during the lifecycle of any PHP process. 
 
