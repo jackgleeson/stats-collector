@@ -2,13 +2,14 @@
 
 namespace Statistics\Helper;
 
+use Statistics\Exception\StatisticsCollectorException;
 use Statistics\Exception\StatisticsCollectorHelperException;
 
 class MathHelper
 {
 
     /**
-     * @var \Statistics\Helper\TypeHelper
+     * @var TypeHelper
      */
     protected $typeHelper;
 
@@ -52,7 +53,7 @@ class MathHelper
      * @param mixed $values
      *
      * @return float|int
-     * @throws \Statistics\Exception\StatisticsCollectorHelperException
+     * @throws StatisticsCollectorHelperException
      */
     public function average($values)
     {
@@ -76,7 +77,7 @@ class MathHelper
      * @param mixed $values
      *
      * @return float|int
-     * @throws \Statistics\Exception\StatisticsCollectorException
+     * @throws StatisticsCollectorException
      */
     public function sum($values)
     {
@@ -103,13 +104,10 @@ class MathHelper
      */
     public function count($values)
     {
-        switch (gettype($values)) {
-            case "array":
-                return count($values);
-                break;
-            default:
-                return 1;
-                break;
+        if (gettype($values) == "array") {
+            return count($values);
+        } else {
+            return 1;
         }
     }
 }
