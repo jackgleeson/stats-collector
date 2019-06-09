@@ -2,6 +2,8 @@
 
 namespace Statistics\Collector\Traits;
 
+use Statistics\Collector\AbstractCollector;
+use Statistics\Exception\StatisticsCollectorException;
 /**
  * Trait CollectorShorthand
  *
@@ -62,7 +64,7 @@ trait CollectorShorthand
      * @param $value
      * @param array $options
      *
-     * @return \Statistics\Collector\AbstractCollector
+     * @return AbstractCollector
      */
     public function add($name, $value, $options = [])
     {
@@ -78,7 +80,7 @@ trait CollectorShorthand
      * @param $value
      * @param array $options
      *
-     * @return \Statistics\Collector\AbstractCollector
+     * @return AbstractCollector
      */
     public function clobber($name, $value, $options = [])
     {
@@ -93,8 +95,8 @@ trait CollectorShorthand
      *
      * @param string $namespace
      *
-     * @return \Statistics\Collector\AbstractCollector
-     * @throws \Statistics\Exception\StatisticsCollectorException
+     * @return AbstractCollector
+     * @throws StatisticsCollectorException
      */
     public function del($namespace)
     {
@@ -109,8 +111,8 @@ trait CollectorShorthand
      * @param string $namespace
      * @param int|float $increment
      *
-     * @return \Statistics\Collector\AbstractCollector
-     * @throws \Statistics\Exception\StatisticsCollectorException
+     * @return AbstractCollector
+     * @throws StatisticsCollectorException
      */
     public function inc($namespace, $increment = 1)
     {
@@ -125,8 +127,8 @@ trait CollectorShorthand
      * @param string $namespace
      * @param int|float|array $increment
      *
-     * @return \Statistics\Collector\AbstractCollector
-     * @throws \Statistics\Exception\StatisticsCollectorException
+     * @return AbstractCollector
+     * @throws StatisticsCollectorException
      */
     public function incCpd($namespace, $increment = 1)
     {
@@ -141,8 +143,8 @@ trait CollectorShorthand
      * @param string $namespace
      * @param int|float $decrement
      *
-     * @return \Statistics\Collector\AbstractCollector
-     * @throws \Statistics\Exception\StatisticsCollectorException
+     * @return AbstractCollector
+     * @throws StatisticsCollectorException
      */
     public function dec($namespace, $decrement = -1)
     {
@@ -157,8 +159,8 @@ trait CollectorShorthand
      * @param string $namespace
      * @param int|float|array $decrement
      *
-     * @return \Statistics\Collector\AbstractCollector
-     * @throws \Statistics\Exception\StatisticsCollectorException
+     * @return AbstractCollector
+     * @throws StatisticsCollectorException
      */
     public function decCpd($namespace, $decrement = 1)
     {
@@ -173,7 +175,6 @@ trait CollectorShorthand
      * @param string $namespace
      * @param mixed $customTimestamp
      * @param bool $useTimerNamespacePrefix
-     *
      */
     public function start($namespace, $customTimestamp=null, $useTimerNamespacePrefix = true)
     {
@@ -190,7 +191,7 @@ trait CollectorShorthand
      * @param mixed $customTimestamp
      * @param bool $useTimerNamespacePrefix
      *
-     * @throws \Statistics\Exception\StatisticsCollectorException
+     * @throws StatisticsCollectorException
      */
     public function end($namespace,  $customTimestamp=null, $useTimerNamespacePrefix = true)
     {
@@ -207,7 +208,7 @@ trait CollectorShorthand
      * @param bool $useTimerNamespacePrefix
      *
      * @return float
-     * @throws \Statistics\Exception\StatisticsCollectorException
+     * @throws StatisticsCollectorException
      */
     public function diff($namespace, $useTimerNamespacePrefix = true)
     {
@@ -223,7 +224,7 @@ trait CollectorShorthand
      * @param string|array $namespace
      *
      * @return float|int
-     * @throws \Statistics\Exception\StatisticsCollectorException
+     * @throws StatisticsCollectorException
      */
     public function avg($namespace)
     {
@@ -243,7 +244,7 @@ trait CollectorShorthand
      * @param string|array $namespace
      *
      * @return float|int
-     * @throws \Statistics\Exception\StatisticsCollectorException
+     * @throws StatisticsCollectorException
      */
     public function sum($namespace)
     {
@@ -292,7 +293,7 @@ trait CollectorShorthand
      *
      * @param mixed $namespace optional
      *
-     * @return string|\Statistics\Collector\AbstractCollector
+     * @return string|AbstractCollector
      */
     public function ns($namespace = null)
     {

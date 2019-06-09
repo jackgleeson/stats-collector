@@ -2,6 +2,7 @@
 
 namespace Statistics\Collector\Traits;
 
+use Statistics\Collector\AbstractCollector;
 /**
  * Trait SingletonInheritance
  *
@@ -24,7 +25,7 @@ trait SingletonInheritance
     protected static $instances = [];
 
     /**
-     * @return \Statistics\Collector\AbstractCollector
+     * @return AbstractCollector
      */
     public static function getInstance()
     {
@@ -46,7 +47,7 @@ trait SingletonInheritance
      */
     public static function tearDown($all = false)
     {
-        if ($all === false) {
+        if (!$all) {
             $class = get_called_class();
             unset(static::$instances[$class]);
         } else {
