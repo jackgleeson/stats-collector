@@ -37,7 +37,7 @@ class TypeHelper
                 return true;
             case "array":
                 foreach ($value as $v) {
-                    if (!$this->isIntOrFloatRecursive($v)) {
+                    if ($this->isIntOrFloatRecursive($v) === false) {
                         return false;
                     }
                 }

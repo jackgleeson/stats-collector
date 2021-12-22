@@ -136,7 +136,7 @@ class File implements iExporter
         foreach ($statistics as $namespace => $stats) {
             if ($this->typeHelper->isCompoundStat($stats)) {
                 foreach ($stats as $key => $stat) {
-                    if (!$this->outputCompoundStatKeys) {
+                    if ($this->outputCompoundStatKeys === false) {
                         $contents[] = $this->mapStatToLine($namespace, $stat);
                     } else {
                         $contents[] = $this->mapStatToLine($namespace . "[" . $key . "]", $stat);
