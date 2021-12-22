@@ -24,6 +24,7 @@ class Prometheus implements iExporter
      * Regular expression pattern to validate Prometheus labels.
      *
      * Taken from https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels
+     * @var string
      */
     const LABEL_PATTERN = "/^([a-z_]+)=([a-z0-9_]+)$/i";
 
@@ -150,7 +151,7 @@ class Prometheus implements iExporter
     private function mapToMetricLabelLineOutput($subject, $key, $stat)
     {
         preg_match(static::LABEL_PATTERN, $key, $matches);
-        return $subject . "{" . $matches[1] . "=\"" . $matches[2] . "\"} " . $stat . PHP_EOL;
+        return $subject . "{" . $matches[1] . '="' . $matches[2] . '"} ' . $stat . PHP_EOL;
     }
 
     /**

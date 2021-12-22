@@ -60,13 +60,10 @@ class MathHelper
             case "integer":
             case "double":
                 return $values;
-                break;
             case "array":
                 return (count($values) > 0) ? array_sum($values) / count($values) : 0;
-                break;
             default:
                 throw new StatisticsCollectorHelperException("Unable to return sum for supplied arguments (are the values numeric?)");
-                break;
         }
     }
 
@@ -84,13 +81,10 @@ class MathHelper
             case "integer":
             case "double":
                 return $values;
-                break;
             case "array":
                 return array_sum($values);
-                break;
             default:
                 throw new StatisticsCollectorHelperException("Unable to return sum for supplied arguments (are the values numeric?)");
-                break;
         }
     }
 
@@ -103,13 +97,10 @@ class MathHelper
      */
     public function count($values)
     {
-        switch (gettype($values)) {
-            case "array":
-                return count($values);
-                break;
-            default:
-                return 1;
-                break;
+        if (gettype($values) == "array") {
+            return count($values);
+        } else {
+            return 1;
         }
     }
 }

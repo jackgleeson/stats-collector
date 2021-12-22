@@ -18,7 +18,7 @@ class ArrayHelper
     {
         $flattened = [];
         array_walk_recursive($array, function ($value, $key) use (&$flattened) {
-            if (is_numeric($key) === false) {
+            if (!is_numeric($key)) {
                 $flattened[$key] = $value;
             } else {
                 $flattened[] = $value;

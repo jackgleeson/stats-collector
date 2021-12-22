@@ -13,27 +13,30 @@ use Statistics\Exception\StatisticsCollectorException;
 abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSingleton
 {
 
-    use CollectorShorthand, SingletonInheritance;
-
+    use CollectorShorthand;
+    use SingletonInheritance;
     /**
      * Namespace separator
+     * @var string
      */
     const SEPARATOR = '.';
 
     /**
      * Wildcard operator
+     * @var string
      */
     const WILDCARD = '*';
 
     /**
      * default group namespace for timers
+     * @var string
      */
     const TIMERS_NS = 'timer';
 
     /**
      * @var null|string
      */
-    protected $namespace = null;
+    protected $namespace;
 
     /**
      * Container for stats data
@@ -80,11 +83,12 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
             throw new StatisticsCollectorException("Wildcard usage forbidden when removing stats (to protect you from yourself!)");
         }
 
-        if ($this->exists($namespace) === true) {
+        if ($this->exists($namespace)) {
             $this->removeValueFromNamespace($namespace);
         } else {
             throw new StatisticsCollectorException("Attempting to remove a statistic that does not exist: " . $namespace);
         }
+
         return $this;
     }
 
@@ -105,6 +109,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
                         return false;
                     }
                 }
+
                 return true;
             } else {
                 return false;
@@ -125,7 +130,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     public function incrementStat($namespace, $increment = 1)
     {
-        if ($this->exists($namespace) !== true) {
+        if (!$this->exists($namespace)) {
             $this->addStat($namespace, 0);
         }
 
@@ -156,46 +161,32 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
         $typeHelper = new TypeHelper();
 
         //if the namespace doesn't exist we create the correct compound stat with values of '0'
-        if ($this->exists($namespace) !== true) {
-            if ($typeHelper->isArray($increment)) {
-                // if array of increments is supplied we create a default compound stat using array keys with value of '0'
-                $default = array_fill_keys(array_keys($increment), 0);
-            } else {
-                //if float|int is supplied we create default compound stat with value of '0'
-                $default = [0];
-            }
+        if (!$this->exists($namespace)) {
+            $default = $typeHelper->isArray($increment) ? array_fill_keys(array_keys($increment), 0) : [0];
+
             $this->addStat($namespace, $default);
         }
 
         // get current compound stat values to check it is compound and if so begin incrementing
         $currentValues = $this->getStat($namespace);
         if (!$typeHelper->isArray($currentValues)) {
-            throw new StatisticsCollectorException("The stat you are trying to increment is not a compound stat, instead use incrementStat(). $namespace=$currentValues(" . gettype($currentValues) . ")");
+            throw new StatisticsCollectorException(sprintf('The stat you are trying to increment is not a compound stat, instead use incrementStat(). %s=%s(', $namespace, $currentValues) . gettype($currentValues) . ")");
         }
 
         // check we have either an int|float or an array of int|floats.
         if ($typeHelper->isIntOrFloatRecursive($increment)) {
-            if ($typeHelper->isArray($increment)) {
-                // if $increment is an array, we match (or add) the keys in $increment to the keys in $currentValues and
-                // increment $currentValues[$increment_key] with the corresponding $increment value.
-                $keys = array_keys($increment);
-            } else {
-                // if $increment is an int|float, we loop through the $currentValues and increment all values
-                // with the value of $increment
-                $keys = array_keys($currentValues);
-            }
+            $keys = $typeHelper->isArray($increment) ? array_keys($increment) : array_keys($currentValues);
 
-            for ($i = 0; $i < count($keys); $i++) {
+            foreach ($keys as $i => $key) {
                 // if key is not set, we add it with a default of '0'
-                if (!array_key_exists($keys[$i], $currentValues)) {
+                if (!array_key_exists($key, $currentValues)) {
                     $currentValues[$keys[$i]] = 0;
                 }
-
-                if ($this->isIncrementable($currentValues[$keys[$i]])) {
-                    $incrementer = ($typeHelper->isArray($increment)) ? $increment[$keys[$i]] : $increment;
-                    $currentValues[$keys[$i]] += $incrementer;
+                if ($this->isIncrementable($currentValues[$key])) {
+                    $incrementer = ($typeHelper->isArray($increment)) ? $increment[$key] : $increment;
+                    $currentValues[$key] += $incrementer;
                 } else {
-                    throw new StatisticsCollectorException("Attempting to increment a compound value which cannot be incremented! (" . $namespace . "[" . $keys[$i] . "]=\"" . $currentValues[$keys[$i]] . "\":" . gettype($currentValues[$keys[$i]]) . ")");
+                    throw new StatisticsCollectorException("Attempting to increment a compound value which cannot be incremented! (" . $namespace . "[" . $key . ']="' . $currentValues[$key] . '":' . gettype($currentValues[$key]) . ")");
                 }
             }
         } else {
@@ -220,7 +211,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     public function decrementStat($namespace, $decrement = -1)
     {
-        if ($this->exists($namespace) !== true) {
+        if (!$this->exists($namespace)) {
             $this->addStat($namespace, 0);
         }
 
@@ -251,46 +242,32 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
         $typeHelper = new TypeHelper();
 
         //if the namespace doesn't exist we create the correct compound stat with values of '0'
-        if ($this->exists($namespace) !== true) {
-            if ($typeHelper->isArray($decrement)) {
-                // if array of decrements is supplied we create a default compound stat using array keys with value of '0'
-                $default = array_fill_keys(array_keys($decrement), 0);
-            } else {
-                //if float|int is supplied we create default compound stat with value of '0'
-                $default = [0];
-            }
+        if (!$this->exists($namespace)) {
+            $default = $typeHelper->isArray($decrement) ? array_fill_keys(array_keys($decrement), 0) : [0];
+
             $this->addStat($namespace, $default);
         }
 
         // get current compound stat values to check it is compound and if so begin decrementing
         $currentValues = $this->getStat($namespace);
         if (!$typeHelper->isArray($currentValues)) {
-            throw new StatisticsCollectorException("The stat you are trying to decrement is not a compound stat, instead use decrementStat(). $namespace=$currentValues(" . gettype($currentValues) . ")");
+            throw new StatisticsCollectorException(sprintf('The stat you are trying to decrement is not a compound stat, instead use decrementStat(). %s=%s(', $namespace, $currentValues) . gettype($currentValues) . ")");
         }
 
         // check we have either an int|float or an array of int|floats.
         if ($typeHelper->isIntOrFloatRecursive($decrement)) {
-            if ($typeHelper->isArray($decrement)) {
-                // if $decrement is an array, we match (or add) the keys in $decrement to the keys in $currentValues and
-                // decrement $currentValues[$decrement_key] with the corresponding $decrement value.
-                $keys = array_keys($decrement);
-            } else {
-                // if $decrement is an int|float, we loop through the $currentValues and decrement all values
-                // with the value of $decrement
-                $keys = array_keys($currentValues);
-            }
+            $keys = $typeHelper->isArray($decrement) ? array_keys($decrement) : array_keys($currentValues);
 
-            for ($i = 0; $i < count($keys); $i++) {
+            foreach ($keys as $i => $key) {
                 // if key is not set, we add it with a default of '0'
-                if (!array_key_exists($keys[$i], $currentValues)) {
+                if (!array_key_exists($key, $currentValues)) {
                     $currentValues[$keys[$i]] = 0;
                 }
-
-                if ($this->isdecrementable($currentValues[$keys[$i]])) {
-                    $decrementer = ($typeHelper->isArray($decrement)) ? $decrement[$keys[$i]] : $decrement;
-                    $currentValues[$keys[$i]] -= abs($decrementer);
+                if ($this->isdecrementable($currentValues[$key])) {
+                    $decrementer = ($typeHelper->isArray($decrement)) ? $decrement[$key] : $decrement;
+                    $currentValues[$key] -= abs($decrementer);
                 } else {
-                    throw new StatisticsCollectorException("Attempting to decrement a compound value which cannot be decremented! (" . $namespace . "[" . $keys[$i] . "]=\"" . $currentValues[$keys[$i]] . "\":" . gettype($currentValues[$keys[$i]]) . ")");
+                    throw new StatisticsCollectorException("Attempting to decrement a compound value which cannot be decremented! (" . $namespace . "[" . $key . ']="' . $currentValues[$key] . '":' . gettype($currentValues[$key]) . ")");
                 }
             }
         } else {
@@ -313,12 +290,9 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     public function startTimer($namespace, $customTimestamp = null, $useTimerNamespacePrefix = true)
     {
-        if ($customTimestamp === null) {
-            $start = microtime(true);
-        } else {
-            $start = $customTimestamp;
-        }
-        $namespace = ($useTimerNamespacePrefix === true) ? static::TIMERS_NS . static::SEPARATOR . $namespace : $namespace;
+        $start = $customTimestamp === null ? microtime(true) : $customTimestamp;
+
+        $namespace = ($useTimerNamespacePrefix) ? static::TIMERS_NS . static::SEPARATOR . $namespace : $namespace;
         $this->addStat($namespace, ['start' => $start]);
     }
 
@@ -334,20 +308,16 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     public function endTimer($namespace, $customTimestamp = null, $useTimerNamespacePrefix = true)
     {
-        if ($customTimestamp === null) {
-            $end = microtime(true);
-        } else {
-            $end = $customTimestamp;
-        }
+        $end = $customTimestamp === null ? microtime(true) : $customTimestamp;
 
-        $namespace = ($useTimerNamespacePrefix === true) ? static::TIMERS_NS . static::SEPARATOR . $namespace : $namespace;
+        $namespace = ($useTimerNamespacePrefix) ? static::TIMERS_NS . static::SEPARATOR . $namespace : $namespace;
         if ($this->hasStartTimer($namespace)) {
             $this->addStat($namespace, [
               'end' => $end,
               'diff' => $end - $this->getStat($namespace)['start'],
             ]);
         } else {
-            throw new StatisticsCollectorException("Unable to find start timestamp for \"$namespace\"");
+            throw new StatisticsCollectorException(sprintf('Unable to find start timestamp for "%s"', $namespace));
         }
     }
 
@@ -362,11 +332,11 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     public function getTimerDiff($namespace, $useTimerNamespacePrefix = true)
     {
-        $namespace = ($useTimerNamespacePrefix === true) ? static::TIMERS_NS . static::SEPARATOR . $namespace : $namespace;
+        $namespace = ($useTimerNamespacePrefix) ? static::TIMERS_NS . static::SEPARATOR . $namespace : $namespace;
         if ($this->hasTimerDiff($namespace)) {
             return $this->getStat($namespace)['diff'];
         } else {
-            throw new StatisticsCollectorException("Unable to find timer difference for \"$namespace\". Have you recorded a start timer and end timer for this stat?");
+            throw new StatisticsCollectorException(sprintf('Unable to find timer difference for "%s". Have you recorded a start timer and end timer for this stat?', $namespace));
         }
     }
 
@@ -392,34 +362,32 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
             return $this->getStats([$namespace], $withKeys, $default);
         }
 
-        if ($this->exists($namespace) === true) {
-            if ($withKeys === true) {
+        if ($this->exists($namespace)) {
+            if ($withKeys) {
                 $resolvedNamespace = $this->getTargetNamespaces($namespace);
                 //clear the prepended '.' on any absolute paths for keys readability
                 if (strpos($resolvedNamespace, static::SEPARATOR) === 0) {
                     $resolvedNamespace = substr($resolvedNamespace, 1);
                 }
+
                 $value[$resolvedNamespace] = $this->getValueFromNamespace($namespace);
             } else {
                 $value = $this->getValueFromNamespace($namespace);
             }
+        } elseif ($withKeys) {
+            $value[$namespace] = $default;
         } else {
-            if ($withKeys === true) {
-                $value[$namespace] = $default;
-            } else {
-                $value = $default;
-            }
+            $value = $default;
         }
+
         return $value;
     }
 
     /**
      * Retrieve a collection of statistics for an array of given namespaces
      *
-     * @param array $namespaces
      * @param bool $withKeys
      * @param mixed $default default value to be returned if stat $namespace is empty
-     *
      * @return mixed
      */
     public function getStats(array $namespaces, $withKeys = false, $default = null)
@@ -432,16 +400,16 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
         $stats = [];
         foreach ($resolvedNamespaces as $namespace) {
             $stat = $this->getStat($namespace, $withKeys, $default);
-            if ($withKeys === true) {
+            if ($withKeys) {
                 $stats = array_merge_recursive($stats,$stat);
             } else {
                 $stats[] = $stat;
             }
         }
 
-        if (count($stats) === 0) {
+        if ($stats === []) {
             if (count($namespaces) > 1) {
-                if ($withKeys === false) {
+                if (!$withKeys) {
                     return array_fill(0, count($namespaces), $default);
                 } else {
                     array_fill_keys(array_keys($namespaces), $default);
@@ -451,7 +419,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
             }
         }
 
-        if (count($stats) === 1 && $withKeys === false) {
+        if (count($stats) === 1 && !$withKeys) {
             return array_values($stats)[0];
         }
 
@@ -477,7 +445,6 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     /**
      * Count the number of values recorded for a collection of given stats
      *
-     * @param array $namespaces
      *
      * @return int
      * @internal param array $names
@@ -505,17 +472,16 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
                 $value = (new ArrayHelper())->flatten($value);
             }
             return $this->calculateStatsAverage($value);
-        } catch (StatisticsCollectorException $e) {
+        } catch (StatisticsCollectorException $statisticsCollectorException) {
             throw new StatisticsCollectorException(
-              "An error occurred with \"" . $namespace . "\" - " . ($e->getMessage()),
-              $e->getCode(),
-              $e
+              'An error occurred with "' . $namespace . '" - ' . ($statisticsCollectorException->getMessage()),
+              $statisticsCollectorException->getCode(),
+              $statisticsCollectorException
             );
         }
     }
 
     /**
-     * @param array $namespaces
      *
      * @return float|int
      * @throws \Statistics\Exception\StatisticsCollectorException
@@ -535,7 +501,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
         } catch (StatisticsCollectorException $e) {
             $namespaceString = '';
             foreach ($namespaces as $namespace) {
-                $namespaceString .= "\"" . $namespace . "\",";
+                $namespaceString .= '"' . $namespace . '",';
             }
             throw new StatisticsCollectorException(
               "An error occurred with " . substr($namespaceString, 0, -1) . " - " . $e->getMessage(),
@@ -561,7 +527,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
             return $this->calculateStatsSum($value);
         } catch (StatisticsCollectorException $e) {
             throw new StatisticsCollectorException(
-              "An error occurred with \"" . $namespace . "\" - " . $e->getMessage(),
+              'An error occurred with "' . $namespace . '" - ' . $e->getMessage(),
               $e->getCode(),
               $e
             );
@@ -569,7 +535,6 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     }
 
     /**
-     * @param array $namespaces
      *
      * @return float|int
      * @throws \Statistics\Exception\StatisticsCollectorException
@@ -589,7 +554,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
         } catch (StatisticsCollectorException $e) {
             $namespaceString = '';
             foreach ($namespaces as $namespace) {
-                $namespaceString .= "\"" . $namespace . "\",";
+                $namespaceString .= '"' . $namespace . '",';
             }
             throw new StatisticsCollectorException(
               "An error occurred with " . substr($namespaceString, 0, -1) . " - " . $e->getMessage(),
@@ -656,11 +621,10 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     protected function getDefaultAddValueToNamespaceOptions()
     {
-        $options = [
+        return [
           'flatten' => true,
           'clobber' => false,
         ];
-        return $options;
     }
 
     /**
@@ -707,7 +671,8 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     {
         // clear absolute path initial '.' as not needed for wildcard
         if ($this->isAbsolutePathNamespace($namespace)) {
-            $namespace = $target = substr($namespace, 1);
+            $namespace = substr($namespace, 1);
+            $target = $namespace;
         }
 
         // add a additional namespace route by prepending the current parent ns to the wildcard query to
@@ -751,19 +716,19 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
                     $expandedWildcardPaths = $this->resolveWildcardNamespace($namespace);
                     if (count($expandedWildcardPaths) > 0) {
                         $expandedWildcardPaths = array_map(function ($path) use ($returnAbsolute) {
-                            return ($returnAbsolute === false) ? substr($path, 1) : $path;
+                            return ($returnAbsolute) ? $path : substr($path, 1);
                         }, $expandedWildcardPaths);
                     }
                     $resolvedNamespaces = array_merge($resolvedNamespaces, $expandedWildcardPaths);
                     break;
                 case $this->isAbsolutePathNamespace($namespace):
-                    $resolvedNamespaces[] = ($returnAbsolute === false) ? substr($namespace, 1) : $namespace;
+                    $resolvedNamespaces[] = ($returnAbsolute) ? $namespace : substr($namespace, 1);
                     break;
                 default:
                     // leaf-node of current namespace e.g. 'dates' or sub-namespace e.g 'sub.path.of.current.namespace'
                     $expandedRelativeNodeNamespace = $this->getNamespace() . static::SEPARATOR . $namespace;
-                    $resolvedNamespaces[] = ($returnAbsolute === false) ? $expandedRelativeNodeNamespace :
-                      static::SEPARATOR . $expandedRelativeNodeNamespace;
+                    $resolvedNamespaces[] = ($returnAbsolute) ? static::SEPARATOR . $expandedRelativeNodeNamespace :
+                      $expandedRelativeNodeNamespace;
             }
         }
 
@@ -908,7 +873,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
      */
     protected function addPopulatedNamespace($namespace)
     {
-        array_push($this->populatedNamespaces, $namespace);
+        $this->populatedNamespaces[] = $namespace;
         $this->sortPopulatedNamespaces();
         return true;
     }
@@ -924,10 +889,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
     {
         $targetNamespace = $namespace;
         $matches = array_filter($this->populatedNamespaces, function ($populatedNamespace) use ($targetNamespace) {
-            if (preg_match("/^$targetNamespace(.*)/i", $populatedNamespace) === 1) {
-                return true;
-            }
-            return false;
+            return preg_match(sprintf('/^%s(.*)/i', $targetNamespace), $populatedNamespace) === 1;
         });
 
         foreach (array_keys($matches) as $key) {
@@ -1052,11 +1014,7 @@ abstract class AbstractCollector implements iCollector, iCollectorShorthand, iSi
             // so in this instance we just update the existing and overwrite the current values with the values
             // supplied in the $value argument.
 
-            if ($flatten === true) {
-                $newData = (new ArrayHelper())->flatten($value);
-            } else {
-                $newData = $value;
-            }
+            $newData = $flatten === true ? (new ArrayHelper())->flatten($value) : $value;
 
             $current = $this->getStatsContainer()->get($namespace);
             if ($typeHelper->isCompoundStat($current)) {
